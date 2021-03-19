@@ -1,0 +1,30 @@
+{
+  "name": "declutter-me",
+  "version": "1.0.0",
+  "description": "Smart & customizable organizer",
+  "main": "app.js",
+  "scripts": {
+    "test": "mocha",
+    "test:watch": "mocha --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitaly-rudenko/declutter-me.git"
+  },
+  "keywords": [
+    "organizer"
+  ],
+  "author": "Vitaly Rudenko",
+  "license": "GPL-3.0-only",
+  "bugs": {
+    "url": "https://github.com/vitaly-rudenko/declutter-me/issues"
+  },
+  "homepage": "https://github.com/vitaly-rudenko/declutter-me#readme",
+  "devDependencies": {
+    "chai": "4.3.4",
+    "chai-as-promised": "7.1.1",
+    "mocha": "8.3.2",
+    "sinon": "9.2.4",
+    "sinon-chai": "3.5.0"
+  }
+}
