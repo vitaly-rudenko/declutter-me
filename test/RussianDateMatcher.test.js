@@ -20,7 +20,7 @@ describe('DateMatcher', () => {
 
 
     describe('match()', () => {
-        it.only('should match simple relative dates', () => {
+        it('should match simple relative dates', () => {
             const expectations = [
                 ['через час', new Date('2020-05-05 11:00')],
                 ['через 1 час', new Date('2020-05-05 11:00')],
