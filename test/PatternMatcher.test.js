@@ -1,6 +1,5 @@
 const chai = require('chai');
 const PatternMatcher = require('../app/PatternMatcher');
-const PatternBuilder = require('../app/PatternBuilder');
 
 const { expect } = chai;
 chai.use(require('deep-equal-in-any-order'));
@@ -8,12 +7,182 @@ chai.use(require('deep-equal-in-any-order'));
 describe('PatternMatcher', () => {
     /** @type {PatternMatcher} */
     let patternMatcher;
-    /** @type {PatternBuilder} */
-    let patternBuilder;
 
     beforeEach(() => {
         patternMatcher = new PatternMatcher();
-        patternBuilder = new PatternBuilder();
+    });
+
+    describe('match()', () => {
+        it('should match simple pattern', () => {
+            // #{list} {item}
+            const pattern = [
+                { type: 'text', value: '#' },
+                { type: 'variable', value: 'list' },
+                { type: 'text', value: ' ' },
+                { type: 'variable', value: 'item' },
+            ];
+            
+            const matchers = {
+                list: input => input.split(' ')[0] || null,
+                item: input => input,
+            };
+
+            expect(patternMatcher.match('#shopping Cabbages', pattern, matchers))
+                .to.deep.eq({
+                    match: true,
+                    variables: {
+                        list: 'shopping',
+                        item: 'Cabbages'
+                    }
+                });
+            
+            expect(patternMatcher.match('#shopping-list Sweet potatoes', pattern, matchers))
+                .to.deep.eq({
+                    match: true,
+                    variables: {
+                        list: 'shopping-list',
+                        item: 'Sweet potatoes'
+                    }
+                });
+            
+            expect(patternMatcher.match('Sweet potatoes', pattern, matchers))
+                .to.deep.eq({ match: false });
+            
+            expect(patternMatcher.match('# Sweet potatoes', pattern, matchers))
+                .to.deep.eq({ match: false });
+        });
+
+        it('should separate variables properly', () => {
+            // #{item} {list}
+            const pattern = [
+                { type: 'variable', value: 'item' },
+                { type: 'text', value: ' #' },
+                { type: 'variable', value: 'list' },
+            ];
+            
+            const matchers = {
+                list: input => input.split(' ')[0],
+                item: input => input,
+            };
+
+            expect(patternMatcher.match('Sweet potatoes #shopping-list', pattern, matchers))
+                .to.deep.eq({
+                    match: true,
+                    variables: {
+                        list: 'shopping-list',
+                        item: 'Sweet potatoes'
+                    }
+                });
+
+            expect(patternMatcher.match('Sweet #potatoes #shopping', pattern, matchers))
+                .to.deep.eq({
+                    match: true,
+                    variables: {
+                        list: 'shopping',
+                        item: 'Sweet #potatoes'
+                    }
+                });
+            
+            expect(patternMatcher.match('Sweet potatoes #shopping list', pattern, matchers))
+                .to.deep.eq({ match: false });
+        });
+
+        it('should separate variables properly in complete sentences', () => {
+            const pattern = [
+                { type: 'text', value: 'add ' },
+                { type: 'variable', value: 'item' },
+                { type: 'text', value: ' to the ' },
+                { type: 'variable', value: 'list' },
+                { type: 'text', value: ' list' },
+            ];
+
+            const matchers = {
+                list: input => input.split(' ')[0],
+                item: input => input,
+            };
+
+            expect(patternMatcher.match('Add sweet potatoes to the shopping list', pattern, matchers))
+                .to.deep.eq({
+                    match: true,
+                    variables: {
+                        item: 'sweet potatoes',
+                        list: 'shopping',
+                    }
+                });
+        });
+
+        it('should match complex patterns', () => {
+            // (add|put) {item}[ to[ the] {list}[ list]]
+            const pattern = [
+                { type: 'variational', value: [
+                    [{ type: 'text', value: 'add' }],
+                    [{ type: 'text', value: 'put' }],
+                ] },
+                { type: 'text', value: ' ' },
+                { type: 'variable', value: 'item' },
+                { type: 'optional', value: [
+                    { type: 'text', value: ' to' },
+                    { type: 'optional', value: [{ type: 'text', value: ' the' }] },
+                    { type: 'text', value: ' ' },
+                    { type: 'variable', value: 'list' },
+                    { type: 'optional', value: [{ type: 'text', value: ' list' }] },
+                ] }
+            ];
+
+            const matchers = {
+                list: input => input.split(' ')[0],
+                item: input => input,
+            };
+
+            for (const input of ['Add sweet potatoes', 'Put sweet potatoes']) {
+                expect(patternMatcher.match(input, pattern, matchers))
+                    .to.deep.eq({
+                        match: true,
+                        variables: { item: 'sweet potatoes' }
+                    });
+            }
+
+            for (const input of [
+                'Add sweet potatoes to shopping',
+                'Add sweet potatoes to shopping list',
+                'Add sweet potatoes to the shopping',
+                'Add sweet potatoes to the shopping list',
+                'Put sweet potatoes to shopping',
+                'Put sweet potatoes to shopping list',
+                'Put sweet potatoes to the shopping',
+                'Put sweet potatoes to the shopping list',
+            ]) {
+                expect(patternMatcher.match(input, pattern, matchers))
+                    .to.deep.eq({
+                        match: true,
+                        variables: {
+                            item: 'sweet potatoes',
+                            list: 'shopping',
+                        }
+                    });
+            }
+
+            for (const input of [
+                'Insert sweet potatoes to the shopping list',
+                'Put', 'Add', 'Addsweet potatoes'
+            ]) {
+                expect(patternMatcher.match(input, pattern, matchers))
+                    .to.deep.eq({ match: false });
+            }
+
+            // Special case
+            expect(patternMatcher.match('Add sweet potatoes into the shopping list', pattern, matchers))
+                .to.deep.eq({
+                    match: true,
+                    variables: { item: 'sweet potatoes into the shopping list' }
+                });
+        });
+
+        it('should throw error for non-existing matchers', () => {
+            expect(() => patternMatcher.match(
+                'my-name', [{ type: 'variable', value: 'name' }], {})
+            ).to.throw('Unsupported matcher: name');
+        });
     });
 
     describe('getTokenCombinations()', () => {
@@ -260,7 +429,7 @@ describe('PatternMatcher', () => {
             ]);
         });
 
-        it('should create combinations for complex tokens', () => {
+        it('should create combinations for complex patterns', () => {
             // ((buy|purchase) {item}[, please]|#{list} {item})
             expect(patternMatcher.getTokenCombinations({
                 type: 'variational',
