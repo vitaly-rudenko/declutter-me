@@ -1,8 +1,4 @@
-const chai = require('chai');
-const sinonChai = require('sinon-chai');
-const expect = chai.expect;
-chai.use(sinonChai);
-
+const { expect } = require('chai');
 const PatternBuilder = require('../app/PatternBuilder');
 
 describe('PatternBuilder', () => {
@@ -133,13 +129,14 @@ describe('PatternBuilder', () => {
                     }
                 ]);
 
-            expect(patternBuilder.build('(hello|hi) (world|there)'))
+            expect(patternBuilder.build('(hello|hi|hey) (world|there)'))
                 .to.deep.eq([
                     {
                         type: 'variational',
                         value: [
                             [{ type: 'text', value: 'hello' }],
                             [{ type: 'text', value: 'hi' }],
+                            [{ type: 'text', value: 'hey' }],
                         ]
                     },
                     { type: 'text', value: ' ' },
