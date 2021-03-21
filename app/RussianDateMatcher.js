@@ -22,44 +22,44 @@ const UNIT_MATCHERS = [
 ];
 
 const NUMBER_MATCHERS = [
-    [['один', 'одну'], 1],
+    [['один', 'одну', 'первого'], 1],
     [['полтора', 'полторы'], 1.5],
-    [['два', 'две', 'пару'], 2],
-    [['три', 'несколько'], 3],
-    [['четыре'], 4],
-    [['пять'], 5],
-    [['шесть'], 6],
-    [['семь'], 7],
-    [['восемь'], 8],
-    [['девять'], 9],
-    [['десять'], 10],
-    [['одиннадцать'], 11],
-    [['двенадцать'], 12],
-    [['тринадцать'], 13],
-    [['четырнадцать'], 14],
-    [['пятнадцать'], 15],
-    [['шестнадцать'], 16],
-    [['семнадцать'], 17],
-    [['восемнадцать'], 18],
-    [['девятнадцать'], 19],
-    [['двадцать'], 20],
-    [['тридцать'], 30],
-    [['сорок'], 40],
-    [['пятьдесят'], 50],
-    [['шестьдесят'], 60],
-    [['семьдесят'], 70],
-    [['восемьдесят'], 80],
-    [['девяносто'], 90],
+    [['два', 'две', 'пару', 'второго'], 2],
+    [['три', 'несколько', 'третьего'], 3],
+    [['четыре', 'четвертого'], 4],
+    [['пять', 'пятого'], 5],
+    [['шесть', 'шестого'], 6],
+    [['семь', 'седьмого'], 7],
+    [['восемь', 'восьмого'], 8],
+    [['девять', 'девятого'], 9],
+    [['десять', 'десятого'], 10],
+    [['одиннадцать', 'одиннадцатого'], 11],
+    [['двенадцать', 'двенадцатого'], 12],
+    [['тринадцать', 'тринадцатого'], 13],
+    [['четырнадцать', 'четырнадцатого'], 14],
+    [['пятнадцать', 'пятнадцатого'], 15],
+    [['шестнадцать', 'шестнадцатого'], 16],
+    [['семнадцать', 'семнадцатого'], 17],
+    [['восемнадцать', 'восемнадцатого'], 18],
+    [['девятнадцать', 'девятнадцатого'], 19],
+    [['двадцать', 'двадцатого'], 20],
+    [['тридцать', 'тридцатого'], 30],
+    [['сорок', 'сорокового'], 40],
+    [['пятьдесят', 'пятьдесятого'], 50],
+    [['шестьдесят', 'шестьдесятого'], 60],
+    [['семьдесят', 'семидесятого'], 70],
+    [['восемьдесят', 'восьмидесятого'], 80],
+    [['девяносто', 'девяностого'], 90],
     [['сто', 'сотни', 'сотню', 'сотен'], 100],
-    [['двести', 'двести'], 200],
-    [['триста'], 300],
-    [['четыреста'], 400],
-    [['пятьсот'], 500],
-    [['шестьсот'], 600],
-    [['семьсот'], 700],
-    [['восемьсот'], 800],
-    [['девятьсот'], 900],
-    [['тысяч', 'тысяча', 'тысячи', 'тысячу'], 1000],
+    [['двести', 'двести', 'двухсотого'], 200],
+    [['триста', 'трехсотого', 'трёхсотого'], 300],
+    [['четыреста', 'четырехсотого', 'четырёхсотого'], 400],
+    [['пятьсот', 'пятисотого'], 500],
+    [['шестьсот', 'шестисотого'], 600],
+    [['семьсот', 'семисотого'], 700],
+    [['восемьсот', 'восьмисотого'], 800],
+    [['девятьсот', 'девятисотого'], 900],
+    [['тысяч', 'тысяча', 'тысячи', 'тысячу', 'тысячного'], 1000],
 ];
 
 /** @type {[string[], (date: Date) => any][]} */
@@ -79,45 +79,111 @@ class RussianDateMatcher {
     match(input) {
         input = input.toLowerCase();
 
-        let amount;
-        let date = new Date();
-        date.setSeconds(0);
+        const date = new Date();
         date.getMilliseconds(0);
 
         if (input.startsWith('через ')) {
-            amount = input.slice('через '.length);
-        } else {
-            amount = input;
-        }
+            input = input.slice('через '.length);
 
-        if (!amount) {
-            return null;
-        }
-
-        let value, unit;
-        if (amount.includes(' ')) {
-            const index = amount.lastIndexOf(' ');
-            value = this.parseValue(amount.slice(0, index));
-            unit = this.parseUnit(amount.slice(index + 1));
-        } else {
-            value = 1;
-            unit = this.parseUnit(amount);
-        }
-        
-        if (value && unit) {
-            return this.getRelativeDate(value, unit, date);
-        }
-
-        const values = amount.split(' ');
-
-        for (const value of values) {
-            date = this.parseSpecial(value, date);
-            if (date === null) {
-                return null;
+            let value, unit;
+            if (input.includes(' ')) {
+                const index = input.lastIndexOf(' ');
+                value = this.parseNumber(input.slice(0, index));
+                unit = this.parseUnit(input.slice(index + 1));
+            } else {
+                value = 1;
+                unit = this.parseUnit(input);
+            }
+            
+            if (value && unit) {
+                const result = this.getRelativeDate(value, unit, date);
+                if (result) {
+                    return result;
+                }
             }
         }
 
-        return date;
+        if (input.startsWith('в ')) {
+            input = input.slice('в '.length);
+
+            const result = this.parseAbsoluteDate(input, date);
+            if (result) {
+                return result;
+            }
+        }
+
+        const parts = input.split(' ');
+        let specialDate = new Date(date);
+
+        for (const value of parts) {
+            specialDate = this.parseSpecial(value, specialDate);
+        }
+
+        if (specialDate) {
+            return specialDate;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param {string} value
+     * @param {Date} date
+     */
+    parseAbsoluteDate(value, date) {
+        const dateCopy = new Date(date);
+        const parts = value.split(' ');
+
+        for (const part of parts) {
+            const number = this.parseNumber(part);
+
+            if (number && this.isValidHours(number)) {
+                dateCopy.setUTCHours(number);
+                continue;
+            } 
+
+            if (part.includes(':')) {
+                const [rawHours, rawMinutes] = part.split(':');
+                const hours = Number(rawHours);
+                const minutes = Number(rawMinutes);
+
+                if (
+                    !Number.isNaN(hours) &&
+                    !Number.isNaN(minutes) &&
+                    this.isValidHours(hours) && 
+                    this.isValidMinutes(minutes)
+                ) {
+                    dateCopy.setUTCHours(Number(hours));
+                    dateCopy.setUTCMinutes(Number(minutes));
+                    continue;
+                }
+            }
+
+            if (part === 'вечера' && dateCopy.getUTCHours() <= 12) {
+                dateCopy.setUTCHours(dateCopy.getUTCHours() + 12);
+                continue;
+            }
+
+            if (['утра', 'дня', 'ночи'].includes(part)) {
+                continue;
+            }
+
+            return null;
+        }
+
+        if (dateCopy <= date) {
+            dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+        }
+
+        return dateCopy;
+    }
+
+    isValidHours(hours) {
+        return hours >= 0 && hours <= 24;
+    }
+
+    isValidMinutes(minutes) {
+        return minutes >= 0 && minutes < 60;
     }
 
     /**
@@ -137,8 +203,8 @@ class RussianDateMatcher {
         const dateCopy = new Date(date);
         match[1](dateCopy);
 
-        if (dateCopy < date) {
-            dateCopy.setDate(dateCopy.getDate() + 1);
+        if (dateCopy <= date) {
+            dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
         }
 
         return dateCopy;
@@ -219,7 +285,7 @@ class RussianDateMatcher {
         return match[1];
     }
 
-    parseValue(value) {
+    parseNumber(value) {
         if (typeof value !== 'string' || value.length === 0) {
             return null;
         }

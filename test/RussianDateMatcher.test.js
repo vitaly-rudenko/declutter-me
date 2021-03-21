@@ -76,12 +76,51 @@ describe('DateMatcher', () => {
                 expect(russianDateMatcher.match(input), input).to.deep.eq(output);
             }
         });
+
+        it('should match absolute times', () => {
+            for (const [input, output] of [
+                ['в 9', utcDate('2020-05-06 9:00')],
+                ['в 10', utcDate('2020-05-06 10:00')],
+                ['в 11', utcDate('2020-05-05 11:00')],
+                ['в 21', utcDate('2020-05-05 21:00')],
+                ['в 9:45', utcDate('2020-05-06 9:45')],
+                ['в 10:15', utcDate('2020-05-05 10:15')],
+                ['в 11:30', utcDate('2020-05-05 11:30')],
+                ['в 21:12', utcDate('2020-05-05 21:12')],
+                ['в 9 вечера', utcDate('2020-05-05 21:00')],
+                ['в 8 утра', utcDate('2020-05-06 08:00')],
+                ['в 2 ночи', utcDate('2020-05-06 02:00')],
+            ]) {
+                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+            }
+        });
+
+        it('should return null for invalid dates', () => {
+            for (const input of [
+                'через NaN недель',
+                'вчера',
+                'через много недель',
+                'в 21:60',
+                'в 25:60',
+                'через много лет',
+                'через 0 минут',
+                'через 0 лет',
+                'послепослезавтра',
+                'в -9 вечера',
+                '9 вечера',
+                '18:00',
+                'в городе',
+                'через дорогу'
+            ]) {
+                expect(russianDateMatcher.match(input), input).to.be.null;
+            }
+        });
     });
 
-    describe('parseValue()', () => {
+    describe('parseNumber()', () => {
         it('should parse regular numbers', () => {
             for (const value of ['1', '123', '1000', '156000']) {
-                expect(russianDateMatcher.parseValue(value), value).to.eq(Number(value));
+                expect(russianDateMatcher.parseNumber(value), value).to.eq(Number(value));
             }
         });
 
@@ -100,9 +139,14 @@ describe('DateMatcher', () => {
                 ['двести двадцать семь', 227],
                 ['тысяча семь', 1007],
                 ['двенадцать', 12],
-                ['сто семьдесят', 170]
+                ['сто семьдесят', 170],
+                ['семь тысяч двадцатого', 7020],
+                ['восьмидесятого', 80],
+                ['тринадцатого', 13],
+                ['шестого', 6],
+                ['первого', 1],
             ]) {
-                expect(russianDateMatcher.parseValue(value), value).to.eq(result);
+                expect(russianDateMatcher.parseNumber(value), value).to.eq(result);
             }
         });
 
@@ -119,7 +163,7 @@ describe('DateMatcher', () => {
                 true,
                 { hello: 'world' }
             ]) {
-                expect(russianDateMatcher.parseValue(value), value).to.be.null;
+                expect(russianDateMatcher.parseNumber(value), value).to.be.null;
             }
         });
     });
