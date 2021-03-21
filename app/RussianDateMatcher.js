@@ -1,18 +1,21 @@
 const Unit = {
+    SECOND: 'second',
     MINUTE: 'minute',
+    HALF_HOUR: 'halfHour',
     HOUR: 'hour',
     DAY: 'day',
     WEEK: 'week',
     MONTH: 'month',
     YEAR: 'year',
-    HALF_YEAR: 'half-year',
+    HALF_YEAR: 'halfYear',
 };
 
 const UNIT_MATCHERS = [
     [['минута', 'минуту', 'минут', 'минуты'], Unit.MINUTE],
+    [['полчаса'], Unit.HALF_HOUR],
     [['час', 'часов', 'часа'], Unit.HOUR],
     [['день', 'дня', 'дней'], Unit.DAY],
-    [['неделя', 'неделю', 'недели'], Unit.WEEK],
+    [['неделя', 'неделю', 'недели', 'недель'], Unit.WEEK],
     [['месяц', 'месяца', 'месяцев'], Unit.MONTH],
     [['лет', 'год', 'года'], Unit.YEAR],
     [['полгода'], Unit.HALF_YEAR],
@@ -20,6 +23,7 @@ const UNIT_MATCHERS = [
 
 const NUMBER_MATCHERS = [
     [['один', 'одну'], 1],
+    [['полтора', 'полторы'], 1.5],
     [['два', 'две', 'пару'], 2],
     [['три', 'несколько'], 3],
     [['четыре'], 4],
@@ -58,14 +62,32 @@ const NUMBER_MATCHERS = [
     [['тысяч', 'тысяча', 'тысячи', 'тысячу'], 1000],
 ];
 
+/** @type {[string[], (date: Date) => any][]} */
+const SPECIAL_MATCHERS = [
+    [['завтра'], date => date.setUTCDate(date.getUTCDate() + 1)],
+    [['послезавтра'], date => date.setUTCDate(date.getUTCDate() + 2)],
+    [['утром'], date => date.setUTCHours(8, 0, 0, 0)],
+    [['днем', 'днём'], date => date.setUTCHours(12, 0, 0, 0)],
+    [['вечером'], date => date.setUTCHours(18, 0, 0, 0)],
+    [['ночью'], date => {
+        date.setUTCDate(date.getUTCDate() + 1);
+        date.setUTCHours(0, 0, 0, 0);
+    }],
+];
+
 class RussianDateMatcher {
     match(input) {
         input = input.toLowerCase();
 
         let amount;
+        let date = new Date();
+        date.setSeconds(0);
+        date.getMilliseconds(0);
 
         if (input.startsWith('через ')) {
             amount = input.slice('через '.length);
+        } else {
+            amount = input;
         }
 
         if (!amount) {
@@ -82,38 +104,103 @@ class RussianDateMatcher {
             unit = this.parseUnit(amount);
         }
         
-        if (!value || !unit) {
+        if (value && unit) {
+            return this.getRelativeDate(value, unit, date);
+        }
+
+        const values = amount.split(' ');
+
+        for (const value of values) {
+            date = this.parseSpecial(value, date);
+            if (date === null) {
+                return null;
+            }
+        }
+
+        return date;
+    }
+
+    /**
+     * @param {string} value
+     * @param {Date} date
+     */
+    parseSpecial(value, date) {
+        if (typeof value !== 'string' || value.length === 0) {
             return null;
         }
 
-        return this.getRelativeDate(value, unit);
+        const match = SPECIAL_MATCHERS.find(([values]) => values.includes(value));
+        if (!match) {
+            return null;
+        }
+
+        const dateCopy = new Date(date);
+        match[1](dateCopy);
+
+        if (dateCopy < date) {
+            dateCopy.setDate(dateCopy.getDate() + 1);
+        }
+
+        return dateCopy;
     }
 
-    getRelativeDate(value, unit) {
-        const date = new Date();
+    /**
+     * @param {number} value
+     * @param {string} unit
+     * @param {Date} date
+     */
+    getRelativeDate(value, unit, date) {
+        const hasExtraHalf = Math.trunc(value) !== value;
+        value = Math.trunc(value);
 
         switch (unit) {
             case Unit.MINUTE:
-                date.setMinutes(date.getMinutes() + value);
+                date.setUTCMinutes(date.getUTCMinutes() + value);
+                break;
+            case Unit.HALF_HOUR:
+                date.setUTCMinutes(date.getUTCMinutes() + 30);
                 break;
             case Unit.HOUR:
-                date.setHours(date.getHours() + value);
+                date.setUTCHours(date.getUTCHours() + value);
                 break;
             case Unit.DAY:
-                date.setDate(date.getDate() + value);
+                date.setUTCDate(date.getUTCDate() + value);
                 break;
             case Unit.WEEK:
-                date.setDate(date.getDate() + value * 7);
+                date.setUTCDate(date.getUTCDate() + value * 7);
                 break;
             case Unit.MONTH:
-                date.setMonth(date.getMonth() + value);
-                break;
-            case Unit.YEAR:
-                date.setFullYear(date.getFullYear() + value);
+                date.setUTCMonth(date.getUTCMonth() + value);
                 break;
             case Unit.HALF_YEAR:
-                date.setMonth(date.getMonth() + 6);
+                date.setUTCMonth(date.getUTCMonth() + 6);
                 break;
+            case Unit.YEAR:
+                date.setUTCFullYear(date.getUTCFullYear() + value);
+                break;
+        }
+
+        if (hasExtraHalf) {
+            switch (unit) {
+                case Unit.MINUTE:
+                    date.setUTCSeconds(date.getUTCSeconds() + 30);
+                    break;
+                case Unit.HOUR:
+                    date.setUTCMinutes(date.getUTCMinutes() + 30);
+                    break;
+                case Unit.DAY:
+                    date.setUTCHours(date.getUTCHours() + 12);
+                    break;
+                case Unit.WEEK:
+                    date.setUTCDate(date.getUTCDate() + 3);
+                    break;
+                case Unit.MONTH:
+                    date.setUTCDate(date.getUTCDate() + 15);
+                    break;
+                case Unit.YEAR:
+                    date.setUTCMonth(date.getUTCMonth() + 6);
+                    break;
+            }
         }
 
         return date;
