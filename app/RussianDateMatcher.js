@@ -75,6 +75,25 @@ const SPECIAL_MATCHERS = [
     }],
 ];
 
+const MONTH_MATCHERS = [
+    ['январь', 'января', 'январе'],
+    ['февраль', 'февраля', 'феврале'],
+    ['март', 'марта', 'марте'],
+    ['апрель', 'апреля', 'апреле'],
+    ['май', 'мая', 'мае'],
+    ['июнь', 'июня', 'июне'],
+    ['июль', 'июля', 'июле'],
+    ['август', 'августа', 'августе'],
+    ['сентябрь', 'сентября', 'сентябре'],
+    ['октябрь', 'октября', 'октябре'],
+    ['ноябрь', 'ноября', 'ноябре'],
+    ['декабрь', 'декабря', 'декабре'],
+];
+
+function endsWith(array, item) {
+    return array[array.length - 1] === item;
+}
+
 class RussianDateMatcher {
     match(input) {
         input = input.toLowerCase();
@@ -83,16 +102,16 @@ class RussianDateMatcher {
         date.getMilliseconds(0);
 
         if (input.startsWith('через ')) {
-            input = input.slice('через '.length);
+            const updatedInput = input.slice('через '.length);
 
             let value, unit;
-            if (input.includes(' ')) {
-                const index = input.lastIndexOf(' ');
-                value = this.parseNumber(input.slice(0, index));
-                unit = this.parseUnit(input.slice(index + 1));
+            if (updatedInput.includes(' ')) {
+                const index = updatedInput.lastIndexOf(' ');
+                value = this.parseNumber(updatedInput.slice(0, index));
+                unit = this.parseUnit(updatedInput.slice(index + 1));
             } else {
                 value = 1;
-                unit = this.parseUnit(input);
+                unit = this.parseUnit(updatedInput);
             }
             
             if (value && unit) {
@@ -104,9 +123,9 @@ class RussianDateMatcher {
         }
 
         if (input.startsWith('в ')) {
-            input = input.slice('в '.length);
+            const updatedInput = input.slice('в '.length);
 
-            const result = this.parseAbsoluteDate(input, date);
+            const result = this.parseAbsoluteTime(updatedInput, date);
             if (result) {
                 return result;
             }
@@ -117,22 +136,108 @@ class RussianDateMatcher {
 
         for (const value of parts) {
             specialDate = this.parseSpecial(value, specialDate);
+            if (!specialDate) break;
         }
 
         if (specialDate) {
             return specialDate;
         }
 
-        return null;
+        return this.parseAbsoluteDate(input, date);
     }
 
     /**
-     * @param {string} value
+     * @param {string} input
      * @param {Date} date
      */
-    parseAbsoluteDate(value, date) {
+    parseAbsoluteDate(input, date) {
+        const inputParts = input.split(' ');
+
+        let specialPart = null;
+        if (this.parseSpecial(inputParts[0], date)) {
+            specialPart = inputParts.shift();
+        }
+
+        let yearNumber = date.getUTCFullYear();
+        let dateNumber = null;
+        let monthIndex = -1;
+        if (inputParts[0] === 'в') {
+            inputParts.shift();
+            
+            dateNumber = date.getUTCDate();
+
+            const monthPart = inputParts.shift();
+            monthIndex = MONTH_MATCHERS.findIndex(matchers => matchers.includes(monthPart));
+        } else {
+            let datePart = inputParts.shift();
+
+            while(inputParts.length > 0) {
+                const part = inputParts[0];
+                dateNumber = this.parseNumber(datePart + ' ' + part);
+                if (dateNumber === null) break;
+
+                datePart = datePart + ' ' + inputParts.shift();
+            }
+
+            const monthPart = inputParts.shift();
+
+            dateNumber = this.parseNumber(datePart);
+            if (dateNumber === null) return null;
+
+            if (monthPart === 'числа') {
+                monthIndex = date.getUTCMonth();
+                if (dateNumber <= date.getUTCDate()) {
+                    monthIndex++;
+                }
+            } else {
+                monthIndex = MONTH_MATCHERS.findIndex(matchers => matchers.includes(monthPart));
+            }
+        }
+
+        if (inputParts.length > 0) {
+            if (endsWith(inputParts, 'года')) {
+                inputParts.pop();
+            }
+
+            yearNumber = this.parseNumber(inputParts.join(' '));
+            if (yearNumber === null) {
+                return null;
+            }
+        }
+
+        if (monthIndex === -1) return null;
+
+        if (yearNumber < 100) {
+            yearNumber += Math.floor(date.getUTCFullYear() / 1000) * 1000;
+        }
+
         const dateCopy = new Date(date);
-        const parts = value.split(' ');
+        dateCopy.setUTCDate(dateNumber);
+        dateCopy.setUTCMonth(monthIndex);
+        dateCopy.setUTCFullYear(yearNumber);
+
+        if (dateCopy.getUTCDate() !== dateNumber || dateCopy.getUTCMonth() !== monthIndex) {
+            return null;
+        }
+        
+        if (dateCopy <= date) {
+            dateCopy.setUTCFullYear(dateCopy.getUTCFullYear() + 1);
+        }
+        
+        if (specialPart !== null) {
+            return this.parseSpecial(specialPart, dateCopy, false);
+        }
+
+        return dateCopy;
+    }
+
+    /**
+     * @param {string} input
+     * @param {Date} date
+     */
+    parseAbsoluteTime(input, date) {
+        const dateCopy = new Date(date);
+        const parts = input.split(' ');
 
         for (const part of parts) {
             const number = this.parseNumber(part);
@@ -153,8 +258,8 @@ class RussianDateMatcher {
                     this.isValidHours(hours) && 
                     this.isValidMinutes(minutes)
                 ) {
-                    dateCopy.setUTCHours(Number(hours));
-                    dateCopy.setUTCMinutes(Number(minutes));
+                    dateCopy.setUTCHours(hours);
+                    dateCopy.setUTCMinutes(minutes);
                     continue;
                 }
             }
@@ -189,8 +294,9 @@ class RussianDateMatcher {
     /**
      * @param {string} value
      * @param {Date} date
+     * @param {boolean} skipDateIfNecessary
      */
-    parseSpecial(value, date) {
+    parseSpecial(value, date, skipDateIfNecessary = true) {
         if (typeof value !== 'string' || value.length === 0) {
             return null;
         }
@@ -203,7 +309,7 @@ class RussianDateMatcher {
         const dateCopy = new Date(date);
         match[1](dateCopy);
 
-        if (dateCopy <= date) {
+        if (skipDateIfNecessary && dateCopy <= date) {
             dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
         }
 

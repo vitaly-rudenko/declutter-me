@@ -3,7 +3,7 @@ const sinon = require('sinon');
 
 const RussianDateMatcher = require('../app/RussianDateMatcher');
 
-describe('DateMatcher', () => {
+describe('RussianDateMatcher', () => {
     /** @type {RussianDateMatcher} */
     let russianDateMatcher;
     let clock;
@@ -95,6 +95,88 @@ describe('DateMatcher', () => {
             }
         });
 
+        it('should match absolute dates (exact date and month)', () => {
+            for (const [input, output] of [
+                ['9 декабря', utcDate('2020-12-09 10:00')],
+                ['3 июля', utcDate('2020-07-03 10:00')],
+                ['25 марта', utcDate('2021-03-25 10:00')],
+                ['тридцатого ноября', utcDate('2020-11-30 10:00')],
+                ['двадцать третьего января', utcDate('2021-01-23 10:00')],
+            ]) {
+                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+            }
+        });
+
+        it('should match absolute dates (exact date, month and year)', () => {
+            for (const [input, output] of [
+                ['9 декабря 2027', utcDate('2027-12-09 10:00')],
+                ['3 июля 2025 года', utcDate('2025-07-03 10:00')],
+                ['25 марта сорок четвертого года', utcDate('2044-03-25 10:00')],
+                ['тридцатого ноября 2022 года', utcDate('2022-11-30 10:00')],
+                ['двадцать третьего января 2046', utcDate('2046-01-23 10:00')],
+            ]) {
+                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+            }
+        });
+
+        it('should match absolute dates (exact date of this month)', () => {
+            for (const [input, output] of [
+                ['первого числа', utcDate('2020-06-01 10:00')],
+                ['четвертого числа', utcDate('2020-06-04 10:00')],
+                ['пятого числа', utcDate('2020-06-05 10:00')],
+                ['девятого числа', utcDate('2020-05-09 10:00')],
+                ['тридцатого числа', utcDate('2020-05-30 10:00')],
+            ]) {
+                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+            }
+        });
+
+        it('should match absolute dates (exact date and year, this month)', () => {
+            for (const [input, output] of [
+                ['пятого числа 2025 года', utcDate('2025-06-05 10:00')],
+                ['девятого числа 2046', utcDate('2046-05-09 10:00')],
+                ['тридцатого числа 2022', utcDate('2022-05-30 10:00')],
+                ['первого числа 21 года', utcDate('2021-06-01 10:00')],
+                ['четвертого числа тридцатого года', utcDate('2030-06-04 10:00')],
+            ]) {
+                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+            }
+        });
+
+        it('should match absolute dates (exact month)', () => {
+            for (const [input, output] of [
+                ['в январе', utcDate('2021-01-05 10:00')],
+                ['в мае', utcDate('2021-05-05 10:00')],
+                ['в июле', utcDate('2020-07-05 10:00')],
+                ['в декабре', utcDate('2020-12-05 10:00')],
+            ]) {
+                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+            }
+        });
+
+        it('should match absolute dates (exact month with year)', () => {
+            for (const [input, output] of [
+                ['в январе 2022', utcDate('2022-01-05 10:00')],
+                ['в мае 2025 года', utcDate('2025-05-05 10:00')],
+                ['в июле две тысячи двадцать третьего года', utcDate('2023-07-05 10:00')],
+                ['в декабре двадцать второго года', utcDate('2022-12-05 10:00')],
+            ]) {
+                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+            }
+        });
+
+        it('should match absolute dates (with special)', () => {
+            for (const [input, output] of [
+                ['утром 25 декабря', utcDate('2020-12-25 08:00')],
+                ['вечером 3 марта', utcDate('2021-03-03 18:00')],
+                ['ночью пятого марта двадцать третьего года', utcDate('2023-03-06 00:00')],
+                ['днём одиннадцатого июля 2025 года', utcDate('2025-07-11 12:00')],
+                ['ночью двадцать третьего января', utcDate('2021-01-24 00:00')],
+            ]) {
+                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+            }
+        });
+
         it('should return null for invalid dates', () => {
             for (const input of [
                 'через NaN недель',
@@ -110,7 +192,8 @@ describe('DateMatcher', () => {
                 '9 вечера',
                 '18:00',
                 'в городе',
-                'через дорогу'
+                'через дорогу',
+                '31 февраля'
             ]) {
                 expect(russianDateMatcher.match(input), input).to.be.null;
             }
