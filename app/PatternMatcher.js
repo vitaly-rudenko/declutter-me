@@ -2,6 +2,10 @@ class PatternMatcher {
     match(input, pattern, matchers) {
         const combinations = this.getPatternCombinations(pattern);
 
+        if (!matchers.priorities) {
+            matchers.priorities = Object.keys(matchers);
+        }
+
         for (const combination of combinations) {
             let remainingInput = input;
 
