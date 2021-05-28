@@ -8,14 +8,14 @@ describe('ReminderMatchers', () => {
     let patternMatcher;
     /** @type {RussianDateMatcher} */
     let russianDateMatcher;
-    /** @type {reminderMatcher} */
+    /** @type {ReminderMatcher} */
     let reminderMatchers;
 
     beforeEach(() => {
         patternMatcher = new PatternMatcher();
         russianDateMatcher = new RussianDateMatcher();
         reminderMatchers = new ReminderMatchers({
-            russianDateMatcher
+            dateMatcher: russianDateMatcher
         });
     });
 
@@ -127,7 +127,7 @@ describe('ReminderMatchers', () => {
             });
     });
 
-    it.skip('should match dates properly from the start (space separator)', () => {
+    it('should match dates properly from the start (space separator)', () => {
         // {reminder} {date}
         const pattern = [
             { type: 'variable', value: 'reminder' },
