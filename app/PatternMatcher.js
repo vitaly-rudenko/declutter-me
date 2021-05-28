@@ -16,19 +16,12 @@ class PatternMatcher {
                 let value = token.value;
 
                 if (token.type === 'variable') {
-                    let matcherInput = remainingInput;
-
-                    const nextToken = combination[i + 1];
-                    if (nextToken && nextToken.type === 'text') {
-                        matcherInput = matcherInput.slice(0, matcherInput.lastIndexOf(nextToken.value));
-                    }
-
                     const matcher = matchers[token.value];
                     if (!matcher) {
                         throw new Error(`Unsupported matcher: ${token.value}`);
                     }
 
-                    value = matcher(matcherInput);
+                    value = matcher(remainingInput, { nextTokens: combination.slice(i + 1) });
                     variables[token.value] = value;
                 }
 
