@@ -98,9 +98,84 @@ describe('NoteMatchers', () => {
                 }
             });
     });
+
+    it('should allow matching multiple tags (from the start)', () => {
+        // [#{tag} ][#{tag} ][#{tag} ]{note}
+        const pattern = [
+            { type: 'optional', value: [
+                { type: 'text', value: '#' },
+                { type: 'variable', value: 'tag' },
+                { type: 'text', value: ' ' },
+            ] },
+            { type: 'optional', value: [
+                { type: 'text', value: '#' },
+                { type: 'variable', value: 'tag' },
+                { type: 'text', value: ' ' },
+            ] },
+            { type: 'optional', value: [
+                { type: 'text', value: '#' },
+                { type: 'variable', value: 'tag' },
+                { type: 'text', value: ' ' },
+            ] },
+            { type: 'variable', value: 'note' },
+        ];
+
+        expect(patternMatcher.match('my note', pattern, noteMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    note: 'my note'
+                }
+            });
+
+        expect(patternMatcher.match('#my-tag-1 my note', pattern, noteMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    note: 'my note',
+                    tag: 'my-tag-1'
+                }
+            });
+
+        expect(patternMatcher.match('#my-tag-1 #my-tag-2 my note', pattern, noteMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    note: 'my note',
+                    tag: ['my-tag-1', 'my-tag-2']
+                }
+            });
+        
+        expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 my note', pattern, noteMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    note: 'my note',
+                    tag: ['my-tag-1', 'my-tag-2', 'my-tag-3']
+                }
+            });
+        
+        expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 my note', pattern, noteMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    note: '#my-tag-4 my note',
+                    tag: ['my-tag-1', 'my-tag-2', 'my-tag-3']
+                }
+            });
+
+        expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 #my-tag-5 my note', pattern, noteMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    note: '#my-tag-4 #my-tag-5 my note',
+                    tag: ['my-tag-1', 'my-tag-2', 'my-tag-3']
+                }
+            });
+    });
     
-    it('should allow matching multiple tags', () => {
-        // save {note}[ #{tag}][ #{tag}][ #{tag}][ #{tag}]
+    it('should allow matching multiple tags (from the end)', () => {
+        // save {note}[ #{tag}][ #{tag}][ #{tag}]
         const pattern = [
             { type: 'text', value: 'save ' },
             { type: 'variable', value: 'note' },
