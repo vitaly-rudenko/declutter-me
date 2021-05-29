@@ -1,21 +1,21 @@
 const { expect } = require('chai');
 const PatternMatcher = require('../app/PatternMatcher');
-const RussianDateMatcher = require('../app/RussianDateMatcher');
+const RussianDateParser = require('../app/RussianDateParser');
 const ReminderMatchers = require('../app/ReminderMatchers');
 
 describe('ReminderMatchers', () => {
     /** @type {PatternMatcher} */
     let patternMatcher;
-    /** @type {RussianDateMatcher} */
-    let russianDateMatcher;
+    /** @type {RussianDateParser} */
+    let russianDateParser;
     /** @type {ReminderMatcher} */
     let reminderMatchers;
 
     beforeEach(() => {
         patternMatcher = new PatternMatcher();
-        russianDateMatcher = new RussianDateMatcher();
+        russianDateParser = new RussianDateParser();
         reminderMatchers = new ReminderMatchers({
-            dateMatcher: russianDateMatcher
+            dateParser: russianDateParser
         });
     });
 

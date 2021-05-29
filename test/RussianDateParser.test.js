@@ -1,17 +1,17 @@
 const { expect } = require('chai');
 const sinon = require('sinon');
 
-const RussianDateMatcher = require('../app/RussianDateMatcher');
+const RussianDateParser = require('../app/RussianDateParser');
 
-describe('RussianDateMatcher', () => {
-    /** @type {RussianDateMatcher} */
-    let russianDateMatcher;
+describe('RussianDateParser', () => {
+    /** @type {RussianDateParser} */
+    let russianDateParser;
     let clock;
 
     beforeEach(() => {
         clock = sinon.useFakeTimers(utcDate('2020-05-05 10:00').getTime());
 
-        russianDateMatcher = new RussianDateMatcher();
+        russianDateParser = new RussianDateParser();
     });
 
     afterEach(() => {
@@ -43,7 +43,7 @@ describe('RussianDateMatcher', () => {
                 ['через неделю', utcDate('2020-05-12 10:00')],
                 ['через год', utcDate('2021-05-05 10:00')],
             ]) {
-                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+                expect(russianDateParser.match(input), input).to.deep.eq(output);
             }
         });
 
@@ -58,7 +58,7 @@ describe('RussianDateMatcher', () => {
                 ['через полтора месяца', utcDate('2020-06-20 10:00')],
                 ['через полтора года', utcDate('2021-11-05 10:00')],
             ]) {
-                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+                expect(russianDateParser.match(input), input).to.deep.eq(output);
             }
         });
 
@@ -73,7 +73,7 @@ describe('RussianDateMatcher', () => {
                 ['завтра ночью', utcDate('2020-05-07 0:00')],
                 ['послезавтра днём', utcDate('2020-05-07 12:00')],
             ]) {
-                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+                expect(russianDateParser.match(input), input).to.deep.eq(output);
             }
         });
 
@@ -91,7 +91,7 @@ describe('RussianDateMatcher', () => {
                 ['в 8 утра', utcDate('2020-05-06 08:00')],
                 ['в 2 ночи', utcDate('2020-05-06 02:00')],
             ]) {
-                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+                expect(russianDateParser.match(input), input).to.deep.eq(output);
             }
         });
 
@@ -103,7 +103,7 @@ describe('RussianDateMatcher', () => {
                 ['тридцатого ноября', utcDate('2020-11-30 10:00')],
                 ['двадцать третьего января', utcDate('2021-01-23 10:00')],
             ]) {
-                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+                expect(russianDateParser.match(input), input).to.deep.eq(output);
             }
         });
 
@@ -115,7 +115,7 @@ describe('RussianDateMatcher', () => {
                 ['тридцатого ноября 2022 года', utcDate('2022-11-30 10:00')],
                 ['двадцать третьего января 2046', utcDate('2046-01-23 10:00')],
             ]) {
-                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+                expect(russianDateParser.match(input), input).to.deep.eq(output);
             }
         });
 
@@ -127,7 +127,7 @@ describe('RussianDateMatcher', () => {
                 ['девятого числа', utcDate('2020-05-09 10:00')],
                 ['тридцатого числа', utcDate('2020-05-30 10:00')],
             ]) {
-                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+                expect(russianDateParser.match(input), input).to.deep.eq(output);
             }
         });
 
@@ -139,7 +139,7 @@ describe('RussianDateMatcher', () => {
                 ['первого числа 21 года', utcDate('2021-06-01 10:00')],
                 ['четвертого числа тридцатого года', utcDate('2030-06-04 10:00')],
             ]) {
-                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+                expect(russianDateParser.match(input), input).to.deep.eq(output);
             }
         });
 
@@ -150,7 +150,7 @@ describe('RussianDateMatcher', () => {
                 ['в июле', utcDate('2020-07-05 10:00')],
                 ['в декабре', utcDate('2020-12-05 10:00')],
             ]) {
-                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+                expect(russianDateParser.match(input), input).to.deep.eq(output);
             }
         });
 
@@ -161,7 +161,7 @@ describe('RussianDateMatcher', () => {
                 ['в июле две тысячи двадцать третьего года', utcDate('2023-07-05 10:00')],
                 ['в декабре двадцать второго года', utcDate('2022-12-05 10:00')],
             ]) {
-                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+                expect(russianDateParser.match(input), input).to.deep.eq(output);
             }
         });
 
@@ -173,7 +173,7 @@ describe('RussianDateMatcher', () => {
                 ['днём одиннадцатого июля 2025 года', utcDate('2025-07-11 12:00')],
                 ['ночью двадцать третьего января', utcDate('2021-01-24 00:00')],
             ]) {
-                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+                expect(russianDateParser.match(input), input).to.deep.eq(output);
             }
         });
 
@@ -188,7 +188,7 @@ describe('RussianDateMatcher', () => {
                 ['послезавтра в 23:59', utcDate('2020-05-07 23:59')],
                 ['через несколько часов в 15:00', utcDate('2020-05-05 15:00')], // absolute time overrides relative one
             ]) {
-                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+                expect(russianDateParser.match(input), input).to.deep.eq(output);
             }
         });
 
@@ -202,7 +202,7 @@ describe('RussianDateMatcher', () => {
                 ['тридцать первого декабря вечером', utcDate('2020-12-31 18:00')],
                 ['тридцать первого декабря ночью', utcDate('2021-01-01 00:00')],
             ]) {
-                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+                expect(russianDateParser.match(input), input).to.deep.eq(output);
             }
         });
 
@@ -224,7 +224,7 @@ describe('RussianDateMatcher', () => {
                 'через дорогу',
                 '31 февраля'
             ]) {
-                expect(russianDateMatcher.match(input), input).to.be.null;
+                expect(russianDateParser.match(input), input).to.be.null;
             }
         });
     });
@@ -232,7 +232,7 @@ describe('RussianDateMatcher', () => {
     describe('parseNumber()', () => {
         it('should parse regular numbers', () => {
             for (const value of ['1', '123', '1000', '156000']) {
-                expect(russianDateMatcher.parseNumber(value), value).to.eq(Number(value));
+                expect(russianDateParser.parseNumber(value), value).to.eq(Number(value));
             }
         });
 
@@ -258,7 +258,7 @@ describe('RussianDateMatcher', () => {
                 ['шестого', 6],
                 ['первого', 1],
             ]) {
-                expect(russianDateMatcher.parseNumber(value), value).to.eq(result);
+                expect(russianDateParser.parseNumber(value), value).to.eq(result);
             }
         });
 
@@ -275,7 +275,7 @@ describe('RussianDateMatcher', () => {
                 true,
                 { hello: 'world' }
             ]) {
-                expect(russianDateMatcher.parseNumber(value), value).to.be.null;
+                expect(russianDateParser.parseNumber(value), value).to.be.null;
             }
         });
     });

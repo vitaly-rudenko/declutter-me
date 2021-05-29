@@ -1,6 +1,6 @@
 class ReminderMatchers {
-    constructor({ dateMatcher }) {
-        this._dateMatcher = dateMatcher;
+    constructor({ dateParser }) {
+        this._dateParser = dateParser;
 
         this.reminder = this.reminder.bind(this);
         this.date = this.date.bind(this);
@@ -19,7 +19,7 @@ class ReminderMatchers {
             if (startIndex === -1) startIndex = 0;
 
             const date = input.slice(startIndex + 1);
-            if (this._dateMatcher.match(date)) {
+            if (this._dateParser.match(date)) {
                 lastDate = date;
             }
         }
@@ -44,7 +44,7 @@ class ReminderMatchers {
             if (endIndex === -1) endIndex = input.length;
 
             const date = input.slice(0, endIndex);
-            if (this._dateMatcher.match(date)) {
+            if (this._dateParser.match(date)) {
                 lastDate = date;
             }
         }

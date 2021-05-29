@@ -94,7 +94,7 @@ function endsWith(array, item) {
     return array[array.length - 1] === item;
 }
 
-class RussianDateMatcher {
+class RussianDateParser {
     /**
      * @param {string} input
      * @param {Date} origin
@@ -496,4 +496,4 @@ class RussianDateMatcher {
     }
 }
 
-module.exports = RussianDateMatcher;
+module.exports = RussianDateParser;
