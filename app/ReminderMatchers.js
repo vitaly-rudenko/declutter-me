@@ -11,50 +11,45 @@ class ReminderMatchers {
             return input;
         }
 
-        const inputParts = input.split(' ');
-        const dateParts = [];
-        let wasDate = false;
+        let lastDate = null;
+        let startIndex = input.length;
 
-        while (inputParts.length > 0) {
-            dateParts.unshift(inputParts.pop());
+        while (startIndex > 0) {
+            startIndex = input.lastIndexOf(' ', startIndex - 1);
+            if (startIndex === -1) startIndex = 0;
 
-            if (this._dateMatcher.match(dateParts.join(' '))) {
-                wasDate = true;
-            } else if (wasDate) {
-                inputParts.push(dateParts.shift());
-                break;
+            const date = input.slice(startIndex + 1);
+            if (this._dateMatcher.match(date)) {
+                lastDate = date;
             }
         }
 
-        const result = inputParts.join(' ') + ' ';
+        if (lastDate) {
+            input = input.slice(0, input.length - lastDate.length);
 
-        if (nextToken.type === 'text') {
-            return result.slice(0, result.lastIndexOf(nextToken.value));
+            if (nextToken.type === 'text') {
+                input = input.slice(0, input.length - nextToken.value.length);
+            }
         }
 
-        return inputParts.join(' ');
+        return input;
     }
 
     date(input) {
-        const inputParts = input.split(' ');
-        const dateParts = [];
-        let wasDate = false;
+        let lastDate = null;
+        let endIndex = 0;
 
-        while (inputParts.length > 0) {
-            dateParts.push(inputParts.shift());
+        while (endIndex < input.length) {
+            endIndex = input.indexOf(' ', endIndex + 1);
+            if (endIndex === -1) endIndex = input.length;
 
-            if (this._dateMatcher.match(dateParts.join(' '))) {
-                wasDate = true;
-                if (inputParts.length === 0) {
-                    return dateParts.join(' ');
-                }
-            } else if (wasDate) {
-                dateParts.pop();
-                return dateParts.join(' ');
+            const date = input.slice(0, endIndex);
+            if (this._dateMatcher.match(date)) {
+                lastDate = date;
             }
         }
 
-        return null;
+        return lastDate;
     }
 }
 
