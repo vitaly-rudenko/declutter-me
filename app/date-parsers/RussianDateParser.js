@@ -99,7 +99,7 @@ class RussianDateParser {
      * @param {string} input
      * @param {Date} origin
      */
-    match(input, origin) {
+    parse(input, origin) {
         input = input.toLowerCase();
 
         if (!origin) {
@@ -127,7 +127,7 @@ class RussianDateParser {
 
         const [rawDate, rawTime] = [input.slice(0, indexOf), input.slice(indexOf + 1)];
 
-        const date = this.match(rawDate, origin);
+        const date = this.parse(rawDate, origin);
         if (!date) return null;
         date.setUTCHours(0);
         date.setUTCMinutes(0);
@@ -146,8 +146,8 @@ class RussianDateParser {
         if (!input.includes(' в ')) return null;
         const [rawDate, rawTime] = input.split(' в ');
 
-        const date = this.match(rawDate, origin);
-        const time = this.match('в ' + rawTime, origin);
+        const date = this.parse(rawDate, origin);
+        const time = this.parse('в ' + rawTime, origin);
 
         if (date && time) {
             return this.combineDateTime(date, time);

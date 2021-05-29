@@ -198,4 +198,49 @@ describe('ReminderMatchers', () => {
                 }
             });
     });
+
+    it('should match complex patterns', () => {
+        // [напомни ]({reminder} {date}|{date} {reminder})
+        const pattern = [
+            { type: 'optional', value: [{ type: 'text', value: 'напомни ' }] },
+            { type: 'variational', value: [
+                [
+                    { type: 'variable', value: 'reminder' },
+                    { type: 'text', value: ' ' },
+                    { type: 'variable', value: 'date' }
+                ], [
+                    { type: 'variable', value: 'date' },
+                    { type: 'text', value: ' ' },
+                    { type: 'variable', value: 'reminder' }
+                ],
+            ] },
+        ];
+
+        expect(patternMatcher.match('напомни съесть морковку через минуту', pattern, reminderMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    reminder: 'съесть морковку',
+                    date: 'через минуту',
+                }
+            });
+        
+        expect(patternMatcher.match('напомни через минуту съесть морковку', pattern, reminderMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    reminder: 'съесть морковку',
+                    date: 'через минуту',
+                }
+            });
+
+        expect(patternMatcher.match('завтра в 16:00 съесть морковку', pattern, reminderMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    reminder: 'съесть морковку',
+                    date: 'завтра в 16:00',
+                }
+            });
+    });
 });

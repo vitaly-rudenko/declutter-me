@@ -19,7 +19,7 @@ class ReminderMatchers {
             if (startIndex === -1) startIndex = -1;
 
             const date = input.slice(startIndex + 1);
-            if (this._dateParser.match(date)) {
+            if (this._dateParser.parse(date)) {
                 lastDate = date;
             }
         }
@@ -44,7 +44,7 @@ class ReminderMatchers {
             if (endIndex === -1) endIndex = input.length;
 
             const date = input.slice(0, endIndex);
-            if (this._dateParser.match(date)) {
+            if (this._dateParser.parse(date)) {
                 lastDate = date;
             }
         }
