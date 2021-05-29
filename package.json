@@ -4,8 +4,8 @@
   "description": "Smart & customizable organizer",
   "main": "app.js",
   "scripts": {
-    "test": "mocha",
-    "test:watch": "mocha --watch"
+    "test": "mocha --recursive",
+    "test:watch": "npm run test -- --watch"
   },
   "repository": {
     "type": "git",
