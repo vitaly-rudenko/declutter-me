@@ -1,10 +1,11 @@
-class ListMatchers {
+// TODO: add support for multiple tags
+class NoteMatchers {
     constructor() {
-        this.item = this.item.bind(this);
-        this.list = this.list.bind(this);
+        this.note = this.note.bind(this);
+        this.tag = this.tag.bind(this);
     }
 
-    item(input, { nextTokens: [nextToken] }) {
+    note(input, { nextTokens: [nextToken] }) {
         if (nextToken && nextToken.type === 'text') {
             return input.slice(0, input.toLowerCase().lastIndexOf(nextToken.value.toLowerCase()));
         }
@@ -12,9 +13,9 @@ class ListMatchers {
         return input;
     }
 
-    list(input) {
+    tag(input) {
         return input.split(' ')[0];
     }
 }
 
-module.exports = ListMatchers;
+module.exports = NoteMatchers;

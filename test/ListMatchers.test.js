@@ -50,7 +50,7 @@ describe('ListMatchers', () => {
     });
 
     it('should separate variables properly', () => {
-        // #{item} {list}
+        // {item} #{list}
         const pattern = [
             { type: 'variable', value: 'item' },
             { type: 'text', value: ' #' },
@@ -80,6 +80,7 @@ describe('ListMatchers', () => {
     });
 
     it('should separate variables properly in complete sentences', () => {
+        // add {item} to the {list} list
         const pattern = [
             { type: 'text', value: 'add ' },
             { type: 'variable', value: 'item' },
@@ -88,16 +89,11 @@ describe('ListMatchers', () => {
             { type: 'text', value: ' list' },
         ];
 
-        const matchers = {
-            list: input => input.split(' ')[0],
-            item: input => input,
-        };
-
-        expect(patternMatcher.match('Add sweet potatoes to the shopping list', pattern, listMatchers))
+        expect(patternMatcher.match('Add Sweet potatoes to the shopping list', pattern, listMatchers))
             .to.deep.eq({
                 match: true,
                 variables: {
-                    item: 'sweet potatoes',
+                    item: 'Sweet potatoes',
                     list: 'shopping',
                 }
             });
@@ -131,13 +127,13 @@ describe('ListMatchers', () => {
 
         for (const input of [
             'Add sweet potatoes to shopping',
-            'Add sweet potatoes to shopping list',
-            'Add sweet potatoes to the shopping',
+            'add sweet potatoes to shopping list',
+            'add sweet potatoes To The shopping',
             'Add sweet potatoes to the shopping list',
             'Put sweet potatoes to shopping',
             'Put sweet potatoes to shopping list',
-            'Put sweet potatoes to the shopping',
-            'Put sweet potatoes to the shopping list',
+            'put sweet potatoes to the shopping',
+            'Put sweet potatoes to the shopping List',
         ]) {
             expect(patternMatcher.match(input, pattern, listMatchers))
                 .to.deep.eq({
