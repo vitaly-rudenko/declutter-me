@@ -52,10 +52,33 @@ const patterns = [{
     type: 'note',
     pattern: new PatternBuilder().build('{note}[ #{tag}][ #{tag}][ #{tag}]'),
 }];
+const lists = [];
+
+function stringifyPattern(pattern) {
+    return pattern.map((token) => {
+        if (token.type === 'variable') {
+            if (token.bang) {
+                return `{${token.value}!}`;
+            } else {
+                return `{${token.value}}`;
+            }
+        }
+
+        if (token.type === 'optional') {
+            return `[${stringifyPattern(token.value)}]`;
+        }
+
+        if (token.type === 'variational') {
+            return `(${token.value.map(variation => stringifyPattern(variation)).join('|')})`;
+        }
+
+        return token.value;
+    }).join('');
+}
 
 const storage = {
     async createUser() {
-        const user = { id: 1 };
+        const user = { userId: 1 };
         users.push(user);
         return user;
     },
@@ -82,6 +105,17 @@ const storage = {
     async setRemindersDatabaseId(userId, databaseId) {
         const notionAccount = await this.findNotionAccount(userId);
         notionAccount.remindersDatabaseId = databaseId;
+    },
+    async createList(userId, databaseId, alias) {
+        const list = { userId, databaseId, alias };
+        lists.push(list);
+        return list;
+    },
+    async findLists(userId) {
+        return lists.filter(list => list.userId === userId);
+    },
+    async findList(userId, alias) {
+        return lists.find(list => list.userId === userId && list.alias === alias);
     },
     async findNotionAccount(userId) {
         return notionAccounts.find(account => account.userId === userId);
@@ -125,217 +159,362 @@ class Cache {
 
         return this._data.get(key)[1];
     }
+
+    delete(key) {
+        this._data.delete(key);
+    }
 }
 
 (async () => {
     const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
     const userPhases = new Cache(60 * 1000);
+    const userPhaseContext = new Cache(60 * 1000);
 
     bot.telegram.setMyCommands([
         { command: '/start', description: 'Start the bot' },
+        { command: '/info', description: 'Prints your information' },
         { command: '/notion', description: 'Configure Notion' },
-        { command: '/patterns', description: 'Patterns menu' },
+        { command: '/list', description: 'Add list' },
+        { command: '/pattern', description: 'Add pattern' },
     ]);
 
-    bot.use(async (context, next) => {
-        context.telegramAccount = await storage.findTelegramAccount(context.from.id);
-        return next();
-    });
+    const withTelegramAccount = () => {
+        return async (ctx, next) => {
+            ctx.state.telegramAccount = await storage.findTelegramAccount(ctx.from.id);
 
-    bot.action('/notion', async (context) => {
-        const { userId } = context.telegramAccount;
+            if (ctx.state.telegramAccount) {
+                ctx.state.userId = ctx.state.telegramAccount.userId;
+            }
 
-        userPhases.set(userId, )
-    });
+            return next();
+        };
+    };
 
-    bot.start(async (context) => {
-        const user = await storage.createUser();
-        await storage.createTelegramAccount(user.id, context.from.id);
+    const withUser = ({ required = true } = {}) => {
+        return async (ctx, next) => {
+            if (!ctx.state.userId) {
+                ctx.reply('Please use /start first 🙇');
+                return;
+            }
 
-        await context.reply('Hi\\! 👋\nSend me your Notion integration token:\n`/connect_notion <token>`', { parse_mode: 'MarkdownV2' });
-    });
+            ctx.state.user = await storage.findUser(ctx.state.userId);
+            if (!ctx.state.user && required) {
+                ctx.reply('Please use /start first 🙇');
+                return;
+            }
 
-    bot.command('/connect_notion', async (context) => {
-        const token = context.message.text.split(' ')[1];
+            return next();
+        };
+    };
 
-        const telegramAccount = context.telegramAccount;
-        await storage.createNotionAccount(telegramAccount.userId, token);
+    const withNotionAccount = ({ required = true } = {}) => {
+        return async (ctx, next) => {
+            ctx.state.notionAccount = await storage.findNotionAccount(ctx.state.userId);
 
-        await context.reply('Notion account has been connected ✅\n\\- `/add_list <alias> <URL>`\n\\- `/set_notes <URL>`\n\\- `/set_reminders <URL>`',
-            { parse_mode: 'MarkdownV2' });
-    });
+            if (!ctx.state.notionAccount && required) {
+                ctx.reply('Please use `/notion` first 🙇');
+                return;
+            }
 
-    bot.command('/set_notes_database', async (context) => {
-        const { userId } = context.telegramAccount;
+            return next();
+        };
+    };
 
-        const url = context.message.text.split(' ')[1];
-        const parsedUrl = new URL(url);
+    const withPhase = (phase, middleware) => {
+        return (ctx, next) => {
+            if ((userPhases.get(ctx.state.userId) || null) === phase) {
+                return middleware(ctx, next);
+            } else {
+                return next();
+            }
+        };
+    }
 
-        const databaseId = parsedUrl.pathname.slice(1);
-        await storage.setNotesDatabaseId(userId, databaseId);
+    bot.use(withTelegramAccount());
 
-        await context.reply('Database for notes has been set! 📔');
-    });
-
-    bot.command('/set_reminders_database', async (context) => {
-        const { userId } = context.telegramAccount;
-
-        const url = context.message.text.split(' ')[1];
-        const parsedUrl = new URL(url);
-
-        const databaseId = parsedUrl.pathname.slice(1);
-        await storage.setRemindersDatabaseId(userId, databaseId);
-
-        await context.reply('Database for reminders has been set! 📅');
-    });
-
-    bot.command('/add_note_pattern', async (context) => {
-        const { userId } = context.telegramAccount;
-
-        const messageParts = context.message.text.split(' ');
-        messageParts.shift();
-        const defaultVariables = JSON.parse(messageParts.shift());
-
-        const rawPattern = messageParts.join(' ');
-
-        const pattern = new PatternBuilder().build(rawPattern);
-
-        await storage.addPattern(userId, 'note', pattern, defaultVariables);
-
-        await context.reply('Pattern has been added\\! 🗒\n\n```\n' + JSON.stringify(pattern, null, 2) + '\n```', { parse_mode: 'MarkdownV2' });
-    });
-
-    bot.command('/add_reminder_pattern', async (context) => {
-        const { userId } = context.telegramAccount;
-
-        const messageParts = context.message.text.split(' ');
-        messageParts.shift();
-
-        const rawPattern = messageParts.join(' ');
-
-        const pattern = new PatternBuilder().build(rawPattern);
-
-        await storage.addPattern(userId, 'reminder', pattern);
-
-        await context.reply('Pattern has been added\\! 🗒\n\n```\n' + JSON.stringify(pattern, null, 2) + '\n```', { parse_mode: 'MarkdownV2' });
-    });
-
-    bot.command('/get_patterns', async (context) => {
-        const { userId } = context.telegramAccount;
-
-        const patterns = await storage.findPatterns(userId);
-
-        await context.reply('Your patterns:\n\n```\n' + JSON.stringify(patterns, null, 2) + '\n```', { parse_mode: 'MarkdownV2' });
-    });
-
-    bot.on('message', async (context) => {
-        const { userId } = context.telegramAccount;
-        const { timezoneOffsetMinutes } = await storage.findUser(userId);
-        const notionAccount = await storage.findNotionAccount(userId);
-
-        if (context.message.text.startsWith('/')) {
+    bot.start(async (ctx) => {
+        if (ctx.state.telegramAccount) {
+            await ctx.reply('You are ready to go!');
             return;
         }
 
-        const patterns = await storage.findPatterns(userId);
+        const user = await storage.createUser();
+        await storage.createTelegramAccount(user.userId, ctx.from.id);
 
-        const dateParser = new RussianDateParser();
-        const patternMatcher = new PatternMatcher();
-        const noteMatchers = new NoteMatchers();
-        const listMatchers = new ListMatchers();
-        const reminderMatchers = new ReminderMatchers({ dateParser });
+        await ctx.reply('Hi! Use /notion to setup Notion integration.');
+    });
 
-        for (const pattern of patterns) {
-            const matchers = pattern.type === 'note'
-                ? noteMatchers
-                : pattern.type === 'reminder'
-                    ? reminderMatchers
-                    : listMatchers;
+    bot.command('info',
+        withUser({ required: false }),
+        withNotionAccount({ required: false }),
+        async (ctx) => {
+            const lists = ctx.state.userId ? await storage.findLists(ctx.state.userId) : [];
+            const patterns = ctx.state.userId ? await storage.findPatterns(ctx.state.userId) : [];
 
-            const result = patternMatcher.match(context.message.text, pattern.pattern, matchers);
+            await ctx.reply(
+                `Hi, ${ctx.from.first_name}!\n` +
+                `Your info:\n` +
+                `  - Language: ${ctx.state.user?.language ?? '<not provided>'}\n` +
+                `  - Timezone offset: ${ctx.state.user?.timezoneOffsetMinutes ?? '<not provided>'}\n` +
+                `  - Notion token: ${ctx.state.notionAccount?.token ?? '<not provided>'}\n` +
+                `  - Notes: ${ctx.state.notionAccount?.notesDatabaseId ?? '<not provided>'}\n` +
+                `  - Reminders: ${ctx.state.notionAccount?.remindersDatabaseId ?? '<not provided>'}\n` +
+                `  - Lists:\n` +
+                (lists.map(list => `    - ${list.alias} (${list.databaseId})`).join('\n') || '    <none>') + '\n' +
+                `  - Patterns:\n` +
+                (patterns.map(pattern => `    - ${pattern.type}: ${stringifyPattern(pattern.pattern)}`).join('\n') || '    <none>') + '\n'
+            );
+        }
+    );
 
-            console.log(context.message.text, '+', pattern.pattern, '+', matchers);
+    bot.command('notion', withUser(), async (ctx) => {
+        await ctx.reply('Your Notion integration token:');
+        userPhases.set(ctx.state.userId, 'notion:token');
+    });
 
-            if (result.match) {
-                await context.reply('It\'s a match\\! 🎉\n\n```\n' + JSON.stringify(result.variables, null, 2) + '\n```', { parse_mode: 'MarkdownV2' });
+    bot.command('list', withUser(), withNotionAccount(), async (ctx) => {
+        await ctx.reply('Link to your List database:');
+        userPhases.set(ctx.state.userId, 'list:link');
+    });
 
-                const notion = new Client({ auth: notionAccount.token });
+    bot.command('pattern', withUser(), withNotionAccount(), async (ctx) => {
+        await ctx.reply(
+            'Choose pattern type:',
+            Markup.inlineKeyboard([
+                Markup.button.callback('Note', 'pattern:note'),
+                Markup.button.callback('List', 'pattern:list'),
+                Markup.button.callback('Reminder', 'pattern:reminder'),
+            ])
+        );
+        userPhases.set(ctx.state.userId, 'pattern:type');
+    });
 
-                if (pattern.type === 'note') {
-                    const name = result.variables.note;
-                    const tags = result.variables.tag
-                        ? Array.isArray(result.variables.tag)
-                            ? result.variables.tag
-                            : [result.variables.tag]
-                        : [];
+    bot.action('pattern:note', withPhase('pattern:type', async (ctx) => {
+        await ctx.answerCbQuery();
+        await ctx.reply('Got it! Now send me the pattern:');
+
+        userPhaseContext.set(ctx.state.userId, { type: 'note' });
+        userPhases.set(ctx.state.userId, 'pattern:pattern');
+    }));
+
+    bot.action('pattern:reminder', withPhase('pattern:type', async (ctx) => {
+        await ctx.answerCbQuery();
+        await ctx.reply('Got it! Now send me the pattern:');
+
+        userPhaseContext.set(ctx.state.userId, { type: 'reminder' });
+        userPhases.set(ctx.state.userId, 'pattern:pattern');
+    }));
+
+    bot.action('pattern:list', withPhase('pattern:type', async (ctx) => {
+        await ctx.answerCbQuery();
+
+        userPhaseContext.set(ctx.state.userId, { type: 'list' });
+
+        const lists = await storage.findLists(ctx.state.userId);
+        if (lists.length > 0) {
+            await ctx.reply(
+                'Got it! What list would you like to use by default?',
+                Markup.inlineKeyboard([
+                    ...lists.map(list => Markup.button.callback(list.alias, 'pattern:list:' + list.alias)),
+                    Markup.button.callback('Skip', 'pattern:list:alias:skip'),
+                ])
+            );
     
-                    await notion.pages.create({
-                        'parent': { 'database_id': notionAccount.notesDatabaseId },
-                        'properties': {
-                            'Note': {
-                                'title': [{
-                                    'type': 'text',
-                                    'text': {
-                                        'content': name,
-                                    }
-                                }]
-                            },
-                            ...tags.length > 0 && {
-                                'Tags': {
-                                    'multi_select': tags.map(tag => ({ name: tag })),
-                                },
-                            }
-                        }
-                    });
-                } else if (pattern.type === 'reminder') {
-                    const date = dateParser.parse(result.variables.date);
-                    const reminder = result.variables.reminder;
+            userPhases.set(ctx.state.userId, 'pattern:list:alias');
+        } else {
+            await ctx.reply(`Okay! Now send me the pattern:`);
+            userPhases.set(ctx.state.userId, 'pattern:pattern');
+        }
+    }));
 
-                    await notion.pages.create({
-                        'parent': { 'database_id': notionAccount.remindersDatabaseId },
-                        'properties': {
-                            'Reminder': {
-                                'title': [{
-                                    'type': 'text',
-                                    'text': {
-                                        'content': reminder,
-                                    }
-                                }]
-                            },
-                            'Date': {
-                                'date': {
-                                    'start': formatUtcDateWithTimezone(date, timezoneOffsetMinutes),
-                                }
-                            }
-                        }
-                    });
-                } else if (pattern.type === 'list') {
-                    const list = result.variables.list;
-                    const item = result.variables.item;
+    bot.action(/pattern:list:(.+)/, withPhase('pattern:list:alias', async (ctx) => {
+        await ctx.answerCbQuery();
+        
+        const alias = ctx.match[1];
+        userPhaseContext.get(ctx.state.userId).defaultVariables = { list: alias };
 
-                    const { databaseId } = await storage.findList(list);
+        await ctx.reply(`Default list: "${alias}".\nNow send me the pattern:`);
+        userPhases.set(ctx.state.userId, 'pattern:pattern');
+    }));
 
-                    await notion.pages.create({
-                        'parent': { 'database_id': databaseId },
-                        'properties': {
-                            'Item': {
-                                'title': [{
-                                    'type': 'text',
-                                    'text': {
-                                        'content': item,
-                                    }
-                                }]
-                            }
-                        }
-                    });
-                }
-                
+    bot.action('pattern:list:alias:skip', withPhase('pattern:list:alias', async (ctx) => {
+        await ctx.answerCbQuery();
+        await ctx.reply(`Okay! Now send me the pattern:`);
+        userPhases.set(ctx.state.userId, 'pattern:pattern');
+    }));
+
+    bot.on('message',
+        withUser(),
+        // Notion
+        withPhase('notion:token', async (ctx) => {
+            const token = ctx.message.text;
+            await storage.createNotionAccount(ctx.state.userId, token);
+            await ctx.reply(`It\'s "${token}".\nLink to Notes database:`);
+            userPhases.set(ctx.state.userId, 'notion:notes');
+        }),
+        withPhase('notion:notes', async (ctx) => {
+            const databaseId = databaseIdFromLink(ctx.message.text);
+            await storage.setNotesDatabaseId(ctx.state.userId, databaseId);
+            await ctx.reply(`It\'s "${databaseId}".\nLink to Reminders database:`);
+            userPhases.set(ctx.state.userId, 'notion:reminders');
+        }),
+        withPhase('notion:reminders', async (ctx) => {
+            const databaseId = databaseIdFromLink(ctx.message.text);
+            await storage.setRemindersDatabaseId(ctx.state.userId, databaseId);
+            await ctx.reply(`It\'s "${databaseId}".\nGreat, your Notion integration is all set!`);
+            userPhases.delete(ctx.state.userId);
+        }),
+        // Lists
+        withPhase('list:link', async (ctx) => {
+            const databaseId = databaseIdFromLink(ctx.message.text);
+            userPhaseContext.set(ctx.state.userId, databaseId);
+
+            await ctx.reply(`It\'s "${databaseId}".\nAlias for the list:`);
+            userPhases.set(ctx.state.userId, 'list:alias');
+        }),
+        withPhase('list:alias', async (ctx) => {
+            const alias = ctx.message.text;
+            const databaseId = userPhaseContext.get(ctx.state.userId);
+
+            await storage.createList(ctx.state.userId, databaseId, alias);
+            await ctx.reply(`List "${alias}" has been added!`);
+            userPhases.delete(ctx.state.userId);
+        }),
+        // Patterns
+        withPhase('pattern:pattern', async (ctx) => {
+            const pattern = new PatternBuilder().build(ctx.message.text);
+
+            await storage.addPattern(ctx.state.userId, userPhaseContext.get(ctx.state.userId).type, pattern);
+            await ctx.reply('Pattern has been added!');
+            userPhases.delete(ctx.state.userId);
+        }),
+        // Handle message
+        withNotionAccount(),
+        withPhase(null, async (ctx) => {
+            const { user: { userId, timezoneOffsetMinutes }, notionAccount } = ctx.state;
+    
+            if (ctx.message.text.startsWith('/')) {
                 return;
             }
-        }
+    
+            const patterns = await storage.findPatterns(userId);
+    
+            const dateParser = new RussianDateParser();
+            const patternMatcher = new PatternMatcher();
+            const noteMatchers = new NoteMatchers();
+            const listMatchers = new ListMatchers();
+            const reminderMatchers = new ReminderMatchers({ dateParser });
+    
+            for (const pattern of patterns) {
+                const matchers = pattern.type === 'note'
+                    ? noteMatchers
+                    : pattern.type === 'reminder'
+                        ? reminderMatchers
+                        : listMatchers;
+    
+                const result = patternMatcher.match(ctx.message.text, pattern.pattern, matchers);
+    
+                if (result.match) {    
+                    const notion = new Client({ auth: notionAccount.token });
+    
+                    if (pattern.type === 'note') {
+                        const name = result.variables.note;
+                        const tags = result.variables.tag
+                            ? Array.isArray(result.variables.tag)
+                                ? result.variables.tag
+                                : [result.variables.tag]
+                            : [];
+        
+                        await notion.pages.create({
+                            'parent': { 'database_id': notionAccount.notesDatabaseId },
+                            'properties': {
+                                'Note': {
+                                    'title': [{
+                                        'type': 'text',
+                                        'text': {
+                                            'content': name,
+                                        }
+                                    }]
+                                },
+                                ...tags.length > 0 && {
+                                    'Tags': {
+                                        'multi_select': tags.map(tag => ({ name: tag })),
+                                    },
+                                }
+                            }
+                        });
+                    } else if (pattern.type === 'reminder') {
+                        const date = dateParser.parse(result.variables.date);
+                        const reminder = result.variables.reminder;
+    
+                        await notion.pages.create({
+                            'parent': { 'database_id': notionAccount.remindersDatabaseId },
+                            'properties': {
+                                'Reminder': {
+                                    'title': [{
+                                        'type': 'text',
+                                        'text': {
+                                            'content': reminder,
+                                        }
+                                    }]
+                                },
+                                'Date': {
+                                    'date': {
+                                        'start': formatUtcDateWithTimezone(date, timezoneOffsetMinutes),
+                                    }
+                                }
+                            }
+                        });
+                    } else if (pattern.type === 'list') {
+                        const alias = result.variables.list;
+                        const item = result.variables.item;
 
-        await context.reply('What was it? 🤔');
+                        const list = await storage.findList(userId, alias);
+                        if (!list) {
+                            if (result.bang?.list) {
+                                continue;
+                            }
+                            await ctx.reply(`Could not find the list: "${list}"`);
+                            return;
+                        }
+                        
+                        await notion.pages.create({
+                            'parent': { 'database_id': list.databaseId },
+                            'properties': {
+                                'Item': {
+                                    'title': [{
+                                        'type': 'text',
+                                        'text': {
+                                            'content': item,
+                                        }
+                                    }]
+                                }
+                            }
+                        });
+                    }
+
+                    await ctx.reply('It\'s a match! 🎉\n\n' + JSON.stringify(result.variables, null, 2));
+                    
+                    return;
+                }
+            }
+    
+            await ctx.reply('What was it? 🤔');
+        })
+    );
+
+    bot.command('reset', async (ctx) => {
+        users.splice();
+        telegramAccounts.splice();
+        notionAccounts.splice();
+        patterns.splice();
+
+        await ctx.reply('Done!');
     });
+
+    function databaseIdFromLink(link) {
+        return new URL(link).pathname.slice(1);
+    }
 
     await bot.launch({
         allowedUpdates: ['callback_query', 'message'],
