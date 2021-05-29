@@ -186,7 +186,7 @@ describe('RussianDateMatcher', () => {
                 ['первого января в 1:30', utcDate('2021-01-01 01:30')],
                 ['через две недели в 8:00', utcDate('2020-05-19 8:00')],
                 ['послезавтра в 23:59', utcDate('2020-05-07 23:59')],
-                ['через несколько часов в 15:00', utcDate('2020-05-05 15:00')], // time overrides special
+                ['через несколько часов в 15:00', utcDate('2020-05-05 15:00')], // absolute time overrides relative one
             ]) {
                 expect(russianDateMatcher.match(input), input).to.deep.eq(output);
             }
