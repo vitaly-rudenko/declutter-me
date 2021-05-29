@@ -1,7 +1,7 @@
 const { expect } = require('chai');
-const PatternMatcher = require('../app/PatternMatcher');
-const RussianDateParser = require('../app/RussianDateParser');
-const ReminderMatchers = require('../app/ReminderMatchers');
+const PatternMatcher = require('../../app/PatternMatcher');
+const RussianDateParser = require('../../app/date-parsers/RussianDateParser');
+const ReminderMatchers = require('../../app/matchers/ReminderMatchers');
 
 describe('ReminderMatchers', () => {
     /** @type {PatternMatcher} */

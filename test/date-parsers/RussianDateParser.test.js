@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const sinon = require('sinon');
 
-const RussianDateParser = require('../app/RussianDateParser');
+const RussianDateParser = require('../../app/date-parsers/RussianDateParser');
 
 describe('RussianDateParser', () => {
     /** @type {RussianDateParser} */

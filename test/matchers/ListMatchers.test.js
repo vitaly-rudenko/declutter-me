@@ -1,6 +1,6 @@
 const chai = require('chai');
-const PatternMatcher = require('../app/PatternMatcher');
-const ListMatchers = require('../app/ListMatchers');
+const PatternMatcher = require('../../app/PatternMatcher');
+const ListMatchers = require('../../app/matchers/ListMatchers');
 
 const { expect } = chai;
 
