@@ -165,13 +165,41 @@ describe('RussianDateMatcher', () => {
             }
         });
 
-        it('should match absolute dates (with special)', () => {
+        it('should match absolute dates with special time', () => {
             for (const [input, output] of [
                 ['утром 25 декабря', utcDate('2020-12-25 08:00')],
                 ['вечером 3 марта', utcDate('2021-03-03 18:00')],
                 ['ночью пятого марта двадцать третьего года', utcDate('2023-03-06 00:00')],
                 ['днём одиннадцатого июля 2025 года', utcDate('2025-07-11 12:00')],
                 ['ночью двадцать третьего января', utcDate('2021-01-24 00:00')],
+            ]) {
+                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+            }
+        });
+
+        it('should match dates with time', () => {
+            for (const [input, output] of [
+                ['9 августа в 19:30', utcDate('2020-08-09 19:30')],
+                ['двадцать пятого декабря в 00:00', utcDate('2020-12-25 00:00')],
+                ['пятого мая в 5:00', utcDate('2021-05-05 05:00')],
+                ['первого января в 1:30', utcDate('2021-01-01 01:30')],
+                ['через две недели в 8:00', utcDate('2020-05-19 8:00')],
+                ['послезавтра в 23:59', utcDate('2020-05-07 23:59')],
+                ['через несколько часов в 15:00', utcDate('2020-05-05 15:00')], // time overrides special
+            ]) {
+                expect(russianDateMatcher.match(input), input).to.deep.eq(output);
+            }
+        });
+
+        it('should match dates with special time', () => {
+            for (const [input, output] of [
+                ['9 августа утром', utcDate('2020-08-09 8:00')],
+                ['через три недели вечером', utcDate('2020-05-26 18:00')],
+                ['первого декабря днём', utcDate('2020-12-01 12:00')],
+                ['тридцать первого декабря утром', utcDate('2020-12-31 08:00')],
+                ['тридцать первого декабря днем', utcDate('2020-12-31 12:00')],
+                ['тридцать первого декабря вечером', utcDate('2020-12-31 18:00')],
+                ['тридцать первого декабря ночью', utcDate('2021-01-01 00:00')],
             ]) {
                 expect(russianDateMatcher.match(input), input).to.deep.eq(output);
             }

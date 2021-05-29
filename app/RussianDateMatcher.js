@@ -95,76 +95,136 @@ function endsWith(array, item) {
 }
 
 class RussianDateMatcher {
-    match(input) {
+    /**
+     * @param {string} input
+     * @param {Date} origin
+     */
+    match(input, origin) {
         input = input.toLowerCase();
 
-        const date = new Date();
-        date.getMilliseconds(0);
-
-        if (input.startsWith('через ')) {
-            const updatedInput = input.slice('через '.length);
-
-            let value, unit;
-            if (updatedInput.includes(' ')) {
-                const index = updatedInput.lastIndexOf(' ');
-                value = this.parseNumber(updatedInput.slice(0, index));
-                unit = this.parseUnit(updatedInput.slice(index + 1));
-            } else {
-                value = 1;
-                unit = this.parseUnit(updatedInput);
-            }
-            
-            if (value && unit) {
-                const result = this.getRelativeDate(value, unit, date);
-                if (result) {
-                    return result;
-                }
-            }
+        if (!origin) {
+            origin = new Date();
+            origin.getMilliseconds(0);
         }
 
-        if (input.startsWith('в ')) {
-            const updatedInput = input.slice('в '.length);
+        return (
+            this.parseRelativeDate(input, origin) ||
+            this.parseAbsoluteTime(input, origin) ||
+            this.parseSpecialDateTime(input, origin) ||
+            this.parseAbsoluteDate(input, origin) ||
+            this.parseDateTime(input, origin) ||
+            this.parseDateWithSpecialTime(input, origin)
+        );
+    }
 
-            const result = this.parseAbsoluteTime(updatedInput, date);
-            if (result) {
-                return result;
-            }
+    /**
+     * @param {string} input
+     * @param {Date} origin
+     */
+    parseDateWithSpecialTime(input, origin) {
+        const indexOf = input.lastIndexOf(' ');
+        if (indexOf === -1) return null;
+
+        const [rawDate, rawTime] = [input.slice(0, indexOf), input.slice(indexOf + 1)];
+
+        const date = this.match(rawDate, origin);
+        if (!date) return null;
+        date.setUTCHours(0);
+        date.setUTCMinutes(0);
+        date.setUTCSeconds(0);
+        date.setUTCMilliseconds(0);
+
+        const time = this.parseSpecial(rawTime, date);
+        return time;
+    }
+
+    /**
+     * @param {string} input
+     * @param {Date} origin
+     */
+    parseDateTime(input, origin) {
+        if (!input.includes(' в ')) return null;
+        const [rawDate, rawTime] = input.split(' в ');
+
+        const date = this.match(rawDate, origin);
+        const time = this.match('в ' + rawTime, origin);
+
+        if (date && time) {
+            return this.combineDateTime(date, time);
         }
+    }
 
+    /**
+     * @param {Date} date
+     * @param {Date} time
+     */
+    combineDateTime(date, time) {
+        return new Date(Date.UTC(
+            date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),
+            time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), time.getUTCMilliseconds()
+        ));
+    }
+
+    /**
+     * @param {string} input
+     * @param {Date} origin
+     */
+    parseSpecialDateTime(input, origin) {
         const parts = input.split(' ');
-        let specialDate = new Date(date);
+        let specialDate = new Date(origin);
 
         for (const value of parts) {
             specialDate = this.parseSpecial(value, specialDate);
             if (!specialDate) break;
         }
 
-        if (specialDate) {
-            return specialDate;
-        }
-
-        return this.parseAbsoluteDate(input, date);
+        return specialDate;
     }
 
     /**
      * @param {string} input
-     * @param {Date} date
+     * @param {Date} origin
      */
-    parseAbsoluteDate(input, date) {
+    parseRelativeDate(input, origin) {
+        if (!input.startsWith('через ')) return null;
+        input = input.slice('через '.length);
+
+        let value, unit;
+        if (input.includes(' ')) {
+            const index = input.lastIndexOf(' ');
+            value = this.parseNumber(input.slice(0, index));
+            unit = this.parseUnit(input.slice(index + 1));
+        } else {
+            value = 1;
+            unit = this.parseUnit(input);
+        }
+        
+        if (value && unit) {
+            return this.getRelativeDate(value, unit, origin);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param {string} input
+     * @param {Date} origin
+     */
+    parseAbsoluteDate(input, origin) {
         const inputParts = input.split(' ');
 
         let specialPart = null;
-        if (this.parseSpecial(inputParts[0], date)) {
+        if (this.parseSpecial(inputParts[0], origin)) {
             specialPart = inputParts.shift();
         }
 
-        let yearNumber = date.getUTCFullYear();
+        let yearNumber = origin.getUTCFullYear();
         let dateNumber = null;
         let monthIndex = -1;
         if (inputParts[0] === 'в') {
             inputParts.shift();
             
-            dateNumber = date.getUTCDate();
+            dateNumber = origin.getUTCDate();
 
             const monthPart = inputParts.shift();
             monthIndex = MONTH_MATCHERS.findIndex(matchers => matchers.includes(monthPart));
@@ -185,8 +245,8 @@ class RussianDateMatcher {
             if (dateNumber === null) return null;
 
             if (monthPart === 'числа') {
-                monthIndex = date.getUTCMonth();
-                if (dateNumber <= date.getUTCDate()) {
+                monthIndex = origin.getUTCMonth();
+                if (dateNumber <= origin.getUTCDate()) {
                     monthIndex++;
                 }
             } else {
@@ -208,10 +268,10 @@ class RussianDateMatcher {
         if (monthIndex === -1) return null;
 
         if (yearNumber < 100) {
-            yearNumber += Math.floor(date.getUTCFullYear() / 1000) * 1000;
+            yearNumber += Math.floor(origin.getUTCFullYear() / 1000) * 1000;
         }
 
-        const dateCopy = new Date(date);
+        const dateCopy = new Date(origin);
         dateCopy.setUTCDate(dateNumber);
         dateCopy.setUTCMonth(monthIndex);
         dateCopy.setUTCFullYear(yearNumber);
@@ -220,7 +280,7 @@ class RussianDateMatcher {
             return null;
         }
         
-        if (dateCopy <= date) {
+        if (dateCopy <= origin) {
             dateCopy.setUTCFullYear(dateCopy.getUTCFullYear() + 1);
         }
         
@@ -233,10 +293,13 @@ class RussianDateMatcher {
 
     /**
      * @param {string} input
-     * @param {Date} date
+     * @param {Date} origin
      */
-    parseAbsoluteTime(input, date) {
-        const dateCopy = new Date(date);
+    parseAbsoluteTime(input, origin) {
+        if (!input.startsWith('в ')) return null;
+        input = input.slice('в '.length);
+
+        const dateCopy = new Date(origin);
         const parts = input.split(' ');
 
         for (const part of parts) {
@@ -276,7 +339,7 @@ class RussianDateMatcher {
             return null;
         }
 
-        if (dateCopy <= date) {
+        if (dateCopy <= origin) {
             dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
         }
 
