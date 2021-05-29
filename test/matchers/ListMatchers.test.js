@@ -160,4 +160,25 @@ describe('ListMatchers', () => {
                 variables: { item: 'sweet potatoes into the shopping list' }
             });
     });
+
+    it('should match bang variables', () => {
+        // {item} #{list!}
+        const pattern = [
+            { type: 'variable', value: 'item' },
+            { type: 'text', value: ' #' },
+            { type: 'variable', value: 'list', bang: true },
+        ];
+
+        expect(patternMatcher.match('Cabbages #shopping', pattern, listMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    item: 'Cabbages',
+                    list: 'shopping'
+                },
+                bang: {
+                    list: true,
+                },
+            });
+    });
 });

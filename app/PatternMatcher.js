@@ -13,6 +13,7 @@ class PatternMatcher {
 
             let match = true;
             const variables = {};
+            const bang = {};
 
             for (const [i, token] of combination.entries()) {
                 let value = token.value;
@@ -46,6 +47,11 @@ class PatternMatcher {
                     } else {
                         variables[token.value] = [variables[token.value], value];
                     }
+
+                    delete bang[token.value];
+                    if (variables[token.value] !== undefined && token.bang) {
+                        bang[token.value] = token.bang;
+                    }
                 }
 
                 if (value && remainingInput.toLowerCase().startsWith(value.toLowerCase())) {
@@ -57,7 +63,11 @@ class PatternMatcher {
             }
 
             if (match && remainingInput.length === 0) {
-                return { match: true, variables };
+                return {
+                    match: true,
+                    variables,
+                    ...Object.keys(bang).length > 0 && { bang },
+                };
             }
         }
 
