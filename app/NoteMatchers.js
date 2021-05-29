@@ -1,4 +1,3 @@
-// TODO: add support for multiple tags
 class NoteMatchers {
     constructor() {
         this.note = this.note.bind(this);
@@ -7,7 +6,18 @@ class NoteMatchers {
 
     note(input, { nextTokens: [nextToken] }) {
         if (nextToken && nextToken.type === 'text') {
-            return input.slice(0, input.toLowerCase().lastIndexOf(nextToken.value.toLowerCase()));
+            const results = [];
+            let startIndex = input.toLowerCase().lastIndexOf(nextToken.value.toLowerCase());
+            while (startIndex > 0) {
+                results.push(input.slice(0, startIndex));
+                startIndex = input.toLowerCase().lastIndexOf(nextToken.value.toLowerCase(), startIndex - 1);
+            }
+
+            if (results.length === 0) {
+                return input;
+            }
+
+            return results;
         }
 
         return input;

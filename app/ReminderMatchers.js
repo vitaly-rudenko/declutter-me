@@ -16,7 +16,7 @@ class ReminderMatchers {
 
         while (startIndex > 0) {
             startIndex = input.lastIndexOf(' ', startIndex - 1);
-            if (startIndex === -1) startIndex = 0;
+            if (startIndex === -1) startIndex = -1;
 
             const date = input.slice(startIndex + 1);
             if (this._dateParser.match(date)) {

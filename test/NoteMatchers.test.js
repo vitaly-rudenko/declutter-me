@@ -98,6 +98,79 @@ describe('NoteMatchers', () => {
                 }
             });
     });
+    
+    it('should allow matching multiple tags', () => {
+        // save {note}[ #{tag}][ #{tag}][ #{tag}][ #{tag}]
+        const pattern = [
+            { type: 'text', value: 'save ' },
+            { type: 'variable', value: 'note' },
+            { type: 'optional', value: [
+                { type: 'text', value: ' #' },
+                { type: 'variable', value: 'tag' }
+            ] },
+            { type: 'optional', value: [
+                { type: 'text', value: ' #' },
+                { type: 'variable', value: 'tag' }
+            ] },
+            { type: 'optional', value: [
+                { type: 'text', value: ' #' },
+                { type: 'variable', value: 'tag' }
+            ] },
+        ];
+
+        expect(patternMatcher.match('Save my note', pattern, noteMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    note: 'my note'
+                }
+            });
+
+        expect(patternMatcher.match('Save my note #my-tag-1', pattern, noteMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    note: 'my note',
+                    tag: 'my-tag-1'
+                }
+            });
+        
+        expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2', pattern, noteMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    note: 'my note',
+                    tag: ['my-tag-1', 'my-tag-2']
+                }
+            });
+
+        expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3', pattern, noteMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    note: 'my note',
+                    tag: ['my-tag-1', 'my-tag-2', 'my-tag-3']
+                }
+            });
+        
+        expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4', pattern, noteMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    note: 'my note #my-tag-1',
+                    tag: ['my-tag-2', 'my-tag-3', 'my-tag-4']
+                }
+            });
+        
+        expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 #my-tag-5', pattern, noteMatchers))
+            .to.deep.eq({
+                match: true,
+                variables: {
+                    note: 'my note #my-tag-1 #my-tag-2',
+                    tag: ['my-tag-3', 'my-tag-4', 'my-tag-5']
+                }
+            });
+    });
 
     it('should match complex patterns', () => {
         // (add|save) {note}[ to[ the] {tag}[ notes]]

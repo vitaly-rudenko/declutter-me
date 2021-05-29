@@ -1,12 +1,14 @@
+function toString(token) {
+    if (token.type === 'variable') {
+
+    }
+}
+
 class PatternMatcher {
     match(input, pattern, matchers) {
         const combinations = this.getPatternCombinations(pattern);
 
-        if (!matchers.priorities) {
-            matchers.priorities = Object.keys(matchers);
-        }
-
-        for (const combination of combinations) {
+        for (const [j, combination] of combinations.entries()) {
             let remainingInput = input;
 
             let match = true;
@@ -21,8 +23,29 @@ class PatternMatcher {
                         throw new Error(`Unsupported matcher: ${token.value}`);
                     }
 
-                    value = matcher(remainingInput, { nextTokens: combination.slice(i + 1) });
-                    variables[token.value] = value;
+                    const nextTokens = combination.slice(i + 1);
+                    value = matcher(remainingInput, { nextTokens });
+                    if (Array.isArray(value)) {
+                        for (const valueVariation of value) {
+                            const matchResult = this.match(remainingInput.slice(valueVariation.length), nextTokens, matchers);
+                            if (matchResult.match) {
+                                value = valueVariation;
+                                break;
+                            }
+                        }
+
+                        if (Array.isArray(value)) {
+                            value = undefined;
+                        }
+                    }
+
+                    if (variables[token.value] === undefined) {
+                        variables[token.value] = value;
+                    } else if (Array.isArray(variables[token.value])) {
+                        variables[token.value].push(value);
+                    } else {
+                        variables[token.value] = [variables[token.value], value];
+                    }
                 }
 
                 if (value && remainingInput.toLowerCase().startsWith(value.toLowerCase())) {
