@@ -86,6 +86,9 @@ const storage = {
     async findUser(userId) {
         return users.find(user => user.userId === userId);
     },
+    async getUsers() {
+        return users;
+    },
     async createTelegramAccount(userId, telegramUserId) {
         const telegramAccount = { userId, telegramUserId };
         telegramAccounts.push(telegramAccount);
@@ -93,6 +96,9 @@ const storage = {
     },
     async findTelegramAccount(telegramUserId) {
         return telegramAccounts.find(account => account.telegramUserId === telegramUserId);
+    },
+    async findTelegramAccountByUserId(userId) {
+        return telegramAccounts.find(account => account.userId === userId);
     },
     async createNotionAccount(userId, token) {
         const notionAccount = { userId, token };
@@ -134,6 +140,17 @@ const storage = {
     },
     async getCloseReminders(userId) {
         return closeReminders[userId] || [];
+    },
+    async addCloseReminder(userId, reminder) {
+        if (!closeReminders[userId]) {
+            closeReminders[userId] = [];
+        }
+
+        closeReminders[userId].push(reminder);
+    },
+    async removeCloseReminder(userId, id) {
+        if (!closeReminders[userId]) return;
+        closeReminders[userId].splice(closeReminders[userId].find(r => r.id === id), 1);
     }
 };
 
@@ -174,8 +191,8 @@ class Cache {
 
 (async () => {
     const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
-    const userPhases = new Cache(60 * 60_1000);
-    const userPhaseContext = new Cache(60 * 60_1000);
+    const userPhases = new Cache(60 * 60_000);
+    const userPhaseContext = new Cache(60 * 60_000);
     const notions = new Cache(10 * 60_000);
 
     bot.telegram.setMyCommands([
@@ -450,8 +467,8 @@ class Cache {
                     } else if (pattern.type === 'reminder') {
                         const date = dateParser.parse(result.variables.date);
                         const reminder = result.variables.reminder;
-    
-                        await notion.pages.create(
+
+                        const reminderPage = await notion.pages.create(
                             createReminderPage({
                                 databaseId: notionAccount.remindersDatabaseId,
                                 date,
@@ -459,6 +476,11 @@ class Cache {
                                 timezoneOffsetMinutes,
                             })
                         );
+
+                        const parsedReminder = parseReminderPage(reminderPage);
+                        if (isCloseReminder(parsedReminder)) {
+                            await storage.addCloseReminder(userId, parsedReminder);
+                        }
                     } else if (pattern.type === 'list') {
                         const alias = result.variables.list;
                         const item = result.variables.item;
@@ -506,26 +528,77 @@ class Cache {
         dropPendingUpdates: true,
     });
 
-    setInterval(() => {
-        // reminder job
+    setInterval(async () => {
+        await sendAllReminders();
     }, 30_000);
 
-    setInterval(() => {
-        // sync reminders
+    setInterval(async () => {
+        await syncAllReminders();
     }, 5 * 60_000);
 
-    const reminders = await fetchReminders(users[0].userId);
-    console.log(reminders);
+    await syncAllReminders();
+    await sendAllReminders();
+
+    async function sendAllReminders() {
+        const users = await storage.getUsers();
+        for (const user of users) {
+            await sendReminders(user.userId);
+        }
+    }
+
+    async function sendReminders(userId) {
+        const telegramAccount = await storage.findTelegramAccountByUserId(userId);
+        const reminders = await storage.getCloseReminders(userId);
+        
+        for (const reminder of reminders) {
+            await markReminderAsDone(userId, reminder.id);
+            await storage.removeCloseReminder(userId, reminder.id);
+            await bot.telegram.sendMessage(telegramAccount.telegramUserId, reminder.reminder);
+        }
+    }
+
+    async function syncAllReminders() {
+        const users = await storage.getUsers();
+        for (const user of users) {
+            await syncReminders(user.userId);
+        }
+    }
+
+    async function syncReminders(userId) {
+        const reminders = await fetchReminders(userId);
+        const closeReminders = reminders.filter(isCloseReminder);
+
+        await storage.storeCloseReminders(userId, closeReminders);
+    }
+
+    function isCloseReminder(reminder) {
+        const inAnHour = Date.now() + 5 * 60 * 60_000;
+        return !reminder.reminded && reminder.date.getTime() <= inAnHour;
+    }
 
     async function fetchReminders(userId) {
         const [notion, notionAccount] = await getNotion(userId);
         const pages = await notion.databases.query({
-            database_id: notionAccount.remindersDatabaseId,
+            'database_id': notionAccount.remindersDatabaseId,
         });
 
         return pages.results.map(parseReminderPage);
     }
 
+    async function markReminderAsDone(userId, id) {
+        const [notion] = await getNotion(userId);
+
+        await notion.pages.update({
+            'page_id': id,
+            'properties': {
+                'Reminded': {
+                    'checkbox': true
+                }
+            }
+        });
+    }
+
+    /** @returns {[import('@notionhq/client').Client]} */
     async function getNotion(userId) {
         if (notions.get(userId)) {
             return notions.get(userId);
@@ -541,8 +614,6 @@ class Cache {
         notions.set(userId, [notion, notionAccount]);
         return [notion, notionAccount];
     }
-
-    console.log('Bot started!');
 })();
 
 class NotionAccountNotFound extends Error {
@@ -610,23 +681,16 @@ function createListItemPage({ databaseId, item }) {
 }
 
 function parseReminderPage(page) {
-    const rawReminder = Object.values(page.properties).find(prop => prop?.title?.[0]?.text?.content !== undefined);
-    const rawDate = Object.values(page.properties).find(prop => prop?.date?.start !== undefined);
-    const rawReminded = Object.values(page.properties).find(prop => prop?.checkbox !== undefined);
-
-    if (rawReminder === undefined || rawDate === undefined || rawReminded === undefined) {
-        return null;
-    }
-
     return {
-        reminder: rawReminder.title[0].text.content,
-        date: new Date(rawDate.date.start),
-        reminded: rawReminded.checkbox,
+        id: page.id,
+        reminder: page.properties['Reminder'].title[0].text.content,
+        date: new Date(page.properties['Date'].date.start),
+        reminded: page.properties['Reminded'].checkbox,
     };
 }
 
 function formatUtcDateWithTimezone(date, timezoneOffsetMinutes) {
-    const dateWithTimezone = new Date(date.getTime() + timezoneOffsetMinutes * 60_1000);
+    const dateWithTimezone = new Date(date.getTime() + timezoneOffsetMinutes * 60_000);
 
     const timezoneHours = Math.trunc(timezoneOffsetMinutes / 60);
     const timezoneMinutes = (timezoneOffsetMinutes - timezoneHours * 60);
@@ -634,4 +698,11 @@ function formatUtcDateWithTimezone(date, timezoneOffsetMinutes) {
     const timezone = String(timezoneHours).padStart(2, '0') + ':' + String(timezoneMinutes).padStart(2, '0');
     
     return dateWithTimezone.toISOString().slice(0, -1) + (timezoneOffsetMinutes >= 0 ? '+' : '-') + timezone;
+}
+
+function toUTC(date) {
+    return new Date(Date.UTC(
+        date.getFullYear(), date.getMonth(), date.getDate(),
+        date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds()
+    ));
 }
