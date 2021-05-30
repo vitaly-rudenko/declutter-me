@@ -53,6 +53,7 @@ const patterns = [{
     pattern: new PatternBuilder().build('{note}[ #{tag}][ #{tag}][ #{tag}]'),
 }];
 const lists = [];
+const closeReminders = {};
 
 function stringifyPattern(pattern) {
     return pattern.map((token) => {
@@ -128,6 +129,12 @@ const storage = {
     async findPatterns(userId) {
         return patterns.filter(pattern => pattern.userId === userId).sort((a, b) => a.order - b.order);
     },
+    async storeCloseReminders(userId, reminders) {
+        closeReminders[userId] = reminders;
+    },
+    async getCloseReminders(userId) {
+        return closeReminders[userId] || [];
+    }
 };
 
 class Cache {
@@ -167,8 +174,9 @@ class Cache {
 
 (async () => {
     const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
-    const userPhases = new Cache(60 * 1000);
-    const userPhaseContext = new Cache(60 * 1000);
+    const userPhases = new Cache(60 * 60_1000);
+    const userPhaseContext = new Cache(60 * 60_1000);
+    const notions = new Cache(10 * 60_000);
 
     bot.telegram.setMyCommands([
         { command: '/start', description: 'Start the bot' },
@@ -207,13 +215,22 @@ class Cache {
         };
     };
 
-    const withNotionAccount = ({ required = true } = {}) => {
+    const withNotion = ({ required = true } = {}) => {
         return async (ctx, next) => {
-            ctx.state.notionAccount = await storage.findNotionAccount(ctx.state.userId);
-
-            if (!ctx.state.notionAccount && required) {
-                ctx.reply('Please use `/notion` first 🙇');
-                return;
+            try {
+                const [notion, notionAccount] = await getNotion(ctx.state.userId);
+    
+                ctx.state.notion = notion;
+                ctx.state.notionAccount = notionAccount;
+            } catch (error) {
+                if (error instanceof NotionAccountNotFound) {
+                    if (required) {
+                        await ctx.reply('Please use `/notion` first 🙇');
+                        return;
+                    }
+                }
+                
+                throw error;
             }
 
             return next();
@@ -246,7 +263,7 @@ class Cache {
 
     bot.command('info',
         withUser({ required: false }),
-        withNotionAccount({ required: false }),
+        withNotion({ required: false }),
         async (ctx) => {
             const lists = ctx.state.userId ? await storage.findLists(ctx.state.userId) : [];
             const patterns = ctx.state.userId ? await storage.findPatterns(ctx.state.userId) : [];
@@ -272,12 +289,12 @@ class Cache {
         userPhases.set(ctx.state.userId, 'notion:token');
     });
 
-    bot.command('list', withUser(), withNotionAccount(), async (ctx) => {
+    bot.command('list', withUser(), withNotion(), async (ctx) => {
         await ctx.reply('Link to your List database:');
         userPhases.set(ctx.state.userId, 'list:link');
     });
 
-    bot.command('pattern', withUser(), withNotionAccount(), async (ctx) => {
+    bot.command('pattern', withUser(), withNotion(), async (ctx) => {
         await ctx.reply(
             'Choose pattern type:',
             Markup.inlineKeyboard([
@@ -389,9 +406,9 @@ class Cache {
             userPhases.delete(ctx.state.userId);
         }),
         // Handle message
-        withNotionAccount(),
+        withNotion(),
         withPhase(null, async (ctx) => {
-            const { user: { userId, timezoneOffsetMinutes }, notionAccount } = ctx.state;
+            const { user: { userId, timezoneOffsetMinutes }, notionAccount, notion } = ctx.state;
     
             if (ctx.message.text.startsWith('/')) {
                 return;
@@ -415,82 +432,50 @@ class Cache {
                 const result = patternMatcher.match(ctx.message.text, pattern.pattern, matchers);
     
                 if (result.match) {    
-                    const notion = new Client({ auth: notionAccount.token });
-    
                     if (pattern.type === 'note') {
-                        const name = result.variables.note;
+                        const note = result.variables.note;
                         const tags = result.variables.tag
                             ? Array.isArray(result.variables.tag)
                                 ? result.variables.tag
                                 : [result.variables.tag]
                             : [];
         
-                        await notion.pages.create({
-                            'parent': { 'database_id': notionAccount.notesDatabaseId },
-                            'properties': {
-                                'Note': {
-                                    'title': [{
-                                        'type': 'text',
-                                        'text': {
-                                            'content': name,
-                                        }
-                                    }]
-                                },
-                                ...tags.length > 0 && {
-                                    'Tags': {
-                                        'multi_select': tags.map(tag => ({ name: tag })),
-                                    },
-                                }
-                            }
-                        });
+                        await notion.pages.create(
+                            createNotePage({
+                                databaseId: notionAccount.notesDatabaseId,
+                                note,
+                                tags,
+                            })
+                        );
                     } else if (pattern.type === 'reminder') {
                         const date = dateParser.parse(result.variables.date);
                         const reminder = result.variables.reminder;
     
-                        await notion.pages.create({
-                            'parent': { 'database_id': notionAccount.remindersDatabaseId },
-                            'properties': {
-                                'Reminder': {
-                                    'title': [{
-                                        'type': 'text',
-                                        'text': {
-                                            'content': reminder,
-                                        }
-                                    }]
-                                },
-                                'Date': {
-                                    'date': {
-                                        'start': formatUtcDateWithTimezone(date, timezoneOffsetMinutes),
-                                    }
-                                }
-                            }
-                        });
+                        await notion.pages.create(
+                            createReminderPage({
+                                databaseId: notionAccount.remindersDatabaseId,
+                                date,
+                                reminder,
+                                timezoneOffsetMinutes,
+                            })
+                        );
                     } else if (pattern.type === 'list') {
                         const alias = result.variables.list;
                         const item = result.variables.item;
 
                         const list = await storage.findList(userId, alias);
                         if (!list) {
-                            if (result.bang?.list) {
-                                continue;
-                            }
+                            if (result.bang?.list) continue;
                             await ctx.reply(`Could not find the list: "${list}"`);
                             return;
                         }
                         
-                        await notion.pages.create({
-                            'parent': { 'database_id': list.databaseId },
-                            'properties': {
-                                'Item': {
-                                    'title': [{
-                                        'type': 'text',
-                                        'text': {
-                                            'content': item,
-                                        }
-                                    }]
-                                }
-                            }
-                        });
+                        await notion.pages.create(
+                            createListItemPage({
+                                databaseId: list.databaseId,
+                                item,
+                            })
+                        );
                     }
 
                     await ctx.reply('It\'s a match! 🎉\n\n' + JSON.stringify(result.variables, null, 2));
@@ -521,17 +506,132 @@ class Cache {
         dropPendingUpdates: true,
     });
 
+    setInterval(() => {
+        // reminder job
+    }, 30_000);
+
+    setInterval(() => {
+        // sync reminders
+    }, 5 * 60_000);
+
+    const reminders = await fetchReminders(users[0].userId);
+    console.log(reminders);
+
+    async function fetchReminders(userId) {
+        const [notion, notionAccount] = await getNotion(userId);
+        const pages = await notion.databases.query({
+            database_id: notionAccount.remindersDatabaseId,
+        });
+
+        return pages.results.map(parseReminderPage);
+    }
+
+    async function getNotion(userId) {
+        if (notions.get(userId)) {
+            return notions.get(userId);
+        }
+
+        const notionAccount = await storage.findNotionAccount(userId);
+        if (!notionAccount) {
+            throw new NotionAccountNotFound();
+        }
+
+        const notion = new Client({ auth: notionAccount.token });
+
+        notions.set(userId, [notion, notionAccount]);
+        return [notion, notionAccount];
+    }
+
     console.log('Bot started!');
 })();
 
+class NotionAccountNotFound extends Error {
+    constructor() {
+        super('Notion account not found');
+    }
+}
+
+function createNotePage({ databaseId, note, tags }) {
+    return {
+        'parent': { 'database_id': databaseId },
+        'properties': {
+            'Note': {
+                'title': [{
+                    'type': 'text',
+                    'text': {
+                        'content': note,
+                    }
+                }]
+            },
+            ...tags.length > 0 && {
+                'Tags': {
+                    'multi_select': tags.map(tag => ({ name: tag })),
+                },
+            }
+        }
+    };
+}
+
+function createReminderPage({ databaseId, reminder, date, timezoneOffsetMinutes }) {
+    return {
+        'parent': { 'database_id': databaseId },
+        'properties': {
+            'Reminder': {
+                'title': [{
+                    'type': 'text',
+                    'text': {
+                        'content': reminder,
+                    }
+                }]
+            },
+            'Date': {
+                'date': {
+                    'start': formatUtcDateWithTimezone(date, timezoneOffsetMinutes),
+                }
+            }
+        }
+    };
+}
+
+function createListItemPage({ databaseId, item }) {
+    return {
+        'parent': { 'database_id': databaseId },
+        'properties': {
+            'Item': {
+                'title': [{
+                    'type': 'text',
+                    'text': {
+                        'content': item,
+                    }
+                }]
+            }
+        }
+    };
+}
+
+function parseReminderPage(page) {
+    const rawReminder = Object.values(page.properties).find(prop => prop?.title?.[0]?.text?.content !== undefined);
+    const rawDate = Object.values(page.properties).find(prop => prop?.date?.start !== undefined);
+    const rawReminded = Object.values(page.properties).find(prop => prop?.checkbox !== undefined);
+
+    if (rawReminder === undefined || rawDate === undefined || rawReminded === undefined) {
+        return null;
+    }
+
+    return {
+        reminder: rawReminder.title[0].text.content,
+        date: new Date(rawDate.date.start),
+        reminded: rawReminded.checkbox,
+    };
+}
+
 function formatUtcDateWithTimezone(date, timezoneOffsetMinutes) {
-    const dateWithTimezone = new Date(date.getTime() + timezoneOffsetMinutes * 60 * 1000);
+    const dateWithTimezone = new Date(date.getTime() + timezoneOffsetMinutes * 60_1000);
 
     const timezoneHours = Math.trunc(timezoneOffsetMinutes / 60);
     const timezoneMinutes = (timezoneOffsetMinutes - timezoneHours * 60);
 
-    const timezone = String(timezoneHours).padStart(2, '0')
-        + ':' + String(timezoneMinutes).padStart(2, '0');
+    const timezone = String(timezoneHours).padStart(2, '0') + ':' + String(timezoneMinutes).padStart(2, '0');
     
     return dateWithTimezone.toISOString().slice(0, -1) + (timezoneOffsetMinutes >= 0 ? '+' : '-') + timezone;
 }
