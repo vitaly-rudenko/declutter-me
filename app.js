@@ -482,13 +482,13 @@ class Cache {
                             await storage.addCloseReminder(userId, parsedReminder);
                         }
                     } else if (pattern.type === 'list') {
-                        const alias = result.variables.list;
+                        const alias = result.variables.list ?? pattern.defaultVariables?.list;
                         const item = result.variables.item;
 
                         const list = await storage.findList(userId, alias);
                         if (!list) {
                             if (result.bang?.list) continue;
-                            await ctx.reply(`Could not find the list: "${list}"`);
+                            await ctx.reply(`Could not find the list: "${alias}"`);
                             return;
                         }
                         
@@ -549,8 +549,9 @@ class Cache {
     async function sendReminders(userId) {
         const telegramAccount = await storage.findTelegramAccountByUserId(userId);
         const reminders = await storage.getCloseReminders(userId);
+        const remindersToSend = reminders.filter(r => r.date <= Date.now());
         
-        for (const reminder of reminders) {
+        for (const reminder of remindersToSend) {
             await markReminderAsDone(userId, reminder.id);
             await storage.removeCloseReminder(userId, reminder.id);
             await bot.telegram.sendMessage(telegramAccount.telegramUserId, reminder.reminder);
