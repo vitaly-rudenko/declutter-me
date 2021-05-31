@@ -8,188 +8,26 @@ const RussianDateParser = require('./app/date-parsers/RussianDateParser');
 const NoteMatchers = require('./app/matchers/NoteMatchers');
 const ListMatchers = require('./app/matchers/ListMatchers');
 const ReminderMatchers = require('./app/matchers/ReminderMatchers');
+const InMemoryStorage = require('./app/storage/InMemoryStorage');
+const Cache = require('./app/utils/Cache');
 
 require('dotenv').config();
 
-const users = [
-    { userId: 1, language: 'russian', timezoneOffsetMinutes: 3 * 60 },
-];
-const telegramAccounts = [
-    { userId: 1, telegramUserId: 56681133 },
-];
-const notionAccounts = [
-    {
-        userId: 1,
-        token: 'secret_sUmg2sizdQDYmfGrQ0amjXSuOv4tHTevLn4PVgcopG6',
-        notesDatabaseId: 'a64b650b4036407385272f3867de44f3',
-        remindersDatabaseId: 'edfe4ac495d24ddd88cbe45e635d0418',
-    },
-];
-const patterns = [{
-    userId: 1,
-    order: 1,
-    type: 'list',
-    pattern: new PatternBuilder().build('купить {item}'),
-    defaultVariables: { list: 'shopping' }
-}, {
-    userId: 1,
-    order: 2,
-    type: 'reminder',
-    pattern: new PatternBuilder().build('[напомни ]({reminder} {date}|{date} {reminder})'),
-}, {
-    userId: 1,
-    order: 3,
-    type: 'list',
-    pattern: new PatternBuilder().build('#{list} {item}'),
-}, {
-    userId: 1,
-    order: 4,
-    type: 'list',
-    pattern: new PatternBuilder().build('{item} #{list!}'),
-}, {
-    userId: 1,
-    order: 5,
-    type: 'note',
-    pattern: new PatternBuilder().build('{note}[ #{tag}][ #{tag}][ #{tag}]'),
-}];
-const lists = [];
-const closeReminders = {};
-
-function stringifyPattern(pattern) {
-    return pattern.map((token) => {
-        if (token.type === 'variable') {
-            if (token.bang) {
-                return `{${token.value}!}`;
-            } else {
-                return `{${token.value}}`;
-            }
-        }
-
-        if (token.type === 'optional') {
-            return `[${stringifyPattern(token.value)}]`;
-        }
-
-        if (token.type === 'variational') {
-            return `(${token.value.map(variation => stringifyPattern(variation)).join('|')})`;
-        }
-
-        return token.value;
-    }).join('');
-}
-
-const storage = {
-    async createUser() {
-        const user = { userId: 1 };
-        users.push(user);
-        return user;
-    },
-    async findUser(userId) {
-        return users.find(user => user.userId === userId);
-    },
-    async getUsers() {
-        return users;
-    },
-    async createTelegramAccount(userId, telegramUserId) {
-        const telegramAccount = { userId, telegramUserId };
-        telegramAccounts.push(telegramAccount);
-        return telegramAccount;
-    },
-    async findTelegramAccount(telegramUserId) {
-        return telegramAccounts.find(account => account.telegramUserId === telegramUserId);
-    },
-    async findTelegramAccountByUserId(userId) {
-        return telegramAccounts.find(account => account.userId === userId);
-    },
-    async createNotionAccount(userId, token) {
-        const notionAccount = { userId, token };
-        notionAccounts.push(notionAccount);
-        return notionAccount;
-    },
-    async setNotesDatabaseId(userId, databaseId) {
-        const notionAccount = await this.findNotionAccount(userId);
-        notionAccount.notesDatabaseId = databaseId;
-    },
-    async setRemindersDatabaseId(userId, databaseId) {
-        const notionAccount = await this.findNotionAccount(userId);
-        notionAccount.remindersDatabaseId = databaseId;
-    },
-    async createList(userId, databaseId, alias) {
-        const list = { userId, databaseId, alias };
-        lists.push(list);
-        return list;
-    },
-    async findLists(userId) {
-        return lists.filter(list => list.userId === userId);
-    },
-    async findList(userId, alias) {
-        return lists.find(list => list.userId === userId && list.alias === alias);
-    },
-    async findNotionAccount(userId) {
-        return notionAccounts.find(account => account.userId === userId);
-    },
-    async addPattern(userId, type, pattern) {
-        const storedPattern = { userId, order: 1, type, pattern };
-        patterns.push(storedPattern);
-        return storedPattern;
-    },
-    async findPatterns(userId) {
-        return patterns.filter(pattern => pattern.userId === userId).sort((a, b) => a.order - b.order);
-    },
-    async storeCloseReminders(userId, reminders) {
-        closeReminders[userId] = reminders;
-    },
-    async getCloseReminders(userId) {
-        return closeReminders[userId] || [];
-    },
-    async addCloseReminder(userId, reminder) {
-        if (!closeReminders[userId]) {
-            closeReminders[userId] = [];
-        }
-
-        closeReminders[userId].push(reminder);
-    },
-    async removeCloseReminder(userId, id) {
-        if (!closeReminders[userId]) return;
-        closeReminders[userId].splice(closeReminders[userId].find(r => r.id === id), 1);
-    }
-};
-
-class Cache {
-    constructor(ttlMs) {
-        this._ttlMs = ttlMs;
-        this._data = new Map();
-
-        setInterval(() => {
-            const entries = [...this._data.entries()];
-
-            for (let i = entries.length - 1; i >= 0; i--) {
-                const [key, [updatedAt]] = entries[i];
-
-                if (Date.now() - updatedAt >= ttlMs) {
-                    this._data.delete(key);
-                }
-            }
-        }, ttlMs);
-    }
-
-    set(key, value) {
-        this._data.set(key, [Date.now(), value]);
-    }
-
-    get(key) {
-        if (!this._data.has(key)) {
-            return undefined;
-        }
-
-        return this._data.get(key)[1];
-    }
-
-    delete(key) {
-        this._data.delete(key);
-    }
-}
-
 (async () => {
+    const storage = new InMemoryStorage();
+    const user = await storage.createUser({ language: 'russian', timezoneOffsetMinutes: 3 * 60 });
+    await storage.createTelegramAccount(user.userId, 56681133);
+    await storage.createNotionAccount(user.userId, 'secret_sUmg2sizdQDYmfGrQ0amjXSuOv4tHTevLn4PVgcopG6');
+    await storage.setNotesDatabaseId(user.userId, 'a64b650b4036407385272f3867de44f3');
+    await storage.setRemindersDatabaseId(user.userId, 'edfe4ac495d24ddd88cbe45e635d0418');
+    await storage.addPattern(user.userId, 'list', new PatternBuilder().build('купить {item}'), { list: 'shopping' });
+    await storage.addPattern(user.userId, 'reminder', new PatternBuilder().build('[напомни ]({reminder} {date}|{date} {reminder})'));
+    await storage.addPattern(user.userId, 'list', new PatternBuilder().build('#{list} {item}'));
+    await storage.addPattern(user.userId, 'list', new PatternBuilder().build('{item} #{list!}'));
+    await storage.addPattern(user.userId, 'note', new PatternBuilder().build('{note}[ #{tag}][ #{tag}][ #{tag}]'));
+    await storage.createList(user.userId, 'ca75e1d762c24d4893e2d682c1823797', 'shopping');
+    await storage.createList(user.userId, '3af8dfb79d18428b86419bd7a211084a', 'recipes');
+
     const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
     const userPhases = new Cache(60 * 60_000);
     const userPhaseContext = new Cache(60 * 60_000);
@@ -447,14 +285,15 @@ class Cache {
                         : listMatchers;
     
                 const result = patternMatcher.match(ctx.message.text, pattern.pattern, matchers);
+                const variables = { ...pattern.defaultVariables, ...result.variables };
     
                 if (result.match) {    
                     if (pattern.type === 'note') {
-                        const note = result.variables.note;
-                        const tags = result.variables.tag
-                            ? Array.isArray(result.variables.tag)
-                                ? result.variables.tag
-                                : [result.variables.tag]
+                        const note = variables.note;
+                        const tags = variables.tag
+                            ? Array.isArray(variables.tag)
+                                ? variables.tag
+                                : [variables.tag]
                             : [];
         
                         await notion.pages.create(
@@ -465,8 +304,8 @@ class Cache {
                             })
                         );
                     } else if (pattern.type === 'reminder') {
-                        const date = dateParser.parse(result.variables.date);
-                        const reminder = result.variables.reminder;
+                        const date = dateParser.parse(variables.date);
+                        const reminder = variables.reminder;
 
                         const reminderPage = await notion.pages.create(
                             createReminderPage({
@@ -482,8 +321,13 @@ class Cache {
                             await storage.addCloseReminder(userId, parsedReminder);
                         }
                     } else if (pattern.type === 'list') {
-                        const alias = result.variables.list ?? pattern.defaultVariables?.list;
-                        const item = result.variables.item;
+                        const alias = variables.list;
+                        const item = variables.item;
+
+                        if (!alias) {
+                            await ctx.reply('Please add a default list for this pattern');
+                            return;
+                        }
 
                         const list = await storage.findList(userId, alias);
                         if (!list) {
@@ -500,7 +344,7 @@ class Cache {
                         );
                     }
 
-                    await ctx.reply('It\'s a match! 🎉\n\n' + JSON.stringify(result.variables, null, 2));
+                    await ctx.reply('It\'s a match! 🎉\n\n' + JSON.stringify(variables, null, 2));
                     
                     return;
                 }
@@ -701,9 +545,24 @@ function formatUtcDateWithTimezone(date, timezoneOffsetMinutes) {
     return dateWithTimezone.toISOString().slice(0, -1) + (timezoneOffsetMinutes >= 0 ? '+' : '-') + timezone;
 }
 
-function toUTC(date) {
-    return new Date(Date.UTC(
-        date.getFullYear(), date.getMonth(), date.getDate(),
-        date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds()
-    ));
+function stringifyPattern(pattern) {
+    return pattern.map((token) => {
+        if (token.type === 'variable') {
+            if (token.bang) {
+                return `{${token.value}!}`;
+            } else {
+                return `{${token.value}}`;
+            }
+        }
+
+        if (token.type === 'optional') {
+            return `[${stringifyPattern(token.value)}]`;
+        }
+
+        if (token.type === 'variational') {
+            return `(${token.value.map(variation => stringifyPattern(variation)).join('|')})`;
+        }
+
+        return token.value;
+    }).join('');
 }
