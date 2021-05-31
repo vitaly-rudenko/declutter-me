@@ -1,23 +1,30 @@
+const NotionAccount = require('../entities/NotionAccount');
+const NotionList = require('../entities/NotionList');
+const TelegramAccount = require('../entities/TelegramAccount');
+const Template = require('../entities/Template');
+const User = require('../entities/User');
+const NotionAccountNotFound = require('./NotionAccountNotFound');
+
 class InMemoryStorage {
     constructor() {
         this._id = 0;
         this._users = [];
         this._telegramAccounts = [];
         this._notionAccounts = [];
-        this._lists = [];
-        this._patterns = [];
+        this._notionLists = [];
+        this._templates = [];
         this._closeReminders = [];
     }
 
     async createUser({ language, timezoneOffsetMinutes }) {
         this._id++;
-        const user = { userId: this._id, language, timezoneOffsetMinutes };
+        const user = new User({ userId: this._id, language, timezoneOffsetMinutes });
         this._users.push(user);
         return user;
     }
 
     async findUser(userId) {
-        return this._users.find(user => user.userId === userId);
+        return this._users.find(u => u.userId === userId) || null;
     }
 
     async getUsers() {
@@ -25,66 +32,74 @@ class InMemoryStorage {
     }
 
     async createTelegramAccount(userId, telegramUserId) {
-        const telegramAccount = { userId, telegramUserId };
+        const telegramAccount = new TelegramAccount({ userId, telegramUserId });
         this._telegramAccounts.push(telegramAccount);
         return telegramAccount;
     }
 
     async findTelegramAccount(telegramUserId) {
-        return this._telegramAccounts.find(account => account.telegramUserId === telegramUserId);
+        return this._telegramAccounts.find(a => a.telegramUserId === telegramUserId) || null;
     }
 
     async findTelegramAccountByUserId(userId) {
-        return this._telegramAccounts.find(account => account.userId === userId);
+        return this._telegramAccounts.find(a => a.userId === userId) || null;
     }
 
     async createNotionAccount(userId, token) {
-        const notionAccount = { userId, token, notesDatabaseId: null, remindersDatabaseId: null };
+        const notionAccount = new NotionAccount({ userId, token });
         this._notionAccounts.push(notionAccount);
         return notionAccount;
     }
 
+    async findNotionAccount(userId) {
+        return this._notionAccounts.find(a => a.userId === userId) || null;
+    }
+
     async setNotesDatabaseId(userId, databaseId) {
         const notionAccount = await this.findNotionAccount(userId);
-        notionAccount.notesDatabaseId = databaseId;
+        if (!notionAccount) {
+            throw new NotionAccountNotFound();
+        }
+
+        notionAccount.setNotesDatabaseId(databaseId);
     }
 
     async setRemindersDatabaseId(userId, databaseId) {
         const notionAccount = await this.findNotionAccount(userId);
-        notionAccount.remindersDatabaseId = databaseId;
+        if (!notionAccount) {
+            throw new NotionAccountNotFound();
+        }
+
+        notionAccount.setRemindersDatabaseId(databaseId);
     }
 
     async createList(userId, databaseId, alias) {
-        const list = { userId, databaseId, alias };
-        this._lists.push(list);
-        return list;
+        const notionList = new NotionList({ userId, databaseId, alias });
+        this._notionLists.push(notionList);
+        return notionList;
     }
 
     async findLists(userId) {
-        return this._lists.filter(list => list.userId === userId);
+        return this._notionLists.filter(l => l.userId === userId);
     }
 
     async findList(userId, alias) {
-        return this._lists.find(list => list.userId === userId && list.alias === alias);
+        return this._notionLists.find(l => l.userId === userId && l.alias === alias) || null;
     }
 
-    async findNotionAccount(userId) {
-        return this._notionAccounts.find(account => account.userId === userId);
-    }
-
-    async addPattern(userId, type, pattern, defaultVariables) {
-        const patterns = await this.findPatterns(userId);
-        const maxOrder = patterns.length > 0
-            ? Math.max(...patterns.map(p => p.order))
+    async addPattern(userId, type, pattern, defaultVariables = {}) {
+        const templates = await this.findPatterns(userId);
+        const maxOrder = templates.length > 0
+            ? Math.max(...templates.map(p => p.order))
             : 0;
 
-        const storedPattern = { userId, order: maxOrder + 1, type, pattern, defaultVariables };
-        this._patterns.push(storedPattern);
-        return storedPattern;
+        const template = new Template({ userId, order: maxOrder + 1, type, pattern, defaultVariables });
+        this._templates.push(template);
+        return template;
     }
 
     async findPatterns(userId) {
-        return this._patterns.filter(pattern => pattern.userId === userId).sort((a, b) => a.order - b.order);
+        return this._templates.filter(t => t.userId === userId).sort((a, b) => a.order - b.order);
     }
 
     async storeCloseReminders(userId, reminders) {
@@ -105,7 +120,11 @@ class InMemoryStorage {
 
     async removeCloseReminder(userId, id) {
         if (!this._closeReminders[userId]) return;
-        this._closeReminders[userId].splice(this._closeReminders[userId].find(r => r.id === id), 1);
+        
+        const index = this._closeReminders[userId].findIndex(r => r.id === id);
+        if (index === -1) return;
+
+        this._closeReminders[userId].splice(index, 1);
     }
 }
 
