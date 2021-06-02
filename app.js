@@ -6,28 +6,31 @@ const PatternBuilder = require('./app/PatternBuilder');
 const PatternMatcher = require('./app/PatternMatcher');
 const RussianDateParser = require('./app/date-parsers/RussianDateParser');
 const NoteMatchers = require('./app/matchers/NoteMatchers');
-const ListMatchers = require('./app/matchers/ListMatchers');
+const ListMatchers = require('./app/lists/ListMatchers');
 const ReminderMatchers = require('./app/matchers/ReminderMatchers');
 const InMemoryStorage = require('./app/storage/InMemoryStorage');
 const Cache = require('./app/utils/Cache');
+const Reminder = require('./app/reminders/Reminder');
+const List = require('./app/lists/List');
+const Template = require('./app/templates/Template');
 
 require('dotenv').config();
 
 (async () => {
     const storage = new InMemoryStorage();
     const user = await storage.createUser({ language: 'russian', timezoneOffsetMinutes: 3 * 60 });
-    await storage.createTelegramAccount(user.userId, 56681133);
-    await storage.createNotionAccount(user.userId, 'secret_sUmg2sizdQDYmfGrQ0amjXSuOv4tHTevLn4PVgcopG6');
-    await storage.setNotesDatabaseId(user.userId, 'a64b650b4036407385272f3867de44f3');
-    await storage.setRemindersDatabaseId(user.userId, 'edfe4ac495d24ddd88cbe45e635d0418');
-    await storage.addPattern(user.userId, 'reminder', new PatternBuilder().build('[напомни[ть][ мне] ]{reminder} {date}'));
-    await storage.addPattern(user.userId, 'reminder', new PatternBuilder().build('{date} [напомни[ть][ мне] ]{reminder}'));
-    await storage.addPattern(user.userId, 'list', new PatternBuilder().build('купить {item}'), { list: 'shopping' });
-    await storage.addPattern(user.userId, 'list', new PatternBuilder().build('#{list} {item}'));
-    await storage.addPattern(user.userId, 'list', new PatternBuilder().build('{item} #{list!}'));
-    await storage.addPattern(user.userId, 'note', new PatternBuilder().build('{note}[ #{tag}][ #{tag}][ #{tag}]'));
-    await storage.createList(user.userId, 'ca75e1d762c24d4893e2d682c1823797', 'shopping');
-    await storage.createList(user.userId, '3af8dfb79d18428b86419bd7a211084a', 'recipes');
+    await storage.createTelegramAccount(user.id, 56681133);
+    await storage.createNotionAccount(user.id, 'secret_sUmg2sizdQDYmfGrQ0amjXSuOv4tHTevLn4PVgcopG6');
+    await storage.setNotesDatabaseId(user.id, 'a64b650b4036407385272f3867de44f3');
+    await storage.setRemindersDatabaseId(user.id, 'edfe4ac495d24ddd88cbe45e635d0418');
+    await storage.storeTemplate(new Template({ userId: user.id, order: 1, type: 'reminder', pattern: new PatternBuilder().build('[напомни[ть][ мне] ]{reminder} {date}') }));
+    await storage.storeTemplate(new Template({ userId: user.id, order: 2, type: 'reminder', pattern: new PatternBuilder().build('{date} [напомни[ть][ мне] ]{reminder}') }));
+    await storage.storeTemplate(new Template({ userId: user.id, order: 3, type: 'list', pattern: new PatternBuilder().build('купить {item}'), defaultVariables: { list: 'shopping' } }));
+    await storage.storeTemplate(new Template({ userId: user.id, order: 4, type: 'list', pattern: new PatternBuilder().build('#{list} {item}') }));
+    await storage.storeTemplate(new Template({ userId: user.id, order: 5, type: 'list', pattern: new PatternBuilder().build('{item} #{list!}') }));
+    await storage.storeTemplate(new Template({ userId: user.id, order: 6, type: 'note', pattern: new PatternBuilder().build('{note}[ #{tag}][ #{tag}][ #{tag}]') }));
+    await storage.storeList(new List({ id: 'ca75e1d762c24d4893e2d682c1823797', alias: 'shopping', userId: user.id }));
+    await storage.storeList(new List({ id: '3af8dfb79d18428b86419bd7a211084a', alias: 'recipes', userId: user.id }));
 
     const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
     const userPhases = new Cache(60 * 60_000);
@@ -61,7 +64,7 @@ require('dotenv').config();
                 return;
             }
 
-            ctx.state.user = await storage.findUser(ctx.state.userId);
+            ctx.state.user = await storage.findUserById(ctx.state.userId);
             if (!ctx.state.user && required) {
                 ctx.reply('Please use /start first 🙇');
                 return;
@@ -112,7 +115,7 @@ require('dotenv').config();
         }
 
         const user = await storage.createUser();
-        await storage.createTelegramAccount(user.userId, ctx.from.id);
+        await storage.createTelegramAccount(user.id, ctx.from.id);
 
         await ctx.reply('Hi! Use /notion to setup Notion integration.');
     });
@@ -121,8 +124,8 @@ require('dotenv').config();
         withUser({ required: false }),
         withNotion({ required: false }),
         async (ctx) => {
-            const lists = ctx.state.userId ? await storage.findLists(ctx.state.userId) : [];
-            const patterns = ctx.state.userId ? await storage.findPatterns(ctx.state.userId) : [];
+            const lists = ctx.state.userId ? await storage.findListsByUserId(ctx.state.userId) : [];
+            const templates = ctx.state.userId ? await storage.findTemplatesByUserId(ctx.state.userId) : [];
 
             await ctx.reply(
                 `Hi, ${ctx.from.first_name}!\n` +
@@ -133,9 +136,9 @@ require('dotenv').config();
                 `  - Notes: ${ctx.state.notionAccount?.notesDatabaseId ?? '<not provided>'}\n` +
                 `  - Reminders: ${ctx.state.notionAccount?.remindersDatabaseId ?? '<not provided>'}\n` +
                 `  - Lists:\n` +
-                (lists.map(list => `    - ${list.alias} (${list.databaseId})`).join('\n') || '    <none>') + '\n' +
-                `  - Patterns:\n` +
-                (patterns.map(pattern => `    - ${pattern.type}: ${stringifyPattern(pattern.pattern)}`).join('\n') || '    <none>') + '\n'
+                (lists.map(list => `    - ${list.alias} (${list.id})`).join('\n') || '    <none>') + '\n' +
+                `  - Templates:\n` +
+                (templates.map(template => `    - ${template.type}: ${stringifyPattern(template.pattern)}`).join('\n') || '    <none>') + '\n'
             );
         }
     );
@@ -154,66 +157,66 @@ require('dotenv').config();
         await ctx.reply(
             'Choose pattern type:',
             Markup.inlineKeyboard([
-                Markup.button.callback('Note', 'pattern:note'),
-                Markup.button.callback('List', 'pattern:list'),
-                Markup.button.callback('Reminder', 'pattern:reminder'),
+                Markup.button.callback('Note', 'template:note'),
+                Markup.button.callback('List', 'template:list'),
+                Markup.button.callback('Reminder', 'template:reminder'),
             ])
         );
-        userPhases.set(ctx.state.userId, 'pattern:type');
+        userPhases.set(ctx.state.userId, 'template:type');
     });
 
-    bot.action('pattern:note', withPhase('pattern:type', async (ctx) => {
+    bot.action('template:note', withPhase('template:type', async (ctx) => {
         await ctx.answerCbQuery();
-        await ctx.reply('Got it! Now send me the pattern:');
+        await ctx.reply('Got it! Now send me the template:');
 
         userPhaseContext.set(ctx.state.userId, { type: 'note' });
-        userPhases.set(ctx.state.userId, 'pattern:pattern');
+        userPhases.set(ctx.state.userId, 'template:pattern');
     }));
 
-    bot.action('pattern:reminder', withPhase('pattern:type', async (ctx) => {
+    bot.action('template:reminder', withPhase('template:type', async (ctx) => {
         await ctx.answerCbQuery();
-        await ctx.reply('Got it! Now send me the pattern:');
+        await ctx.reply('Got it! Now send me the template:');
 
         userPhaseContext.set(ctx.state.userId, { type: 'reminder' });
-        userPhases.set(ctx.state.userId, 'pattern:pattern');
+        userPhases.set(ctx.state.userId, 'template:pattern');
     }));
 
-    bot.action('pattern:list', withPhase('pattern:type', async (ctx) => {
+    bot.action('template:list', withPhase('template:type', async (ctx) => {
         await ctx.answerCbQuery();
 
         userPhaseContext.set(ctx.state.userId, { type: 'list' });
 
-        const lists = await storage.findLists(ctx.state.userId);
+        const lists = await storage.findListsByUserId(ctx.state.userId);
         if (lists.length > 0) {
             await ctx.reply(
                 'Got it! What list would you like to use by default?',
                 Markup.inlineKeyboard([
-                    ...lists.map(list => Markup.button.callback(list.alias, 'pattern:list:' + list.alias)),
-                    Markup.button.callback('Skip', 'pattern:list:alias:skip'),
+                    ...lists.map(list => Markup.button.callback(list.alias, 'template:list:' + list.alias)),
+                    Markup.button.callback('Skip', 'template:list:alias:skip'),
                 ])
             );
     
-            userPhases.set(ctx.state.userId, 'pattern:list:alias');
+            userPhases.set(ctx.state.userId, 'template:list:alias');
         } else {
-            await ctx.reply(`Okay! Now send me the pattern:`);
-            userPhases.set(ctx.state.userId, 'pattern:pattern');
+            await ctx.reply(`Okay! Now send me the template:`);
+            userPhases.set(ctx.state.userId, 'template:pattern');
         }
     }));
 
-    bot.action(/pattern:list:(.+)/, withPhase('pattern:list:alias', async (ctx) => {
+    bot.action(/template:list:(.+)/, withPhase('template:list:alias', async (ctx) => {
         await ctx.answerCbQuery();
         
         const alias = ctx.match[1];
         userPhaseContext.get(ctx.state.userId).defaultVariables = { list: alias };
 
-        await ctx.reply(`Default list: "${alias}".\nNow send me the pattern:`);
-        userPhases.set(ctx.state.userId, 'pattern:pattern');
+        await ctx.reply(`Default list: "${alias}".\nNow send me the template:`);
+        userPhases.set(ctx.state.userId, 'template:pattern');
     }));
 
-    bot.action('pattern:list:alias:skip', withPhase('pattern:list:alias', async (ctx) => {
+    bot.action('template:list:alias:skip', withPhase('template:list:alias', async (ctx) => {
         await ctx.answerCbQuery();
-        await ctx.reply(`Okay! Now send me the pattern:`);
-        userPhases.set(ctx.state.userId, 'pattern:pattern');
+        await ctx.reply(`Okay! Now send me the template:`);
+        userPhases.set(ctx.state.userId, 'template:pattern');
     }));
 
     bot.on('message',
@@ -249,47 +252,62 @@ require('dotenv').config();
             const alias = ctx.message.text;
             const databaseId = userPhaseContext.get(ctx.state.userId);
 
-            await storage.createList(ctx.state.userId, databaseId, alias);
+            await storage.storeList(
+                new List({
+                    id: databaseId,
+                    userId: ctx.state.userId,
+                    alias,
+                })
+            );
+
             await ctx.reply(`List "${alias}" has been added!`);
             userPhases.delete(ctx.state.userId);
         }),
         // Patterns
-        withPhase('pattern:pattern', async (ctx) => {
+        withPhase('template:pattern', async (ctx) => {
             const pattern = new PatternBuilder().build(ctx.message.text);
 
-            await storage.addPattern(ctx.state.userId, userPhaseContext.get(ctx.state.userId).type, pattern);
+            await storage.storeTemplate(
+                new Template({
+                    userId: ctx.state.userId,
+                    type: userPhaseContext.get(ctx.state.userId).type,
+                    pattern,
+                    order: 1,
+                })
+            );
+
             await ctx.reply('Pattern has been added!');
             userPhases.delete(ctx.state.userId);
         }),
         // Handle message
         withNotion(),
         withPhase(null, async (ctx) => {
-            const { user: { userId, timezoneOffsetMinutes }, notionAccount, notion } = ctx.state;
+            const { userId, user: { timezoneOffsetMinutes }, notionAccount, notion } = ctx.state;
     
             if (ctx.message.text.startsWith('/')) {
                 return;
             }
     
-            const patterns = await storage.findPatterns(userId);
+            const templates = await storage.findTemplatesByUserId(userId);
     
             const dateParser = new RussianDateParser();
             const patternMatcher = new PatternMatcher();
             const noteMatchers = new NoteMatchers();
             const listMatchers = new ListMatchers();
             const reminderMatchers = new ReminderMatchers({ dateParser });
-    
-            for (const pattern of patterns) {
-                const matchers = pattern.type === 'note'
+
+            for (const template of templates) {
+                const matchers = template.type === 'note'
                     ? noteMatchers
-                    : pattern.type === 'reminder'
+                    : template.type === 'reminder'
                         ? reminderMatchers
                         : listMatchers;
     
-                const result = patternMatcher.match(ctx.message.text, pattern.pattern, matchers);
-                const variables = { ...pattern.defaultVariables, ...result.variables };
+                const result = patternMatcher.match(ctx.message.text, template.pattern, matchers);
+                const variables = { ...template.defaultVariables, ...result.variables };
     
                 if (result.match) {    
-                    if (pattern.type === 'note') {
+                    if (template.type === 'note') {
                         const note = variables.note;
                         const tags = variables.tag
                             ? Array.isArray(variables.tag)
@@ -304,7 +322,7 @@ require('dotenv').config();
                                 tags,
                             })
                         );
-                    } else if (pattern.type === 'reminder') {
+                    } else if (template.type === 'reminder') {
                         const date = dateParser.parse(variables.date);
                         const reminder = variables.reminder;
 
@@ -318,10 +336,10 @@ require('dotenv').config();
                         );
 
                         const parsedReminder = parseReminderPage(reminderPage);
-                        if (isCloseReminder(parsedReminder)) {
+                        if (parsedReminder && isCloseReminder(parsedReminder)) {
                             await storage.addCloseReminder(userId, parsedReminder);
                         }
-                    } else if (pattern.type === 'list') {
+                    } else if (template.type === 'list') {
                         const alias = variables.list;
                         const item = variables.item;
 
@@ -330,7 +348,7 @@ require('dotenv').config();
                             return;
                         }
 
-                        const list = await storage.findList(userId, alias);
+                        const list = await storage.findListByAlias({ alias, userId });
                         if (!list) {
                             if (result.bang?.list) continue;
                             await ctx.reply(`Could not find the list: "${alias}"`);
@@ -339,7 +357,7 @@ require('dotenv').config();
                         
                         await notion.pages.create(
                             createListItemPage({
-                                databaseId: list.databaseId,
+                                databaseId: list.id,
                                 item,
                             })
                         );
@@ -387,7 +405,7 @@ require('dotenv').config();
     async function sendAllReminders() {
         const users = await storage.getUsers();
         for (const user of users) {
-            await sendReminders(user.userId);
+            await sendReminders(user.id);
         }
     }
 
@@ -399,14 +417,14 @@ require('dotenv').config();
         for (const reminder of remindersToSend) {
             await markReminderAsDone(userId, reminder.id);
             await storage.removeCloseReminder(userId, reminder.id);
-            await bot.telegram.sendMessage(telegramAccount.telegramUserId, reminder.reminder);
+            await bot.telegram.sendMessage(telegramAccount.telegramUserId, reminder.content);
         }
     }
 
     async function syncAllReminders() {
         const users = await storage.getUsers();
         for (const user of users) {
-            await syncReminders(user.userId);
+            await syncReminders(user.id);
         }
     }
 
@@ -428,7 +446,7 @@ require('dotenv').config();
             'database_id': notionAccount.remindersDatabaseId,
         });
 
-        return pages.results.map(parseReminderPage);
+        return pages.results.map(parseReminderPage).filter(Boolean);
     }
 
     async function markReminderAsDone(userId, id) {
@@ -527,12 +545,20 @@ function createListItemPage({ databaseId, item }) {
 }
 
 function parseReminderPage(page) {
-    return {
+    const rawContent = page.properties['Reminder'].title[0]?.text.content
+    const rawDate = page.properties['Date']?.date.start
+    const rawReminded = page.properties['Reminded'].checkbox
+
+    if (rawContent === undefined || rawDate === undefined || rawReminded === undefined) {
+        return null;
+    }
+
+    return new Reminder({
         id: page.id,
-        reminder: page.properties['Reminder'].title[0].text.content,
-        date: new Date(page.properties['Date'].date.start),
+        content: page.properties['Reminder'].title[0].text.content,
+        date: new Date(),
         reminded: page.properties['Reminded'].checkbox,
-    };
+    });
 }
 
 function formatUtcDateWithTimezone(date, timezoneOffsetMinutes) {

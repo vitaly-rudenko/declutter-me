@@ -1,12 +1,11 @@
 const chai = require('chai');
-const TelegramAccount = require('../../app/entities/TelegramAccount');
-const NotionAccount = require('../../app/entities/NotionAccount');
-const User = require('../../app/entities/User');
+const TelegramAccount = require('../../app/telegram-accounts/TelegramAccount');
+const NotionAccount = require('../../app/notion-accounts/NotionAccount');
+const User = require('../../app/users/User');
 const InMemoryStorage = require('../../app/storage/InMemoryStorage');
 const NotionAccountNotFound = require('../../app/storage/NotionAccountNotFound');
-const NotionList = require('../../app/entities/NotionList');
-const PatternBuilder = require('../../app/PatternBuilder');
-const Template = require('../../app/entities/Template');
+const List = require('../../app/lists/List');
+const Template = require('../../app/templates/Template');
 
 const { expect } = chai;
 chai.use(require('chai-as-promised'));
@@ -20,21 +19,21 @@ describe('InMemoryStorage', () => {
     });
 
     it('should implement user management', async () => {
-        expect(await inMemoryStorage.findUser(1)).to.eq(null);
+        expect(await inMemoryStorage.findUserById(1)).to.eq(null);
         expect(await inMemoryStorage.getUsers()).to.deep.eq([]);
 
         const user1 = await inMemoryStorage.createUser({ language: 'english', timezoneOffsetMinutes: 123 });
         const user2 = await inMemoryStorage.createUser({ language: 'ukrainian', timezoneOffsetMinutes: 146 });
         const user3 = await inMemoryStorage.createUser({ language: 'russian', timezoneOffsetMinutes: 0 });
 
-        expect(user1).to.deep.eq(new User({ userId: 1, language: 'english', timezoneOffsetMinutes: 123 }));
-        expect(user2).to.deep.eq(new User({ userId: 2, language: 'ukrainian', timezoneOffsetMinutes: 146 }));
-        expect(user3).to.deep.eq(new User({ userId: 3, language: 'russian', timezoneOffsetMinutes: 0 }));
+        expect(user1).to.deep.eq(new User({ id: 1, language: 'english', timezoneOffsetMinutes: 123 }));
+        expect(user2).to.deep.eq(new User({ id: 2, language: 'ukrainian', timezoneOffsetMinutes: 146 }));
+        expect(user3).to.deep.eq(new User({ id: 3, language: 'russian', timezoneOffsetMinutes: 0 }));
 
-        expect(await inMemoryStorage.findUser(1)).to.eq(user1);
-        expect(await inMemoryStorage.findUser(2)).to.eq(user2);
-        expect(await inMemoryStorage.findUser(3)).to.eq(user3);
-        expect(await inMemoryStorage.findUser(4)).to.be.null;
+        expect(await inMemoryStorage.findUserById(1)).to.eq(user1);
+        expect(await inMemoryStorage.findUserById(2)).to.eq(user2);
+        expect(await inMemoryStorage.findUserById(3)).to.eq(user3);
+        expect(await inMemoryStorage.findUserById(4)).to.be.null;
 
         expect(await inMemoryStorage.getUsers()).to.deep.eq([user1, user2, user3]);
     });
@@ -52,9 +51,9 @@ describe('InMemoryStorage', () => {
             expect(await inMemoryStorage.findTelegramAccount(123456)).to.be.null;
             expect(await inMemoryStorage.findTelegramAccountByUserId(1)).to.be.null;
 
-            const telegramAccount1 = await inMemoryStorage.createTelegramAccount(user1.userId, 123456);
-            const telegramAccount2 = await inMemoryStorage.createTelegramAccount(user2.userId, 464646);
-            const telegramAccount3 = await inMemoryStorage.createTelegramAccount(user3.userId, 868686);
+            const telegramAccount1 = await inMemoryStorage.createTelegramAccount(user1.id, 123456);
+            const telegramAccount2 = await inMemoryStorage.createTelegramAccount(user2.id, 464646);
+            const telegramAccount3 = await inMemoryStorage.createTelegramAccount(user3.id, 868686);
 
             expect(telegramAccount1).to.deep.eq(new TelegramAccount({ userId: 1, telegramUserId: 123456 }));
             expect(telegramAccount2).to.deep.eq(new TelegramAccount({ userId: 2, telegramUserId: 464646 }));
@@ -74,9 +73,9 @@ describe('InMemoryStorage', () => {
         it('should implement notion account management', async () => {
             expect(await inMemoryStorage.findNotionAccount(1)).to.be.null;
 
-            const notionAccount1 = await inMemoryStorage.createNotionAccount(user1.userId, 'fake-token-1');
-            const notionAccount2 = await inMemoryStorage.createNotionAccount(user2.userId, 'fake-token-2');
-            const notionAccount3 = await inMemoryStorage.createNotionAccount(user3.userId, 'fake-token-3');
+            const notionAccount1 = await inMemoryStorage.createNotionAccount(user1.id, 'fake-token-1');
+            const notionAccount2 = await inMemoryStorage.createNotionAccount(user2.id, 'fake-token-2');
+            const notionAccount3 = await inMemoryStorage.createNotionAccount(user3.id, 'fake-token-3');
 
             expect(notionAccount1).to.deep.eq(new NotionAccount({ userId: 1, token: 'fake-token-1' }));
             expect(notionAccount2).to.deep.eq(new NotionAccount({ userId: 2, token: 'fake-token-2' }));
@@ -103,27 +102,27 @@ describe('InMemoryStorage', () => {
         });
 
         it('should implement notion list management', async () => {
-            const notionList1 = await inMemoryStorage.createList(user1.userId, 'fake-list-id-1', 'alias-1');
-            const notionList2 = await inMemoryStorage.createList(user2.userId, 'fake-list-id-2', 'alias-2');
-            const notionList3 = await inMemoryStorage.createList(user2.userId, 'fake-list-id-3', 'alias-3');
+            const notionList1 = await inMemoryStorage.storeList(new List({ userId: user1.id, id: 'fake-list-id-1', alias: 'alias-1' }));
+            const notionList2 = await inMemoryStorage.storeList(new List({ userId: user2.id, id: 'fake-list-id-2', alias: 'alias-2' }));
+            const notionList3 = await inMemoryStorage.storeList(new List({ userId: user2.id, id: 'fake-list-id-3', alias: 'alias-3' }));
 
-            expect(notionList1).to.deep.eq(new NotionList({ userId: 1, databaseId: 'fake-list-id-1', alias: 'alias-1' }));
-            expect(notionList2).to.deep.eq(new NotionList({ userId: 2, databaseId: 'fake-list-id-2', alias: 'alias-2' }));
-            expect(notionList3).to.deep.eq(new NotionList({ userId: 2, databaseId: 'fake-list-id-3', alias: 'alias-3' }));
+            expect(notionList1).to.deep.eq(new List({ userId: 1, id: 'fake-list-id-1', alias: 'alias-1' }));
+            expect(notionList2).to.deep.eq(new List({ userId: 2, id: 'fake-list-id-2', alias: 'alias-2' }));
+            expect(notionList3).to.deep.eq(new List({ userId: 2, id: 'fake-list-id-3', alias: 'alias-3' }));
 
-            expect(await inMemoryStorage.findLists(1)).to.deep.eq([notionList1]);
-            expect(await inMemoryStorage.findLists(2)).to.deep.eq([notionList2, notionList3]);
-            expect(await inMemoryStorage.findLists(3)).to.deep.eq([]);
-            expect(await inMemoryStorage.findLists(4)).to.deep.eq([]);
+            expect(await inMemoryStorage.findListsByUserId(1)).to.deep.eq([notionList1]);
+            expect(await inMemoryStorage.findListsByUserId(2)).to.deep.eq([notionList2, notionList3]);
+            expect(await inMemoryStorage.findListsByUserId(3)).to.deep.eq([]);
+            expect(await inMemoryStorage.findListsByUserId(4)).to.deep.eq([]);
 
-            expect(await inMemoryStorage.findList(1, 'alias-1')).to.eq(notionList1);
-            expect(await inMemoryStorage.findList(2, 'alias-2')).to.eq(notionList2);
-            expect(await inMemoryStorage.findList(2, 'alias-3')).to.eq(notionList3);
+            expect(await inMemoryStorage.findListByAlias({ alias: 'alias-1', userId: 1 })).to.eq(notionList1);
+            expect(await inMemoryStorage.findListByAlias({ alias: 'alias-2', userId: 2 })).to.eq(notionList2);
+            expect(await inMemoryStorage.findListByAlias({ alias: 'alias-3', userId: 2 })).to.eq(notionList3);
 
-            expect(await inMemoryStorage.findList(1, 'alias-2')).to.be.null;
-            expect(await inMemoryStorage.findList(2, 'alias-1')).to.be.null;
-            expect(await inMemoryStorage.findList(3, 'alias-3')).to.be.null;
-            expect(await inMemoryStorage.findList(4, 'alias-4')).to.be.null;
+            expect(await inMemoryStorage.findListByAlias({ alias: 'alias-2', userId: 1 })).to.be.null;
+            expect(await inMemoryStorage.findListByAlias({ alias: 'alias-1', userId: 2 })).to.be.null;
+            expect(await inMemoryStorage.findListByAlias({ alias: 'alias-3', userId: 3 })).to.be.null;
+            expect(await inMemoryStorage.findListByAlias({ alias: 'alias-4', userId: 4 })).to.be.null;
         });
 
         it('should implement template management', async () => {
@@ -133,11 +132,11 @@ describe('InMemoryStorage', () => {
             const pattern4 = ['fake', 'pattern', 4];
             const pattern5 = ['fake', 'pattern', 5];
 
-            const template1 = await inMemoryStorage.addPattern(user1.userId, 'note', pattern1);
-            const template2 = await inMemoryStorage.addPattern(user2.userId, 'reminder', pattern2, { date: 'in five minutes' });
-            const template3 = await inMemoryStorage.addPattern(user2.userId, 'list', pattern3, { list: 'shopping' });
-            const template4 = await inMemoryStorage.addPattern(user2.userId, 'list', pattern4, {});
-            const template5 = await inMemoryStorage.addPattern(user3.userId, 'note', pattern5);
+            const template1 = await inMemoryStorage.storeTemplate(new Template({ userId: user1.id, order: 1, type: 'note', pattern: pattern1 }));
+            const template2 = await inMemoryStorage.storeTemplate(new Template({ userId: user2.id, order: 1, type: 'reminder', pattern: pattern2, defaultVariables: { date: 'in five minutes' } }));
+            const template3 = await inMemoryStorage.storeTemplate(new Template({ userId: user2.id, order: 2, type: 'list', pattern: pattern3, defaultVariables: { list: 'shopping' } }));
+            const template4 = await inMemoryStorage.storeTemplate(new Template({ userId: user2.id, order: 3, type: 'list', pattern: pattern4, defaultVariables: {} }));
+            const template5 = await inMemoryStorage.storeTemplate(new Template({ userId: user3.id, order: 1, type: 'note', pattern: pattern5 }));
 
             expect(template1)
                 .to.deep.eq(new Template({ userId: 1, type: 'note', order: 1, pattern: pattern1, defaultVariables: {} }));
@@ -150,10 +149,10 @@ describe('InMemoryStorage', () => {
             expect(template5)
                 .to.deep.eq(new Template({ userId: 3, type: 'note', order: 1, pattern: pattern5, defaultVariables: {} }));
             
-            expect(await inMemoryStorage.findPatterns(1)).to.deep.eq([template1]);
-            expect(await inMemoryStorage.findPatterns(2)).to.deep.eq([template2, template3, template4]);
-            expect(await inMemoryStorage.findPatterns(3)).to.deep.eq([template5]);
-            expect(await inMemoryStorage.findPatterns(4)).to.deep.eq([]);
+            expect(await inMemoryStorage.findTemplatesByUserId(1)).to.deep.eq([template1]);
+            expect(await inMemoryStorage.findTemplatesByUserId(2)).to.deep.eq([template2, template3, template4]);
+            expect(await inMemoryStorage.findTemplatesByUserId(3)).to.deep.eq([template5]);
+            expect(await inMemoryStorage.findTemplatesByUserId(4)).to.deep.eq([]);
         });
 
         it('should implement close reminders management', async () => {
@@ -162,9 +161,9 @@ describe('InMemoryStorage', () => {
             const reminder3 = { id: 'reminder-3' };
             const reminder4 = { id: 'reminder-4' };
 
-            await inMemoryStorage.storeCloseReminders(user1.userId, [reminder1]);
-            await inMemoryStorage.storeCloseReminders(user2.userId, [reminder2, reminder3]);
-            await inMemoryStorage.storeCloseReminders(user3.userId, [reminder4]);
+            await inMemoryStorage.storeCloseReminders(user1.id, [reminder1]);
+            await inMemoryStorage.storeCloseReminders(user2.id, [reminder2, reminder3]);
+            await inMemoryStorage.storeCloseReminders(user3.id, [reminder4]);
 
             expect(await inMemoryStorage.getCloseReminders(1)).to.deep.eq([reminder1]);
             expect(await inMemoryStorage.getCloseReminders(2)).to.deep.eq([reminder2, reminder3]);

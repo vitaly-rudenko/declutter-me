@@ -1,5 +1,5 @@
 class Template {
-    constructor({ userId, type, order, pattern, defaultVariables }) {
+    constructor({ userId, type, order, pattern, defaultVariables = {} }) {
         this._userId = userId;
         this._type = type;
         this._order = order;
