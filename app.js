@@ -4,9 +4,9 @@ const { URL } = require('url');
 const PatternBuilder = require('./app/PatternBuilder');
 const PatternMatcher = require('./app/PatternMatcher');
 const RussianDateParser = require('./app/date-parsers/RussianDateParser');
-const NoteMatchers = require('./app/matchers/NoteMatchers');
-const ListMatchers = require('./app/lists/ListMatchers');
-const ReminderMatchers = require('./app/matchers/ReminderMatchers');
+const NoteMatchers = require('./app/notes/NoteMatchers');
+const ListItemMatchers = require('./app/lists/ListItemMatchers');
+const ReminderMatchers = require('./app/reminders/ReminderMatchers');
 const InMemoryStorage = require('./app/storage/InMemoryStorage');
 const Reminder = require('./app/reminders/Reminder');
 const List = require('./app/lists/List');
@@ -17,13 +17,13 @@ const ListItem = require('./app/lists/ListItem');
 const NotionListItemSerializer = require('./app/lists/NotionListItemSerializer');
 const NotionReminderSerializer = require('./app/reminders/NotionReminderSerializer');
 const PatternStringifier = require('./app/PatternStringifier');
-const NotionSessionManager = require('./app/notion-accounts/NotionSessionManager');
+const NotionSessionManager = require('./app/notion/NotionSessionManager');
 const UserSessionManager = require('./app/users/UserSessionManager');
 
-const withTelegramAccount = require('./app/telegram-bot/middlewares/withTelegramAccount');
-const withPhaseFactory = require('./app/telegram-bot/middlewares/withPhaseFactory');
-const withUserFactory = require('./app/telegram-bot/middlewares/withUserFactory');
-const withNotionFactory = require('./app/telegram-bot/middlewares/withNotionFactory');
+const withTelegramAccount = require('./app/telegram/middlewares/withTelegramAccount');
+const withPhaseFactory = require('./app/telegram/middlewares/withPhaseFactory');
+const withUserFactory = require('./app/telegram/middlewares/withUserFactory');
+const withNotionFactory = require('./app/telegram/middlewares/withNotionFactory');
 const ReminderManager = require('./app/reminders/ReminderManager');
 
 require('dotenv').config();
@@ -264,7 +264,7 @@ require('dotenv').config();
             const dateParser = new RussianDateParser();
             const patternMatcher = new PatternMatcher();
             const noteMatchers = new NoteMatchers();
-            const listMatchers = new ListMatchers();
+            const listItemMatchers = new ListItemMatchers();
             const reminderMatchers = new ReminderMatchers({ dateParser });
 
             for (const template of templates) {
@@ -272,7 +272,7 @@ require('dotenv').config();
                     ? noteMatchers
                     : template.type === 'reminder'
                         ? reminderMatchers
-                        : listMatchers;
+                        : listItemMatchers;
     
                 const result = patternMatcher.match(ctx.message.text, template.pattern, matchers);
                 const variables = { ...template.defaultVariables, ...result.variables };

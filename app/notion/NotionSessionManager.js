@@ -1,6 +1,6 @@
 const { Client } = require('@notionhq/client/build/src');
 const NotionAccountNotFound = require('../errors/NotionAccountNotFound');
-const Cache = require('../utils/Cache');
+const Cache = require('../storage/Cache');
 
 class NotionSessionManager {
     /** @param {{ storage: import('../storage/InMemoryStorage') }} dependencies */

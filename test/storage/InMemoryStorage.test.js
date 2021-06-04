@@ -1,9 +1,9 @@
 const chai = require('chai');
-const TelegramAccount = require('../../app/telegram-accounts/TelegramAccount');
-const NotionAccount = require('../../app/notion-accounts/NotionAccount');
+const TelegramAccount = require('../../app/telegram/TelegramAccount');
+const NotionAccount = require('../../app/notion/NotionAccount');
 const User = require('../../app/users/User');
 const InMemoryStorage = require('../../app/storage/InMemoryStorage');
-const NotionAccountNotFound = require('../../app/storage/NotionAccountNotFound');
+const NotionAccountNotFound = require('../../app/errors/NotionAccountNotFound');
 const List = require('../../app/lists/List');
 const Template = require('../../app/templates/Template');
 

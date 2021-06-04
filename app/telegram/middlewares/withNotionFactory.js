@@ -1,7 +1,7 @@
 const { Client } = require('@notionhq/client');
 const NotionAccountNotFound = require('../../errors/NotionAccountNotFound');
 
-/** @param {import('../../notion-accounts/NotionSessionManager')} notionSessionManager */
+/** @param {import('../../notion/NotionSessionManager')} notionSessionManager */
 const withNotionFactory = (notionSessionManager) => {
     /** @param {{ required?: boolean }} [options] */
     return ({ required = true } = {}) => {

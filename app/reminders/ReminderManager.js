@@ -3,7 +3,7 @@ const NotionReminderSerializer = require('./NotionReminderSerializer');
 class ReminderManager {
     /**
      * @param {{
-     *     notionSessionManager: import('../notion-accounts/NotionSessionManager'),
+     *     notionSessionManager: import('../notion/NotionSessionManager'),
      *     storage: import('../storage/InMemoryStorage'),
      *     bot: import('telegraf').Telegraf,
      * }} dependencies

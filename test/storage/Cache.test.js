@@ -1,4 +1,5 @@
-const Cache = require('../../app/utils/Cache');
+const sinon = require('sinon');
+const Cache = require('../../app/storage/Cache');
 
 describe('Cache', () => {
     const TTL_MS = 14600;

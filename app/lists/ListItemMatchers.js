@@ -1,4 +1,4 @@
-class ListMatchers {
+class ListItemMatchers {
     constructor() {
         this.item = this.item.bind(this);
         this.list = this.list.bind(this);
@@ -17,4 +17,4 @@ class ListMatchers {
     }
 }
 
-module.exports = ListMatchers;
+module.exports = ListItemMatchers;

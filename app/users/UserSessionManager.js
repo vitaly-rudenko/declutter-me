@@ -1,4 +1,4 @@
-const Cache = require('../utils/Cache');
+const Cache = require('../storage/Cache');
 
 class UserSessionManager {
     constructor() {
