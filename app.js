@@ -13,6 +13,12 @@ const Cache = require('./app/utils/Cache');
 const Reminder = require('./app/reminders/Reminder');
 const List = require('./app/lists/List');
 const Template = require('./app/templates/Template');
+const NotionNoteSerializer = require('./app/notes/NotionNoteSerializer');
+const Note = require('./app/notes/Note');
+const NotionAccount = require('./app/notion-accounts/NotionAccount');
+const ListItem = require('./app/lists/ListItem');
+const NotionListItemSerializer = require('./app/lists/NotionListItemSerializer');
+const NotionReminderSerializer = require('./app/reminders/NotionReminderSerializer');
 
 require('dotenv').config();
 
@@ -308,41 +314,43 @@ require('dotenv').config();
     
                 if (result.match) {    
                     if (template.type === 'note') {
-                        const note = variables.note;
-                        const tags = variables.tag
-                            ? Array.isArray(variables.tag)
-                                ? variables.tag
-                                : [variables.tag]
-                            : [];
+                        const note = new Note({
+                            content: variables.note,
+                            tags: variables.tag
+                                ? Array.isArray(variables.tag)
+                                    ? variables.tag
+                                    : [variables.tag]
+                                : []
+                        });
         
                         await notion.pages.create(
-                            createNotePage({
+                            new NotionNoteSerializer().serialize({
                                 databaseId: notionAccount.notesDatabaseId,
                                 note,
-                                tags,
                             })
                         );
                     } else if (template.type === 'reminder') {
-                        const date = dateParser.parse(variables.date);
-                        const reminder = variables.reminder;
+                        const reminder = new Reminder({
+                            content: variables.reminder,
+                            date: dateParser.parse(variables.date),
+                        });
 
                         const reminderPage = await notion.pages.create(
-                            createReminderPage({
+                            new NotionReminderSerializer().serialize({
                                 databaseId: notionAccount.remindersDatabaseId,
-                                date,
-                                reminder,
                                 timezoneOffsetMinutes,
+                                reminder,
                             })
                         );
 
-                        const parsedReminder = parseReminderPage(reminderPage);
+                        const parsedReminder = new NotionReminderSerializer().deserialize(reminderPage);
                         if (parsedReminder && isCloseReminder(parsedReminder)) {
                             await storage.addCloseReminder(userId, parsedReminder);
                         }
                     } else if (template.type === 'list') {
-                        const alias = variables.list;
-                        const item = variables.item;
+                        const listItem = new ListItem({ content: variables.item });
 
+                        const alias = variables.list;
                         if (!alias) {
                             await ctx.reply('Please add a default list for this pattern');
                             return;
@@ -356,9 +364,9 @@ require('dotenv').config();
                         }
                         
                         await notion.pages.create(
-                            createListItemPage({
+                            new NotionListItemSerializer().serialize({
+                                listItem,
                                 databaseId: list.id,
-                                item,
                             })
                         );
                     }
@@ -374,11 +382,7 @@ require('dotenv').config();
     );
 
     bot.command('reset', async (ctx) => {
-        users.splice();
-        telegramAccounts.splice();
-        notionAccounts.splice();
-        patterns.splice();
-
+        await storage.cleanUp();
         await ctx.reply('Done!');
     });
 
@@ -446,7 +450,9 @@ require('dotenv').config();
             'database_id': notionAccount.remindersDatabaseId,
         });
 
-        return pages.results.map(parseReminderPage).filter(Boolean);
+        return pages.results
+            .map(page => new NotionReminderSerializer().deserialize(page))
+            .filter(Boolean);
     }
 
     async function markReminderAsDone(userId, id) {
@@ -456,13 +462,14 @@ require('dotenv').config();
             'page_id': id,
             'properties': {
                 'Reminded': {
+                    'type': 'checkbox',
                     'checkbox': true
                 }
             }
         });
     }
 
-    /** @returns {[import('@notionhq/client').Client]} */
+    /** @returns {Promise<[import('@notionhq/client').Client, NotionAccount]>} */
     async function getNotion(userId) {
         if (notions.get(userId)) {
             return notions.get(userId);
@@ -484,92 +491,6 @@ class NotionAccountNotFound extends Error {
     constructor() {
         super('Notion account not found');
     }
-}
-
-function createNotePage({ databaseId, note, tags }) {
-    return {
-        'parent': { 'database_id': databaseId },
-        'properties': {
-            'Note': {
-                'title': [{
-                    'type': 'text',
-                    'text': {
-                        'content': note,
-                    }
-                }]
-            },
-            ...tags.length > 0 && {
-                'Tags': {
-                    'multi_select': tags.map(tag => ({ name: tag })),
-                },
-            }
-        }
-    };
-}
-
-function createReminderPage({ databaseId, reminder, date, timezoneOffsetMinutes }) {
-    return {
-        'parent': { 'database_id': databaseId },
-        'properties': {
-            'Reminder': {
-                'title': [{
-                    'type': 'text',
-                    'text': {
-                        'content': reminder,
-                    }
-                }]
-            },
-            'Date': {
-                'date': {
-                    'start': formatUtcDateWithTimezone(date, timezoneOffsetMinutes),
-                }
-            }
-        }
-    };
-}
-
-function createListItemPage({ databaseId, item }) {
-    return {
-        'parent': { 'database_id': databaseId },
-        'properties': {
-            'Item': {
-                'title': [{
-                    'type': 'text',
-                    'text': {
-                        'content': item,
-                    }
-                }]
-            }
-        }
-    };
-}
-
-function parseReminderPage(page) {
-    const rawContent = page.properties['Reminder'].title[0]?.text.content
-    const rawDate = page.properties['Date']?.date.start
-    const rawReminded = page.properties['Reminded'].checkbox
-
-    if (rawContent === undefined || rawDate === undefined || rawReminded === undefined) {
-        return null;
-    }
-
-    return new Reminder({
-        id: page.id,
-        content: page.properties['Reminder'].title[0].text.content,
-        date: new Date(),
-        reminded: page.properties['Reminded'].checkbox,
-    });
-}
-
-function formatUtcDateWithTimezone(date, timezoneOffsetMinutes) {
-    const dateWithTimezone = new Date(date.getTime() + timezoneOffsetMinutes * 60_000);
-
-    const timezoneHours = Math.trunc(timezoneOffsetMinutes / 60);
-    const timezoneMinutes = (timezoneOffsetMinutes - timezoneHours * 60);
-
-    const timezone = String(timezoneHours).padStart(2, '0') + ':' + String(timezoneMinutes).padStart(2, '0');
-    
-    return dateWithTimezone.toISOString().slice(0, -1) + (timezoneOffsetMinutes >= 0 ? '+' : '-') + timezone;
 }
 
 function stringifyPattern(pattern) {

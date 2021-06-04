@@ -20,7 +20,7 @@ class InMemoryStorage {
         this._lists = [];
         /** @type {Template[]} */
         this._templates = [];
-        /** @type {Reminder[]} */
+        /** @type {Reminder[][]} */
         this._closeReminders = [];
     }
 
@@ -109,6 +109,7 @@ class InMemoryStorage {
         this._closeReminders[userId] = reminders;
     }
 
+    /** @returns {Promise<Reminder[]>} */
     async getCloseReminders(userId) {
         return this._closeReminders[userId] || [];
     }
@@ -128,6 +129,16 @@ class InMemoryStorage {
         if (index === -1) return;
 
         this._closeReminders[userId].splice(index, 1);
+    }
+
+    async cleanUp() {
+        this._id = 0;
+        this._users = [];
+        this._telegramAccounts = [];
+        this._notionAccounts = [];
+        this._lists = [];
+        this._templates = [];
+        this._closeReminders = [];
     }
 }
 

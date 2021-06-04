@@ -1,5 +1,5 @@
 class Reminder {
-    constructor({ id, content, date, reminded }) {
+    constructor({ id = null, content, date, reminded = false }) {
         this._id = id;
         this._content = content;
         this._date = date;

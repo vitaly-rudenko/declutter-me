@@ -97,7 +97,7 @@ function endsWith(array, item) {
 class RussianDateParser {
     /**
      * @param {string} input
-     * @param {Date} origin
+     * @param {Date} [origin]
      */
     parse(input, origin) {
         input = input.toLowerCase();
@@ -451,7 +451,7 @@ class RussianDateParser {
             return null;
         }
 
-        return match[1];
+        return Array.isArray(match[1]) ? match[1][0] : match[1];
     }
 
     parseNumber(value) {

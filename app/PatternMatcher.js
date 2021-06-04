@@ -5,6 +5,17 @@ function toString(token) {
 }
 
 class PatternMatcher {
+    /**
+     * 
+     * @param {string} input
+     * @param {any[]} pattern
+     * @param {any} matchers
+     * @returns {{
+     *     match: boolean,
+     *     variables?: any,
+     *     bang?: any
+     * }}
+     */
     match(input, pattern, matchers) {
         const combinations = this.getPatternCombinations(pattern);
 

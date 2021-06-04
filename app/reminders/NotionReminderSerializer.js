@@ -31,10 +31,18 @@ class NotionReminderSerializer {
 
     /** @param {import('@notionhq/client/build/src/api-types').Page} page */
     deserialize(page) {
+        const rawContent = page.properties['Reminder'].title[0]?.text.content;
+        const rawDate = page.properties['Date']?.date.start;
+        const rawReminded = page.properties['Reminded'].checkbox;
+
+        if (rawContent === undefined || rawDate === undefined || rawReminded === undefined) {
+            return null;
+        }
+
         return new Reminder({
             id: page.id,
             content: page.properties['Reminder'].title[0].text.content,
-            date: new Date(page.properties['Date'].date.start),
+            date: new Date(),
             reminded: page.properties['Reminded'].checkbox,
         });
     }

@@ -13,13 +13,13 @@ class NotionNoteSerializer {
                     'title': [{
                         'type': 'text',
                         'text': {
-                            'content': note,
+                            'content': note.content,
                         }
                     }]
                 },
-                ...tags.length > 0 && {
+                ...note.tags.length > 0 && {
                     'Tags': {
-                        'multi_select': tags.map(tag => ({ name: tag })),
+                        'multi_select': note.tags.map(tag => ({ name: tag })),
                     },
                 }
             }
