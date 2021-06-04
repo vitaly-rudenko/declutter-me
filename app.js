@@ -24,6 +24,7 @@ const withTelegramAccount = require('./app/telegram-bot/middlewares/withTelegram
 const withPhaseFactory = require('./app/telegram-bot/middlewares/withPhaseFactory');
 const withUserFactory = require('./app/telegram-bot/middlewares/withUserFactory');
 const withNotionFactory = require('./app/telegram-bot/middlewares/withNotionFactory');
+const ReminderManager = require('./app/reminders/ReminderManager');
 
 require('dotenv').config();
 
@@ -47,6 +48,7 @@ require('dotenv').config();
 
     const userSessionManager = new UserSessionManager();
     const notionSessionManager = new NotionSessionManager({ storage });
+    const reminderManager = new ReminderManager({ notionSessionManager, storage, bot });
 
     bot.telegram.setMyCommands([
         { command: '/start', description: 'Start the bot' },
@@ -106,9 +108,13 @@ require('dotenv').config();
 
     bot.command('sync', withUser(), withNotion(), async (ctx) => {
         const message = await ctx.reply('Syncing...');
-        await syncReminders(ctx.state.userId);
+
+        await reminderManager.sync(ctx.state.userId);
+
         const closeReminders = await storage.getCloseReminders(ctx.state.userId);
         await bot.telegram.editMessageText(ctx.from.id, message.message_id, null, `Synced! You have ${closeReminders.length} close reminders.`);
+
+        await reminderManager.send(ctx.state.userId);
     });
 
     bot.command('template', withUser(), withNotion(), async (ctx) => {
@@ -303,7 +309,7 @@ require('dotenv').config();
                         );
 
                         const parsedReminder = new NotionReminderSerializer().deserialize(reminderPage);
-                        if (parsedReminder && isCloseReminder(parsedReminder)) {
+                        if (parsedReminder && reminderManager.isClose(parsedReminder)) {
                             await storage.addCloseReminder(userId, parsedReminder);
                         }
                     } else if (template.type === 'list') {
@@ -355,78 +361,15 @@ require('dotenv').config();
     });
 
     setInterval(async () => {
-        await sendAllReminders();
+        await reminderManager.sendAll();
     }, 30_000);
 
     setInterval(async () => {
-        await syncAllReminders();
-    }, 5 * 60_000);
+        await reminderManager.syncAll();
+    }, 15 * 60_000);
 
-    await syncAllReminders();
-    await sendAllReminders();
-
-    async function sendAllReminders() {
-        const users = await storage.getUsers();
-        for (const user of users) {
-            await sendReminders(user.id);
-        }
-    }
-
-    async function sendReminders(userId) {
-        const telegramAccount = await storage.findTelegramAccountByUserId(userId);
-        const reminders = await storage.getCloseReminders(userId);
-        const remindersToSend = reminders.filter(r => r.date <= Date.now());
-        
-        for (const reminder of remindersToSend) {
-            await markReminderAsDone(userId, reminder.id);
-            await storage.removeCloseReminder(userId, reminder.id);
-            await bot.telegram.sendMessage(telegramAccount.telegramUserId, reminder.content);
-        }
-    }
-
-    async function syncAllReminders() {
-        const users = await storage.getUsers();
-        for (const user of users) {
-            await syncReminders(user.id);
-        }
-    }
-
-    async function syncReminders(userId) {
-        const reminders = await fetchReminders(userId);
-        const closeReminders = reminders.filter(isCloseReminder);
-
-        await storage.storeCloseReminders(userId, closeReminders);
-    }
-
-    function isCloseReminder(reminder) {
-        const inAnHour = Date.now() + 5 * 60 * 60_000;
-        return !reminder.reminded && reminder.date.getTime() <= inAnHour;
-    }
-
-    async function fetchReminders(userId) {
-        const [notion, notionAccount] = await notionSessionManager.get(userId);
-        const pages = await notion.databases.query({
-            'database_id': notionAccount.remindersDatabaseId,
-        });
-
-        return pages.results
-            .map(page => new NotionReminderSerializer().deserialize(page))
-            .filter(Boolean);
-    }
-
-    async function markReminderAsDone(userId, id) {
-        const [notion] = await notionSessionManager.get(userId);
-
-        await notion.pages.update({
-            'page_id': id,
-            'properties': {
-                'Reminded': {
-                    'type': 'checkbox',
-                    'checkbox': true
-                }
-            }
-        });
-    }
+    await reminderManager.syncAll();
+    await reminderManager.sendAll();
 })()
     .then(() => console.log('Started!'));
 
