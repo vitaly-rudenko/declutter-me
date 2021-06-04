@@ -19,6 +19,8 @@ const NotionAccount = require('./app/notion-accounts/NotionAccount');
 const ListItem = require('./app/lists/ListItem');
 const NotionListItemSerializer = require('./app/lists/NotionListItemSerializer');
 const NotionReminderSerializer = require('./app/reminders/NotionReminderSerializer');
+const PatternStringifier = require('./app/PatternStringifier');
+const NotionAccountNotFound = require('./app/storage/NotionAccountNotFound');
 
 require('dotenv').config();
 
@@ -144,7 +146,7 @@ require('dotenv').config();
                 `  - Lists:\n` +
                 (lists.map(list => `    - ${list.alias} (${list.id})`).join('\n') || '    <none>') + '\n' +
                 `  - Templates:\n` +
-                (templates.map(template => `    - ${template.type}: ${stringifyPattern(template.pattern)}`).join('\n') || '    <none>') + '\n'
+                (templates.map(template => `    - ${template.type}: ${new PatternStringifier().stringify(template.pattern)}`).join('\n') || '    <none>') + '\n'
             );
         }
     );
@@ -487,30 +489,3 @@ require('dotenv').config();
     }
 })();
 
-class NotionAccountNotFound extends Error {
-    constructor() {
-        super('Notion account not found');
-    }
-}
-
-function stringifyPattern(pattern) {
-    return pattern.map((token) => {
-        if (token.type === 'variable') {
-            if (token.bang) {
-                return `{${token.value}!}`;
-            } else {
-                return `{${token.value}}`;
-            }
-        }
-
-        if (token.type === 'optional') {
-            return `[${stringifyPattern(token.value)}]`;
-        }
-
-        if (token.type === 'variational') {
-            return `(${token.value.map(variation => stringifyPattern(variation)).join('|')})`;
-        }
-
-        return token.value;
-    }).join('');
-}
