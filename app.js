@@ -1,6 +1,5 @@
-const { Telegraf, Scenes, Composer, Markup, session } = require('telegraf');
+const { Telegraf, Markup } = require('telegraf');
 const { URL } = require('url');
-const { Client } = require('@notionhq/client');
 
 const PatternBuilder = require('./app/PatternBuilder');
 const PatternMatcher = require('./app/PatternMatcher');
@@ -9,18 +8,22 @@ const NoteMatchers = require('./app/matchers/NoteMatchers');
 const ListMatchers = require('./app/lists/ListMatchers');
 const ReminderMatchers = require('./app/matchers/ReminderMatchers');
 const InMemoryStorage = require('./app/storage/InMemoryStorage');
-const Cache = require('./app/utils/Cache');
 const Reminder = require('./app/reminders/Reminder');
 const List = require('./app/lists/List');
 const Template = require('./app/templates/Template');
 const NotionNoteSerializer = require('./app/notes/NotionNoteSerializer');
 const Note = require('./app/notes/Note');
-const NotionAccount = require('./app/notion-accounts/NotionAccount');
 const ListItem = require('./app/lists/ListItem');
 const NotionListItemSerializer = require('./app/lists/NotionListItemSerializer');
 const NotionReminderSerializer = require('./app/reminders/NotionReminderSerializer');
 const PatternStringifier = require('./app/PatternStringifier');
-const NotionAccountNotFound = require('./app/storage/NotionAccountNotFound');
+const NotionSessionManager = require('./app/notion-accounts/NotionSessionManager');
+const UserSessionManager = require('./app/users/UserSessionManager');
+
+const withTelegramAccount = require('./app/telegram-bot/middlewares/withTelegramAccount');
+const withPhaseFactory = require('./app/telegram-bot/middlewares/withPhaseFactory');
+const withUserFactory = require('./app/telegram-bot/middlewares/withUserFactory');
+const withNotionFactory = require('./app/telegram-bot/middlewares/withNotionFactory');
 
 require('dotenv').config();
 
@@ -41,9 +44,9 @@ require('dotenv').config();
     await storage.storeList(new List({ id: '3af8dfb79d18428b86419bd7a211084a', alias: 'recipes', userId: user.id }));
 
     const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
-    const userPhases = new Cache(60 * 60_000);
-    const userPhaseContext = new Cache(60 * 60_000);
-    const notions = new Cache(10 * 60_000);
+
+    const userSessionManager = new UserSessionManager();
+    const notionSessionManager = new NotionSessionManager({ storage });
 
     bot.telegram.setMyCommands([
         { command: '/start', description: 'Start the bot' },
@@ -53,68 +56,11 @@ require('dotenv').config();
         { command: '/pattern', description: 'Add pattern' },
     ]);
 
-    const withTelegramAccount = () => {
-        return async (ctx, next) => {
-            ctx.state.telegramAccount = await storage.findTelegramAccount(ctx.from.id);
+    const withPhase = withPhaseFactory(userSessionManager);
+    const withUser = withUserFactory(storage);
+    const withNotion = withNotionFactory(notionSessionManager);
 
-            if (ctx.state.telegramAccount) {
-                ctx.state.userId = ctx.state.telegramAccount.userId;
-            }
-
-            return next();
-        };
-    };
-
-    const withUser = ({ required = true } = {}) => {
-        return async (ctx, next) => {
-            if (!ctx.state.userId) {
-                ctx.reply('Please use /start first 🙇');
-                return;
-            }
-
-            ctx.state.user = await storage.findUserById(ctx.state.userId);
-            if (!ctx.state.user && required) {
-                ctx.reply('Please use /start first 🙇');
-                return;
-            }
-
-            return next();
-        };
-    };
-
-    const withNotion = ({ required = true } = {}) => {
-        return async (ctx, next) => {
-            try {
-                const [notion, notionAccount] = await getNotion(ctx.state.userId);
-    
-                ctx.state.notion = notion;
-                ctx.state.notionAccount = notionAccount;
-            } catch (error) {
-                if (error instanceof NotionAccountNotFound) {
-                    if (required) {
-                        await ctx.reply('Please use `/notion` first 🙇');
-                        return;
-                    }
-                }
-                
-                throw error;
-            }
-
-            return next();
-        };
-    };
-
-    const withPhase = (phase, middleware) => {
-        return (ctx, next) => {
-            if ((userPhases.get(ctx.state.userId) || null) === phase) {
-                return middleware(ctx, next);
-            } else {
-                return next();
-            }
-        };
-    }
-
-    bot.use(withTelegramAccount());
+    bot.use(withTelegramAccount(storage));
 
     bot.start(async (ctx) => {
         if (ctx.state.telegramAccount) {
@@ -153,12 +99,12 @@ require('dotenv').config();
 
     bot.command('notion', withUser(), async (ctx) => {
         await ctx.reply('Your Notion integration token:');
-        userPhases.set(ctx.state.userId, 'notion:token');
+        userSessionManager.setPhase(ctx.state.userId, 'notion:token');
     });
 
     bot.command('list', withUser(), withNotion(), async (ctx) => {
         await ctx.reply('Link to your List database:');
-        userPhases.set(ctx.state.userId, 'list:link');
+        userSessionManager.setPhase(ctx.state.userId, 'list:link');
     });
 
     bot.command('pattern', withUser(), withNotion(), async (ctx) => {
@@ -170,29 +116,29 @@ require('dotenv').config();
                 Markup.button.callback('Reminder', 'template:reminder'),
             ])
         );
-        userPhases.set(ctx.state.userId, 'template:type');
+        userSessionManager.setPhase(ctx.state.userId, 'template:type');
     });
 
     bot.action('template:note', withPhase('template:type', async (ctx) => {
         await ctx.answerCbQuery();
         await ctx.reply('Got it! Now send me the template:');
 
-        userPhaseContext.set(ctx.state.userId, { type: 'note' });
-        userPhases.set(ctx.state.userId, 'template:pattern');
+        userSessionManager.setContext(ctx.state.userId, { type: 'note' });
+        userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
     }));
 
     bot.action('template:reminder', withPhase('template:type', async (ctx) => {
         await ctx.answerCbQuery();
         await ctx.reply('Got it! Now send me the template:');
 
-        userPhaseContext.set(ctx.state.userId, { type: 'reminder' });
-        userPhases.set(ctx.state.userId, 'template:pattern');
+        userSessionManager.setContext(ctx.state.userId, { type: 'reminder' });
+        userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
     }));
 
     bot.action('template:list', withPhase('template:type', async (ctx) => {
         await ctx.answerCbQuery();
 
-        userPhaseContext.set(ctx.state.userId, { type: 'list' });
+        userSessionManager.setContext(ctx.state.userId, { type: 'list' });
 
         const lists = await storage.findListsByUserId(ctx.state.userId);
         if (lists.length > 0) {
@@ -204,10 +150,10 @@ require('dotenv').config();
                 ])
             );
     
-            userPhases.set(ctx.state.userId, 'template:list:alias');
+            userSessionManager.setPhase(ctx.state.userId, 'template:list:alias');
         } else {
             await ctx.reply(`Okay! Now send me the template:`);
-            userPhases.set(ctx.state.userId, 'template:pattern');
+            userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
         }
     }));
 
@@ -215,16 +161,23 @@ require('dotenv').config();
         await ctx.answerCbQuery();
         
         const alias = ctx.match[1];
-        userPhaseContext.get(ctx.state.userId).defaultVariables = { list: alias };
+
+        userSessionManager.setContext(
+            ctx.state.userId,
+            {
+                ...userSessionManager.getContext(ctx.state.userId),
+                defaultVariables: { list: alias }
+            }
+        );
 
         await ctx.reply(`Default list: "${alias}".\nNow send me the template:`);
-        userPhases.set(ctx.state.userId, 'template:pattern');
+        userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
     }));
 
     bot.action('template:list:alias:skip', withPhase('template:list:alias', async (ctx) => {
         await ctx.answerCbQuery();
         await ctx.reply(`Okay! Now send me the template:`);
-        userPhases.set(ctx.state.userId, 'template:pattern');
+        userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
     }));
 
     bot.on('message',
@@ -234,31 +187,31 @@ require('dotenv').config();
             const token = ctx.message.text;
             await storage.createNotionAccount(ctx.state.userId, token);
             await ctx.reply(`It\'s "${token}".\nLink to Notes database:`);
-            userPhases.set(ctx.state.userId, 'notion:notes');
+            userSessionManager.setPhase(ctx.state.userId, 'notion:notes');
         }),
         withPhase('notion:notes', async (ctx) => {
             const databaseId = databaseIdFromLink(ctx.message.text);
             await storage.setNotesDatabaseId(ctx.state.userId, databaseId);
             await ctx.reply(`It\'s "${databaseId}".\nLink to Reminders database:`);
-            userPhases.set(ctx.state.userId, 'notion:reminders');
+            userSessionManager.setPhase(ctx.state.userId, 'notion:reminders');
         }),
         withPhase('notion:reminders', async (ctx) => {
             const databaseId = databaseIdFromLink(ctx.message.text);
             await storage.setRemindersDatabaseId(ctx.state.userId, databaseId);
             await ctx.reply(`It\'s "${databaseId}".\nGreat, your Notion integration is all set!`);
-            userPhases.delete(ctx.state.userId);
+            userSessionManager.reset(ctx.state.userId);
         }),
         // Lists
         withPhase('list:link', async (ctx) => {
             const databaseId = databaseIdFromLink(ctx.message.text);
-            userPhaseContext.set(ctx.state.userId, databaseId);
+            userSessionManager.setContext(ctx.state.userId, databaseId);
 
             await ctx.reply(`It\'s "${databaseId}".\nAlias for the list:`);
-            userPhases.set(ctx.state.userId, 'list:alias');
+            userSessionManager.setPhase(ctx.state.userId, 'list:alias');
         }),
         withPhase('list:alias', async (ctx) => {
             const alias = ctx.message.text;
-            const databaseId = userPhaseContext.get(ctx.state.userId);
+            const databaseId = userSessionManager.getContext(ctx.state.userId);
 
             await storage.storeList(
                 new List({
@@ -269,7 +222,7 @@ require('dotenv').config();
             );
 
             await ctx.reply(`List "${alias}" has been added!`);
-            userPhases.delete(ctx.state.userId);
+            userSessionManager.reset(ctx.state.userId);
         }),
         // Patterns
         withPhase('template:pattern', async (ctx) => {
@@ -278,14 +231,14 @@ require('dotenv').config();
             await storage.storeTemplate(
                 new Template({
                     userId: ctx.state.userId,
-                    type: userPhaseContext.get(ctx.state.userId).type,
+                    type: userSessionManager.getContext(ctx.state.userId).type,
                     pattern,
                     order: 1,
                 })
             );
 
             await ctx.reply('Pattern has been added!');
-            userPhases.delete(ctx.state.userId);
+            userSessionManager.reset(ctx.state.userId);
         }),
         // Handle message
         withNotion(),
@@ -447,7 +400,7 @@ require('dotenv').config();
     }
 
     async function fetchReminders(userId) {
-        const [notion, notionAccount] = await getNotion(userId);
+        const [notion, notionAccount] = await notionSessionManager.get(userId);
         const pages = await notion.databases.query({
             'database_id': notionAccount.remindersDatabaseId,
         });
@@ -458,7 +411,7 @@ require('dotenv').config();
     }
 
     async function markReminderAsDone(userId, id) {
-        const [notion] = await getNotion(userId);
+        const [notion] = await notionSessionManager.get(userId);
 
         await notion.pages.update({
             'page_id': id,
@@ -470,22 +423,6 @@ require('dotenv').config();
             }
         });
     }
-
-    /** @returns {Promise<[import('@notionhq/client').Client, NotionAccount]>} */
-    async function getNotion(userId) {
-        if (notions.get(userId)) {
-            return notions.get(userId);
-        }
-
-        const notionAccount = await storage.findNotionAccount(userId);
-        if (!notionAccount) {
-            throw new NotionAccountNotFound();
-        }
-
-        const notion = new Client({ auth: notionAccount.token });
-
-        notions.set(userId, [notion, notionAccount]);
-        return [notion, notionAccount];
-    }
-})();
+})()
+    .then(() => console.log('Started!'));
 

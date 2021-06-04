@@ -4,7 +4,7 @@ const Reminder = require('../reminders/Reminder');
 const TelegramAccount = require('../telegram-accounts/TelegramAccount');
 const Template = require('../templates/Template');
 const User = require('../users/User');
-const NotionAccountNotFound = require('./NotionAccountNotFound');
+const NotionAccountNotFound = require('../errors/NotionAccountNotFound');
 
 class InMemoryStorage {
     constructor() {
