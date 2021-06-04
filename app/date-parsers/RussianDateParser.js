@@ -21,6 +21,7 @@ const UNIT_MATCHERS = [
     [['полгода'], Unit.HALF_YEAR],
 ];
 
+/** @type [string[], number][] */
 const NUMBER_MATCHERS = [
     [['один', 'одну', 'первого'], 1],
     [['полтора', 'полторы'], 1.5],
@@ -104,7 +105,7 @@ class RussianDateParser {
 
         if (!origin) {
             origin = new Date();
-            origin.getMilliseconds(0);
+            origin.setMilliseconds(0);
         }
 
         return (
@@ -477,7 +478,7 @@ class RussianDateParser {
                 return null;
             }
 
-            const number = match[1];
+            const number = Number(match[1]);
 
             if (multiplier > number) {
                 if (!reduced) {
