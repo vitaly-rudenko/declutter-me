@@ -53,7 +53,8 @@ require('dotenv').config();
         { command: '/info', description: 'Prints your information' },
         { command: '/notion', description: 'Configure Notion' },
         { command: '/list', description: 'Add list' },
-        { command: '/pattern', description: 'Add pattern' },
+        { command: '/template', description: 'Add template' },
+        { command: '/sync', description: 'Sync with Notion' },
     ]);
 
     const withPhase = withPhaseFactory(userSessionManager);
@@ -74,28 +75,24 @@ require('dotenv').config();
         await ctx.reply('Hi! Use /notion to setup Notion integration.');
     });
 
-    bot.command('info',
-        withUser({ required: false }),
-        withNotion({ required: false }),
-        async (ctx) => {
-            const lists = ctx.state.userId ? await storage.findListsByUserId(ctx.state.userId) : [];
-            const templates = ctx.state.userId ? await storage.findTemplatesByUserId(ctx.state.userId) : [];
+    bot.command('info', withUser({ required: false }), withNotion({ required: false }), async (ctx) => {
+        const lists = ctx.state.userId ? await storage.findListsByUserId(ctx.state.userId) : [];
+        const templates = ctx.state.userId ? await storage.findTemplatesByUserId(ctx.state.userId) : [];
 
-            await ctx.reply(
-                `Hi, ${ctx.from.first_name}!\n` +
-                `Your info:\n` +
-                `  - Language: ${ctx.state.user?.language ?? '<not provided>'}\n` +
-                `  - Timezone offset: ${ctx.state.user?.timezoneOffsetMinutes ?? '<not provided>'}\n` +
-                `  - Notion token: ${ctx.state.notionAccount?.token ?? '<not provided>'}\n` +
-                `  - Notes: ${ctx.state.notionAccount?.notesDatabaseId ?? '<not provided>'}\n` +
-                `  - Reminders: ${ctx.state.notionAccount?.remindersDatabaseId ?? '<not provided>'}\n` +
-                `  - Lists:\n` +
-                (lists.map(list => `    - ${list.alias} (${list.id})`).join('\n') || '    <none>') + '\n' +
-                `  - Templates:\n` +
-                (templates.map(template => `    - ${template.type}: ${new PatternStringifier().stringify(template.pattern)}`).join('\n') || '    <none>') + '\n'
-            );
-        }
-    );
+        await ctx.reply(
+            `Hi, ${ctx.from.first_name}!\n` +
+            `Your info:\n` +
+            `  - Language: ${ctx.state.user?.language ?? '<not provided>'}\n` +
+            `  - Timezone offset: ${ctx.state.user?.timezoneOffsetMinutes ?? '<not provided>'}\n` +
+            `  - Notion token: ${ctx.state.notionAccount?.token ?? '<not provided>'}\n` +
+            `  - Notes: ${ctx.state.notionAccount?.notesDatabaseId ?? '<not provided>'}\n` +
+            `  - Reminders: ${ctx.state.notionAccount?.remindersDatabaseId ?? '<not provided>'}\n` +
+            `  - Lists:\n` +
+            (lists.map(list => `    - ${list.alias} (${list.id})`).join('\n') || '    <none>') + '\n' +
+            `  - Templates:\n` +
+            (templates.map(template => `    - ${template.type}: ${new PatternStringifier().stringify(template.pattern)}`).join('\n') || '    <none>') + '\n'
+        );
+    });
 
     bot.command('notion', withUser(), async (ctx) => {
         await ctx.reply('Your Notion integration token:');
@@ -107,9 +104,16 @@ require('dotenv').config();
         userSessionManager.setPhase(ctx.state.userId, 'list:link');
     });
 
-    bot.command('pattern', withUser(), withNotion(), async (ctx) => {
+    bot.command('sync', withUser(), withNotion(), async (ctx) => {
+        const message = await ctx.reply('Syncing...');
+        await syncReminders(ctx.state.userId);
+        const closeReminders = await storage.getCloseReminders(ctx.state.userId);
+        await bot.telegram.editMessageText(ctx.from.id, message.message_id, null, `Synced! You have ${closeReminders.length} close reminders.`);
+    });
+
+    bot.command('template', withUser(), withNotion(), async (ctx) => {
         await ctx.reply(
-            'Choose pattern type:',
+            'Choose template type:',
             Markup.inlineKeyboard([
                 Markup.button.callback('Note', 'template:note'),
                 Markup.button.callback('List', 'template:list'),
@@ -237,8 +241,8 @@ require('dotenv').config();
                 })
             );
 
-            await ctx.reply('Pattern has been added!');
             userSessionManager.reset(ctx.state.userId);
+            await ctx.reply('Template has been added!');
         }),
         // Handle message
         withNotion(),
