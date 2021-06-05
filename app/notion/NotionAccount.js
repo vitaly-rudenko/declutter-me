@@ -13,24 +13,6 @@ class NotionAccount {
     get token() {
         return this._token;
     }
-
-    setNotesDatabaseId(value) {
-        this._notesDatabaseId = value;
-        return this;
-    }
-    
-    get notesDatabaseId() {
-        return this._notesDatabaseId;
-    }
-
-    setRemindersDatabaseId(value) {
-        this._remindersDatabaseId = value;
-        return this;
-    }
-    
-    get remindersDatabaseId() {
-        return this._remindersDatabaseId;
-    }
 }
 
 module.exports = NotionAccount;

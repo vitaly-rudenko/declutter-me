@@ -14,14 +14,12 @@
                 "Hi, {name}!",
                 "Your info:",
                 "  - Language: {language}",
-                "  - Timezone offset: {timezoneOffset}",
+                "  - Timezone: {timezone}",
                 "  - Notion token: {notionToken}",
-                "  - Notes database: {notesDatabaseId}",
-                "  - Reminders database: {remindersDatabaseId}",
-                "  - Lists: {lists}",
+                "  - Databases: {databases}",
                 "  - Templates: {templates}"
             ],
-            "list": "    - {alias} ({id})",
+            "database": "    - {alias} ({notionDatabaseId})",
             "template": "    - {type} ({pattern})",
             "notProvided": "<not provided>",
             "none": "<none>"
@@ -41,11 +39,11 @@
                 "Great, your Notion integration is all set!"
             ]
         },
-        "list": {
-            "yourLink": "Link to your list database:",
-            "yourAlias": [
-                "It's \"{databaseId}\".",
-                "Alias for the list:"
+        "database": {
+            "link": "Link to the database:",
+            "alias": [
+                "It's \"{match}\".",
+                "Alias for the database:"
             ],
             "added": "List \"{alias}\" has been added!"
         }

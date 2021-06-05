@@ -12,6 +12,8 @@ class InMemoryStorage {
 
         /** @type {User[]} */
         this._users = [];
+        /** @type {import('../notion/NotionDatabase')[]} */
+        this._databases = [];
         /** @type {TelegramAccount[]} */
         this._telegramAccounts = [];
         /** @type {NotionAccount[]} */
@@ -63,36 +65,22 @@ class InMemoryStorage {
         return this._notionAccounts.find(a => a.userId === userId) || null;
     }
 
-    async setNotesDatabaseId(userId, databaseId) {
-        const notionAccount = await this.findNotionAccount(userId);
-        if (!notionAccount) {
-            throw new NotionAccountNotFound();
+    /** @param {import('../notion/NotionDatabase')} database */
+    async storeDatabase(database) {
+        if (this._databases.some(d => d.userId === database.userId && d.alias === database.alias)) {
+            throw new Error('Database alias already exists!');
         }
 
-        notionAccount.setNotesDatabaseId(databaseId);
+        this._databases.push(database);
+        return database;
     }
 
-    async setRemindersDatabaseId(userId, databaseId) {
-        const notionAccount = await this.findNotionAccount(userId);
-        if (!notionAccount) {
-            throw new NotionAccountNotFound();
-        }
-
-        notionAccount.setRemindersDatabaseId(databaseId);
+    async findDatabasesByUserId(userId) {
+        return this._databases.filter(d => d.userId === userId);
     }
 
-    /** @param {import('../lists/List')} list */
-    async storeList(list) {
-        this._lists.push(list);
-        return list;
-    }
-
-    async findListsByUserId(userId) {
-        return this._lists.filter(l => l.userId === userId);
-    }
-
-    async findListByAlias({ alias, userId }) {
-        return this._lists.find(l => l.userId === userId && l.alias === alias) || null;
+    async findDatabaseByAlias({ userId, alias }) {
+        return this._databases.find(d => d.userId === userId && d.alias === alias) || null;
     }
 
     /** @param {import('../templates/Template')} template */

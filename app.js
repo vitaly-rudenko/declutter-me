@@ -29,6 +29,7 @@ const ReminderManager = require('./app/reminders/ReminderManager');
 require('dotenv').config();
 
 const en = require('./assets/localization/en.json');
+const NotionDatabase = require('./app/notion/NotionDatabase');
 const localize = (message, replacements = null) => {
     const path = message.split('.');
 
@@ -63,16 +64,16 @@ const localize = (message, replacements = null) => {
     const user = await storage.createUser({ language: 'russian', timezoneOffsetMinutes: 3 * 60 });
     await storage.createTelegramAccount(user.id, 56681133);
     await storage.createNotionAccount(user.id, 'secret_sUmg2sizdQDYmfGrQ0amjXSuOv4tHTevLn4PVgcopG6');
-    await storage.setNotesDatabaseId(user.id, 'a64b650b4036407385272f3867de44f3');
-    await storage.setRemindersDatabaseId(user.id, 'edfe4ac495d24ddd88cbe45e635d0418');
+    // await storage.setNotesDatabaseId(user.id, 'a64b650b4036407385272f3867de44f3');
+    // await storage.setRemindersDatabaseId(user.id, 'edfe4ac495d24ddd88cbe45e635d0418');
     await storage.storeTemplate(new Template({ userId: user.id, order: 1, type: 'reminder', pattern: new PatternBuilder().build('[напомни[ть][ мне] ]{reminder} {date}') }));
     await storage.storeTemplate(new Template({ userId: user.id, order: 2, type: 'reminder', pattern: new PatternBuilder().build('{date} [напомни[ть][ мне] ]{reminder}') }));
     await storage.storeTemplate(new Template({ userId: user.id, order: 3, type: 'list', pattern: new PatternBuilder().build('купить {item}'), defaultVariables: { list: 'shopping' } }));
     await storage.storeTemplate(new Template({ userId: user.id, order: 4, type: 'list', pattern: new PatternBuilder().build('#{list} {item}') }));
     await storage.storeTemplate(new Template({ userId: user.id, order: 5, type: 'list', pattern: new PatternBuilder().build('{item} #{list!}') }));
     await storage.storeTemplate(new Template({ userId: user.id, order: 6, type: 'note', pattern: new PatternBuilder().build('{note}[ #{tag}][ #{tag}][ #{tag}]') }));
-    await storage.storeList(new List({ id: 'ca75e1d762c24d4893e2d682c1823797', alias: 'shopping', userId: user.id }));
-    await storage.storeList(new List({ id: '3af8dfb79d18428b86419bd7a211084a', alias: 'recipes', userId: user.id }));
+    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'shopping', notionDatabaseId: 'ca75e1d762c24d4893e2d682c1823797' }))
+    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'recipes', notionDatabaseId: '3af8dfb79d18428b86419bd7a211084a' }))
 
     const debugChatId = process.env.DEBUG_CHAT_ID;
 
@@ -105,6 +106,7 @@ const localize = (message, replacements = null) => {
         { command: '/info', description: 'Prints your information' },
         { command: '/notion', description: 'Configure Notion' },
         { command: '/list', description: 'Add list' },
+        { command: '/database', description: 'Add database' },
         { command: '/template', description: 'Add template' },
         { command: '/sync', description: 'Sync with Notion' },
     ]);
@@ -120,51 +122,55 @@ const localize = (message, replacements = null) => {
     });
 
     bot.use(withTelegramAccount(storage));
+    bot.use((ctx, next) => {
+        ctx.state.localize = localize;
+        next();
+    });
 
     bot.start(async (ctx) => {
         if (ctx.state.telegramAccount) {
-            await ctx.reply(localize('command.start.readyToGo'));
+            await ctx.reply(ctx.state.localize('command.start.readyToGo'));
             return;
         }
 
         const user = await storage.createUser();
         await storage.createTelegramAccount(user.id, ctx.from.id);
 
-        await ctx.reply(localize('command.start.useNotionCommand'));
+        await ctx.reply(ctx.state.localize('command.start.useNotionCommand'));
     });
 
     bot.command('info', withUser({ required: false }), withNotion({ required: false }), async (ctx) => {
-        const lists = ctx.state.userId ? await storage.findListsByUserId(ctx.state.userId) : [];
+        const databases = ctx.state.userId ? await storage.findDatabasesByUserId(ctx.state.userId) : [];
         const templates = ctx.state.userId ? await storage.findTemplatesByUserId(ctx.state.userId) : [];
 
         await ctx.reply(
-            localize('command.info.response', {
+            ctx.state.localize('command.info.response', {
                 name: ctx.from.first_name,
                 language: ctx.state.user?.language
-                    ? localize(`language.${ctx.state.user.language}`)
-                    : localize('command.info.notProvided'),
-                timezoneOffset: ctx.state.user?.timezoneOffsetMinutes ?? localize('command.info.notProvided'),
-                notionToken: ctx.state.notionAccount?.token ?? localize('command.info.notProvided'),
-                notesDatabaseId: ctx.state.notionAccount?.notesDatabaseId ?? localize('command.info.notProvided'),
-                remindersDatabaseId: ctx.state.notionAccount?.remindersDatabaseId ?? localize('command.info.notProvided'),
-                lists: lists.length > 0
-                    ? '\n' + lists.map(list => localize('command.info.list', { id: list.id, alias: list.alias })).join('\n')
-                    : localize('command.info.none'),
+                    ? ctx.state.localize(`language.${ctx.state.user.language}`)
+                    : ctx.state.localize('command.info.notProvided'),
+                timezone: ctx.state.user?.timezoneOffsetMinutes
+                    ? formatTimezone(ctx.state.user?.timezoneOffsetMinutes)
+                    : ctx.state.localize('command.info.notProvided'),
+                notionToken: ctx.state.notionAccount?.token ?? ctx.state.localize('command.info.notProvided'),
+                databases: databases.length > 0
+                    ? '\n' + databases.map(list => ctx.state.localize('command.info.database', { notionDatabaseId: list.notionDatabaseId, alias: list.alias })).join('\n')
+                    : ctx.state.localize('command.info.none'),
                 templates: templates.length > 0
-                    ? '\n' + templates.map(template => localize('command.info.template', { type: template.type, pattern: new PatternStringifier().stringify(template.pattern) })).join('\n')
-                    : localize('command.info.none'),
+                    ? '\n' + templates.map(template => ctx.state.localize('command.info.template', { type: template.type, pattern: new PatternStringifier().stringify(template.pattern) })).join('\n')
+                    : ctx.state.localize('command.info.none'),
             })
         );
     });
 
     bot.command('notion', withUser(), async (ctx) => {
-        await ctx.reply(localize('command.notion.yourToken'));
+        await ctx.reply(ctx.state.localize('command.notion.yourToken'));
         userSessionManager.setPhase(ctx.state.userId, 'notion:token');
     });
 
-    bot.command('list', withUser(), withNotion(), async (ctx) => {
-        await ctx.reply(localize('command.list.yourLink'));
-        userSessionManager.setPhase(ctx.state.userId, 'list:link');
+    bot.command('database', withUser(), withNotion(), async (ctx) => {
+        await ctx.reply(ctx.state.localize('command.database.link'));
+        userSessionManager.setPhase(ctx.state.userId, 'database:link');
     });
 
     bot.command('sync', withUser(), withNotion(), async (ctx) => {
@@ -252,48 +258,56 @@ const localize = (message, replacements = null) => {
             const token = ctx.message.text;
 
             await storage.createNotionAccount(ctx.state.userId, token);
-            await ctx.reply(localize('command.notion.yourNotesDatabase', { token }));
+            await ctx.reply(ctx.state.localize('command.notion.yourNotesDatabase', { token }));
 
             userSessionManager.setPhase(ctx.state.userId, 'notion:notes');
         }),
         withPhase('notion:notes', async (ctx) => {
-            const databaseId = databaseIdFromLink(ctx.message.text);
+            const databaseId = notionDatabaseIdFromUrl(ctx.message.text);
 
             await storage.setNotesDatabaseId(ctx.state.userId, databaseId);
-            await ctx.reply(localize('command.notion.yourRemindersDatabase', { databaseId }));
+            await ctx.reply(ctx.state.localize('command.notion.yourRemindersDatabase', { databaseId }));
 
             userSessionManager.setPhase(ctx.state.userId, 'notion:reminders');
         }),
         withPhase('notion:reminders', async (ctx) => {
-            const databaseId = databaseIdFromLink(ctx.message.text);
+            const databaseId = notionDatabaseIdFromUrl(ctx.message.text);
 
             await storage.setRemindersDatabaseId(ctx.state.userId, databaseId);
-            await ctx.reply(localize('command.notion.allSet', { databaseId }));
+            await ctx.reply(ctx.state.localize('command.notion.allSet', { databaseId }));
 
             userSessionManager.reset(ctx.state.userId);
         }),
-        // Lists
-        withPhase('list:link', async (ctx) => {
-            const databaseId = databaseIdFromLink(ctx.message.text);
-            userSessionManager.context(ctx.state.userId).databaseId = databaseId;
+        // Databases
+        withPhase('database:link', async (ctx) => {
+            const notionDatabaseId = notionDatabaseIdFromUrl(ctx.message.text);
+            if (!notionDatabaseId) {
+                await ctx.reply(ctx.state.localize('command.database.invalidLink'));
+                return;
+            }
 
-            await ctx.reply(localize('command.list.yourAlias', { databaseId }));
-            userSessionManager.setPhase(ctx.state.userId, 'list:alias');
+            userSessionManager.context(ctx.state.userId).notionDatabaseId = notionDatabaseId;
+            userSessionManager.setPhase(ctx.state.userId, 'database:alias');
+            await ctx.reply(ctx.state.localize('command.database.alias', { match: notionDatabaseId }));
         }),
-        withPhase('list:alias', async (ctx) => {
-            const alias = ctx.message.text;
-            const { databaseId } = userSessionManager.context(ctx.state.userId);
+        withPhase('database:alias', async (ctx) => {
+            const alias = databaseAlias(ctx.message.text);
+            if (!alias) {
+                await ctx.reply(ctx.state.localize('command.database.invalidAlias'));
+                return;
+            }
 
-            await storage.storeList(
-                new List({
-                    id: databaseId,
+            const { notionDatabaseId } = userSessionManager.context(ctx.state.userId);
+            await storage.storeDatabase(
+                new NotionDatabase({
                     userId: ctx.state.userId,
+                    notionDatabaseId,
                     alias,
                 })
             );
 
-            await ctx.reply(localize('command.list.added', { alias }));
             userSessionManager.reset(ctx.state.userId);
+            await ctx.reply(ctx.state.localize('command.databases.added', { alias }));
         }),
         // Patterns
         withPhase('template:pattern', async (ctx) => {
@@ -418,8 +432,31 @@ const localize = (message, replacements = null) => {
         await logError(error);
     });
 
-    function databaseIdFromLink(link) {
-        return new URL(link).pathname.slice(1);
+    function notionDatabaseIdFromUrl(link) {
+        try {
+            return new URL(link).pathname.slice(1);
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function databaseAlias(value) {
+        value = value.trim().toLowerCase();
+
+        if (!value || /\s/.test(value)) {
+            return null;
+        }
+
+        return value;
+    }
+
+    function formatTimezone(timezoneOffsetMinutes) {
+        const offset = Math.abs(timezoneOffsetMinutes);
+
+        const timezoneHours = Math.trunc(offset / 60);
+        const timezoneMinutes = (offset - timezoneHours * 60);
+    
+        return (offset >= 0 ? '+' : '-') + String(timezoneHours).padStart(2, '0') + ':' + String(timezoneMinutes).padStart(2, '0');
     }
 
     await bot.launch({
@@ -427,16 +464,16 @@ const localize = (message, replacements = null) => {
         dropPendingUpdates: true,
     });
 
-    setInterval(async () => {
-        await reminderManager.sendAll();
-    }, 30_000);
+    // setInterval(async () => {
+    //     await reminderManager.sendAll();
+    // }, 30_000);
 
-    setInterval(async () => {
-        await reminderManager.syncAll();
-    }, 15 * 60_000);
+    // setInterval(async () => {
+    //     await reminderManager.syncAll();
+    // }, 15 * 60_000);
 
-    await reminderManager.syncAll();
-    await reminderManager.sendAll();
+    // await reminderManager.syncAll();
+    // await reminderManager.sendAll();
 })()
     .then(() => console.log('Started!'));
 

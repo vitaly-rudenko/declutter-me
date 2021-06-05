@@ -48,10 +48,12 @@ class NotionReminderSerializer {
     }
 
     _formatUtcDateWithTimezone(date, timezoneOffsetMinutes) {
-        const dateWithTimezone = new Date(date.getTime() + timezoneOffsetMinutes * 60_000);
+        const offset = Math.abs(timezoneOffsetMinutes);
+
+        const dateWithTimezone = new Date(date.getTime() + offset * 60_000);
     
-        const timezoneHours = Math.trunc(timezoneOffsetMinutes / 60);
-        const timezoneMinutes = (timezoneOffsetMinutes - timezoneHours * 60);
+        const timezoneHours = Math.trunc(offset / 60);
+        const timezoneMinutes = (offset - timezoneHours * 60);
     
         const timezone = String(timezoneHours).padStart(2, '0') + ':' + String(timezoneMinutes).padStart(2, '0');
         
