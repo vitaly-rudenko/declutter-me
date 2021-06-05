@@ -1,0 +1,53 @@
+{
+    "language": {
+        "ukrainian": "Українська",
+        "english": "English",
+        "russian": "Русский"
+    },
+    "command": {
+        "start": {
+            "readyToGo": "You're ready to go!",
+            "start.useNotionCommand": "Hi! Use /notion to setup Notion integration."
+        },
+        "info": {
+            "response": [
+                "Hi, {name}!",
+                "Your info:",
+                "  - Language: {language}",
+                "  - Timezone offset: {timezoneOffset}",
+                "  - Notion token: {notionToken}",
+                "  - Notes database: {notesDatabaseId}",
+                "  - Reminders database: {remindersDatabaseId}",
+                "  - Lists: {lists}",
+                "  - Templates: {templates}"
+            ],
+            "list": "    - {alias} ({id})",
+            "template": "    - {type} ({pattern})",
+            "notProvided": "<not provided>",
+            "none": "<none>"
+        },
+        "notion": {
+            "yourToken": "Your Notion integration token:",
+            "yourNotesDatabase": [
+                "It's \"{token}\".",
+                "Link to notes database:"
+            ],
+            "yourRemindersDatabase": [
+                "It's \"{databaseId}\".",
+                "Link to reminders database:"
+            ],
+            "allSet": [
+                "It's \"{databaseId}\".",
+                "Great, your Notion integration is all set!"
+            ]
+        },
+        "list": {
+            "yourLink": "Link to your list database:",
+            "yourAlias": [
+                "It's \"{databaseId}\".",
+                "Alias for the list:"
+            ],
+            "added": "List \"{alias}\" has been added!"
+        }
+    }
+}

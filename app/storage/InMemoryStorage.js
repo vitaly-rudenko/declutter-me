@@ -97,6 +97,15 @@ class InMemoryStorage {
 
     /** @param {import('../templates/Template')} template */
     async storeTemplate(template) {
+        if (!template.order) {
+            const templates = this._templates.filter(t => t.userId === template.userId);
+            template = template.clone({
+                order: templates.length === 0
+                    ? 1
+                    : (Math.max(...templates.map(t => t.order)) + 1)
+            });
+        }
+
         this._templates.push(template);
         return template;
     }

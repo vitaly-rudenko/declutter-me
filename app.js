@@ -28,6 +28,36 @@ const ReminderManager = require('./app/reminders/ReminderManager');
 
 require('dotenv').config();
 
+const en = require('./assets/localization/en.json');
+const localize = (message, replacements = null) => {
+    const path = message.split('.');
+
+    let result = en;
+    while (result && path.length > 0) {
+        result = result[path.shift()];
+    }
+
+    if (!result) {
+        if (replacements) {
+            return `${message}\n${JSON.stringify(replacements, null, 4)}`;
+        } else {
+            return message;
+        }
+    }
+
+    if (Array.isArray(result)) {
+        result = result.join('\n');
+    }
+
+    if (replacements) {
+        for (const [key, value] of Object.entries(replacements)) {
+            result = result.replace(new RegExp('\\{' + key + '\\}', 'g'), value);
+        }
+    }
+
+    return result;
+};
+
 (async () => {
     const storage = new InMemoryStorage();
     const user = await storage.createUser({ language: 'russian', timezoneOffsetMinutes: 3 * 60 });
@@ -44,13 +74,33 @@ require('dotenv').config();
     await storage.storeList(new List({ id: 'ca75e1d762c24d4893e2d682c1823797', alias: 'shopping', userId: user.id }));
     await storage.storeList(new List({ id: '3af8dfb79d18428b86419bd7a211084a', alias: 'recipes', userId: user.id }));
 
+    const debugChatId = process.env.DEBUG_CHAT_ID;
+
     const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+
+    process.on('unhandledRejection', async (error) => {
+        await logError(error);
+    });
+
+    async function logError(error) {
+        console.error('Unexpected error:', error);
+
+        try {
+            await bot.telegram.sendMessage(
+                debugChatId,
+                `❗️Unexpected error at ${new Date().toISOString()}❗️\n${error.name}: ${error.message}\n\nStack:\n${error.stack}`
+            );
+        } catch (error) {
+            console.warn('Could not post log to debug chat:', error);
+        }
+    }
 
     const userSessionManager = new UserSessionManager();
     const notionSessionManager = new NotionSessionManager({ storage });
     const reminderManager = new ReminderManager({ notionSessionManager, storage, bot });
 
     bot.telegram.setMyCommands([
+        { command: '/help', description: 'Get help' },
         { command: '/start', description: 'Start the bot' },
         { command: '/info', description: 'Prints your information' },
         { command: '/notion', description: 'Configure Notion' },
@@ -63,18 +113,24 @@ require('dotenv').config();
     const withUser = withUserFactory(storage);
     const withNotion = withNotionFactory(notionSessionManager);
 
+    bot.use(async (context, next) => {
+        if (context.chat.type === 'private') {
+            next();
+        }
+    });
+
     bot.use(withTelegramAccount(storage));
 
     bot.start(async (ctx) => {
         if (ctx.state.telegramAccount) {
-            await ctx.reply('You are ready to go!');
+            await ctx.reply(localize('command.start.readyToGo'));
             return;
         }
 
         const user = await storage.createUser();
         await storage.createTelegramAccount(user.id, ctx.from.id);
 
-        await ctx.reply('Hi! Use /notion to setup Notion integration.');
+        await ctx.reply(localize('command.start.useNotionCommand'));
     });
 
     bot.command('info', withUser({ required: false }), withNotion({ required: false }), async (ctx) => {
@@ -82,27 +138,32 @@ require('dotenv').config();
         const templates = ctx.state.userId ? await storage.findTemplatesByUserId(ctx.state.userId) : [];
 
         await ctx.reply(
-            `Hi, ${ctx.from.first_name}!\n` +
-            `Your info:\n` +
-            `  - Language: ${ctx.state.user?.language ?? '<not provided>'}\n` +
-            `  - Timezone offset: ${ctx.state.user?.timezoneOffsetMinutes ?? '<not provided>'}\n` +
-            `  - Notion token: ${ctx.state.notionAccount?.token ?? '<not provided>'}\n` +
-            `  - Notes: ${ctx.state.notionAccount?.notesDatabaseId ?? '<not provided>'}\n` +
-            `  - Reminders: ${ctx.state.notionAccount?.remindersDatabaseId ?? '<not provided>'}\n` +
-            `  - Lists:\n` +
-            (lists.map(list => `    - ${list.alias} (${list.id})`).join('\n') || '    <none>') + '\n' +
-            `  - Templates:\n` +
-            (templates.map(template => `    - ${template.type}: ${new PatternStringifier().stringify(template.pattern)}`).join('\n') || '    <none>') + '\n'
+            localize('command.info.response', {
+                name: ctx.from.first_name,
+                language: ctx.state.user?.language
+                    ? localize(`language.${ctx.state.user.language}`)
+                    : localize('command.info.notProvided'),
+                timezoneOffset: ctx.state.user?.timezoneOffsetMinutes ?? localize('command.info.notProvided'),
+                notionToken: ctx.state.notionAccount?.token ?? localize('command.info.notProvided'),
+                notesDatabaseId: ctx.state.notionAccount?.notesDatabaseId ?? localize('command.info.notProvided'),
+                remindersDatabaseId: ctx.state.notionAccount?.remindersDatabaseId ?? localize('command.info.notProvided'),
+                lists: lists.length > 0
+                    ? '\n' + lists.map(list => localize('command.info.list', { id: list.id, alias: list.alias })).join('\n')
+                    : localize('command.info.none'),
+                templates: templates.length > 0
+                    ? '\n' + templates.map(template => localize('command.info.template', { type: template.type, pattern: new PatternStringifier().stringify(template.pattern) })).join('\n')
+                    : localize('command.info.none'),
+            })
         );
     });
 
     bot.command('notion', withUser(), async (ctx) => {
-        await ctx.reply('Your Notion integration token:');
+        await ctx.reply(localize('command.notion.yourToken'));
         userSessionManager.setPhase(ctx.state.userId, 'notion:token');
     });
 
     bot.command('list', withUser(), withNotion(), async (ctx) => {
-        await ctx.reply('Link to your List database:');
+        await ctx.reply(localize('command.list.yourLink'));
         userSessionManager.setPhase(ctx.state.userId, 'list:link');
     });
 
@@ -133,7 +194,7 @@ require('dotenv').config();
         await ctx.answerCbQuery();
         await ctx.reply('Got it! Now send me the template:');
 
-        userSessionManager.setContext(ctx.state.userId, { type: 'note' });
+        userSessionManager.context(ctx.state.userId).type = 'note';
         userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
     }));
 
@@ -141,14 +202,14 @@ require('dotenv').config();
         await ctx.answerCbQuery();
         await ctx.reply('Got it! Now send me the template:');
 
-        userSessionManager.setContext(ctx.state.userId, { type: 'reminder' });
+        userSessionManager.context(ctx.state.userId).type = 'reminder';
         userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
     }));
 
     bot.action('template:list', withPhase('template:type', async (ctx) => {
         await ctx.answerCbQuery();
 
-        userSessionManager.setContext(ctx.state.userId, { type: 'list' });
+        userSessionManager.context(ctx.state.userId).type = 'list';
 
         const lists = await storage.findListsByUserId(ctx.state.userId);
         if (lists.length > 0) {
@@ -172,13 +233,7 @@ require('dotenv').config();
         
         const alias = ctx.match[1];
 
-        userSessionManager.setContext(
-            ctx.state.userId,
-            {
-                ...userSessionManager.getContext(ctx.state.userId),
-                defaultVariables: { list: alias }
-            }
-        );
+        userSessionManager.context(ctx.state.userId).defaultVariables = { list: alias };
 
         await ctx.reply(`Default list: "${alias}".\nNow send me the template:`);
         userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
@@ -195,33 +250,39 @@ require('dotenv').config();
         // Notion
         withPhase('notion:token', async (ctx) => {
             const token = ctx.message.text;
+
             await storage.createNotionAccount(ctx.state.userId, token);
-            await ctx.reply(`It\'s "${token}".\nLink to Notes database:`);
+            await ctx.reply(localize('command.notion.yourNotesDatabase', { token }));
+
             userSessionManager.setPhase(ctx.state.userId, 'notion:notes');
         }),
         withPhase('notion:notes', async (ctx) => {
             const databaseId = databaseIdFromLink(ctx.message.text);
+
             await storage.setNotesDatabaseId(ctx.state.userId, databaseId);
-            await ctx.reply(`It\'s "${databaseId}".\nLink to Reminders database:`);
+            await ctx.reply(localize('command.notion.yourRemindersDatabase', { databaseId }));
+
             userSessionManager.setPhase(ctx.state.userId, 'notion:reminders');
         }),
         withPhase('notion:reminders', async (ctx) => {
             const databaseId = databaseIdFromLink(ctx.message.text);
+
             await storage.setRemindersDatabaseId(ctx.state.userId, databaseId);
-            await ctx.reply(`It\'s "${databaseId}".\nGreat, your Notion integration is all set!`);
+            await ctx.reply(localize('command.notion.allSet', { databaseId }));
+
             userSessionManager.reset(ctx.state.userId);
         }),
         // Lists
         withPhase('list:link', async (ctx) => {
             const databaseId = databaseIdFromLink(ctx.message.text);
-            userSessionManager.setContext(ctx.state.userId, databaseId);
+            userSessionManager.context(ctx.state.userId).databaseId = databaseId;
 
-            await ctx.reply(`It\'s "${databaseId}".\nAlias for the list:`);
+            await ctx.reply(localize('command.list.yourAlias', { databaseId }));
             userSessionManager.setPhase(ctx.state.userId, 'list:alias');
         }),
         withPhase('list:alias', async (ctx) => {
             const alias = ctx.message.text;
-            const databaseId = userSessionManager.getContext(ctx.state.userId);
+            const { databaseId } = userSessionManager.context(ctx.state.userId);
 
             await storage.storeList(
                 new List({
@@ -231,19 +292,21 @@ require('dotenv').config();
                 })
             );
 
-            await ctx.reply(`List "${alias}" has been added!`);
+            await ctx.reply(localize('command.list.added', { alias }));
             userSessionManager.reset(ctx.state.userId);
         }),
         // Patterns
         withPhase('template:pattern', async (ctx) => {
             const pattern = new PatternBuilder().build(ctx.message.text);
 
+            const { type, defaultVariables } = userSessionManager.context(ctx.state.userId);
+
             await storage.storeTemplate(
                 new Template({
-                    userId: ctx.state.userId,
-                    type: userSessionManager.getContext(ctx.state.userId).type,
+                    type,
                     pattern,
-                    order: 1,
+                    defaultVariables,
+                    userId: ctx.state.userId,
                 })
             );
 
@@ -254,8 +317,8 @@ require('dotenv').config();
         withNotion(),
         withPhase(null, async (ctx) => {
             const { userId, user: { timezoneOffsetMinutes }, notionAccount, notion } = ctx.state;
-    
-            if (ctx.message.text.startsWith('/')) {
+
+            if (!ctx.message.text || ctx.message.text.startsWith('/')) {
                 return;
             }
     
@@ -349,6 +412,10 @@ require('dotenv').config();
     bot.command('reset', async (ctx) => {
         await storage.cleanUp();
         await ctx.reply('Done!');
+    });
+
+    bot.catch(async (error) => {
+        await logError(error);
     });
 
     function databaseIdFromLink(link) {

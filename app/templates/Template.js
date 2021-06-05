@@ -1,10 +1,21 @@
 class Template {
-    constructor({ userId, type, order, pattern, defaultVariables = {} }) {
+    constructor({ userId, type, pattern, order = null, defaultVariables = {} }) {
         this._userId = userId;
         this._type = type;
         this._order = order;
         this._pattern = pattern;
         this._defaultVariables = defaultVariables;
+    }
+
+    clone(override = {}) {
+        return new Template({
+            userId: this._userId,
+            type: this._type,
+            order: this._order,
+            pattern: this._pattern,
+            defaultVariables: this._defaultVariables,
+            ...override,
+        });
     }
 
     get userId() {

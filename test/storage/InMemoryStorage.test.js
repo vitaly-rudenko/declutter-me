@@ -131,12 +131,14 @@ describe('InMemoryStorage', () => {
             const pattern3 = ['fake', 'pattern', 3];
             const pattern4 = ['fake', 'pattern', 4];
             const pattern5 = ['fake', 'pattern', 5];
+            const pattern6 = ['fake', 'pattern', 6];
 
-            const template1 = await inMemoryStorage.storeTemplate(new Template({ userId: user1.id, order: 1, type: 'note', pattern: pattern1 }));
-            const template2 = await inMemoryStorage.storeTemplate(new Template({ userId: user2.id, order: 1, type: 'reminder', pattern: pattern2, defaultVariables: { date: 'in five minutes' } }));
-            const template3 = await inMemoryStorage.storeTemplate(new Template({ userId: user2.id, order: 2, type: 'list', pattern: pattern3, defaultVariables: { list: 'shopping' } }));
-            const template4 = await inMemoryStorage.storeTemplate(new Template({ userId: user2.id, order: 3, type: 'list', pattern: pattern4, defaultVariables: {} }));
-            const template5 = await inMemoryStorage.storeTemplate(new Template({ userId: user3.id, order: 1, type: 'note', pattern: pattern5 }));
+            const template1 = await inMemoryStorage.storeTemplate(new Template({ userId: user1.id, type: 'note', pattern: pattern1 }));
+            const template2 = await inMemoryStorage.storeTemplate(new Template({ userId: user2.id, type: 'reminder', pattern: pattern2, defaultVariables: { date: 'in five minutes' } }));
+            const template3 = await inMemoryStorage.storeTemplate(new Template({ userId: user2.id, type: 'list', pattern: pattern3, defaultVariables: { list: 'shopping' } }));
+            const template4 = await inMemoryStorage.storeTemplate(new Template({ userId: user2.id, type: 'list', pattern: pattern4, defaultVariables: {} }));
+            const template5 = await inMemoryStorage.storeTemplate(new Template({ userId: user3.id, order: 5, type: 'note', pattern: pattern5 }));
+            const template6 = await inMemoryStorage.storeTemplate(new Template({ userId: user3.id, type: 'note', pattern: pattern6 }));
 
             expect(template1)
                 .to.deep.eq(new Template({ userId: 1, type: 'note', order: 1, pattern: pattern1, defaultVariables: {} }));
@@ -147,11 +149,13 @@ describe('InMemoryStorage', () => {
             expect(template4)
                 .to.deep.eq(new Template({ userId: 2, type: 'list', order: 3, pattern: pattern4, defaultVariables: {} }));
             expect(template5)
-                .to.deep.eq(new Template({ userId: 3, type: 'note', order: 1, pattern: pattern5, defaultVariables: {} }));
+                .to.deep.eq(new Template({ userId: 3, type: 'note', order: 5, pattern: pattern5, defaultVariables: {} }));
+            expect(template6)
+                .to.deep.eq(new Template({ userId: 3, type: 'note', order: 6, pattern: pattern6, defaultVariables: {} }));
             
             expect(await inMemoryStorage.findTemplatesByUserId(1)).to.deep.eq([template1]);
             expect(await inMemoryStorage.findTemplatesByUserId(2)).to.deep.eq([template2, template3, template4]);
-            expect(await inMemoryStorage.findTemplatesByUserId(3)).to.deep.eq([template5]);
+            expect(await inMemoryStorage.findTemplatesByUserId(3)).to.deep.eq([template5, template6]);
             expect(await inMemoryStorage.findTemplatesByUserId(4)).to.deep.eq([]);
         });
 

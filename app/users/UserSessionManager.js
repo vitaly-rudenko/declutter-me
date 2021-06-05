@@ -3,26 +3,28 @@ const Cache = require('../storage/Cache');
 class UserSessionManager {
     constructor() {
         this._phases = new Cache(60 * 60_000);
+        this._contexts = new Cache(60 * 60_000);
     }
 
     setPhase(userId, phase) {
-        this._phases.set(userId, { phase, context: {} });
+        this._phases.set(userId, { phase });
     }
     
     getPhase(userId) {
-        return this._phases.get(userId);
+        return this._phases.get(userId)?.phase ?? null;
     }
 
-    setContext(userId, context) {
-        this._phases.get(userId).context = context;
-    }
+    context(userId) {
+        if (!this._contexts.get(userId)) {
+            this._contexts.set(userId, {});
+        }
 
-    getContext(userId) {
-        return this._phases.get(userId)?.context ?? {};
+        return this._contexts.get(userId);
     }
 
     reset(userId) {
         this._phases.delete(userId);
+        this._contexts.delete(userId);
     }
 }
 
