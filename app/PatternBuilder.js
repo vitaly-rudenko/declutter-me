@@ -65,14 +65,19 @@ class PatternBuilder {
                 value.length > 0 &&
                 (currentType !== type || character === null)
             ) {
-                const isBang = currentType === 'variable' && value.endsWith('!');
-                if (isBang) {
-                    value = value.slice(0, -1);
-                }
+                const metadata = {};
 
-                let inputType, outputType;
-                if (currentType === 'variable' && value.includes(':')) {
+                if (currentType === 'variable') {
+                    if (value.endsWith('!')) {
+                        metadata.bang = true;
+                        value = value.slice(0, -1);
+                    }
+
+                    let inputType, outputType;
                     [value, inputType, outputType] = value.split(':');
+
+                    if (inputType) metadata.inputType = inputType;
+                    if (outputType) metadata.outputType = outputType;
                 }
 
                 result.push({
@@ -84,9 +89,7 @@ class PatternBuilder {
                             : currentType === 'variable'
                                 ? value
                                 : value.toLowerCase(),
-                    ...isBang && { bang: true },
-                    ...inputType && { inputType },
-                    ...outputType && { outputType },
+                    ...metadata,
                 });
                 value = '';
             }
