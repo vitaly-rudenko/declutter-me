@@ -81,7 +81,9 @@ class PatternBuilder {
                         ? this.build(value)
                         : currentType === 'variational'
                             ? value.split('|').map(v => this.build(v))
-                            : value.toLowerCase(),
+                            : currentType === 'variable'
+                                ? value
+                                : value.toLowerCase(),
                     ...isBang && { bang: true },
                     ...fieldType && { fieldType },
                 });

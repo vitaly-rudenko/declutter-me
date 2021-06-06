@@ -6,14 +6,20 @@ class EntryMatchers {
         this.metadata = {
             texts: { array: true },
             words: { array: true },
+            urls: { array: true },
+            phones: { array: true },
         };
 
         this.text = this.text.bind(this);
         this.word = this.word.bind(this);
+        this.url = this.word.bind(this);
+        this.phone = this.word.bind(this);
 
         this.database = this.word.bind(this);
         this.texts = this.text.bind(this);
         this.words = this.word.bind(this);
+        this.urls = this.url.bind(this);
+        this.phones = this.phone.bind(this);
 
         this.date = this.date.bind(this);
         this.futureDate = this.futureDate.bind(this);
