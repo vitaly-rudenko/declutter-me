@@ -32,11 +32,11 @@ class EntryMatchers {
             results.push(input);
 
             if (nextToken2 && nextToken2.inputType === 'future_date') {
-                return results.map(result => this._removeDateFromInput(result, { nextTokens: [nextToken2] }, true))
+                return results.map(result => this._removeDateFromInput(result, { nextTokens: [nextToken2] }, { futureOnly: true }))
             }
 
             if (nextToken2 && nextToken2.inputType === 'date') {
-                return results.map(result => this._removeDateFromInput(result, { nextTokens: [nextToken2] }, false))
+                return results.map(result => this._removeDateFromInput(result, { nextTokens: [nextToken2] }, { futureOnly: false }))
             }
 
             return results;
@@ -45,7 +45,7 @@ class EntryMatchers {
         return input;
     }
 
-    _removeDateFromInput(input, { nextTokens: [nextToken] }, futureOnly) {
+    _removeDateFromInput(input, { nextTokens: [nextToken] }, { futureOnly }) {
         if (!nextToken) {
             return input;
         }
@@ -58,7 +58,7 @@ class EntryMatchers {
             if (startIndex === -1) startIndex = -1;
 
             const date = input.slice(startIndex + 1);
-            if (this._dateParser.parse(date, null, futureOnly)) {
+            if (this._dateParser.parse(date, { futureOnly })) {
                 lastDate = date;
             }
         }
@@ -87,7 +87,7 @@ class EntryMatchers {
             if (endIndex === -1) endIndex = input.length;
 
             const date = input.slice(0, endIndex);
-            if (this._dateParser.parse(date, null, futureOnly)) {
+            if (this._dateParser.parse(date, { futureOnly })) {
                 lastDate = date;
             }
         }

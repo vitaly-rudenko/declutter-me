@@ -98,10 +98,9 @@ function endsWith(array, item) {
 class RussianDateParser {
     /**
      * @param {string} input
-     * @param {Date} [origin]
-     * @param {boolean} [futureOnly]
+     * @param {{ origin?: Date, futureOnly?: boolean }} [options]
      */
-    parse(input, origin, futureOnly = true) {
+    parse(input, { origin = null, futureOnly = false } = {}) {
         input = input.toLowerCase();
 
         if (!origin) {
@@ -110,51 +109,49 @@ class RussianDateParser {
         }
 
         return (
-            this.parseRelativeDate(input, origin) ||
-            this.parseAbsoluteTime(input, origin) ||
-            this.parseSpecialDateTime(input, origin) ||
-            this.parseAbsoluteDate(input, origin) ||
-            this.parseDateTime(input, origin, futureOnly) ||
-            this.parseDateWithSpecialTime(input, origin, futureOnly)
+            this.parseRelativeDate(input, { origin }) ||
+            this.parseAbsoluteTime(input, { origin, futureOnly }) ||
+            this.parseSpecialDateTime(input, { origin, futureOnly }) ||
+            this.parseAbsoluteDate(input, { origin, futureOnly }) ||
+            this.parseDateTime(input, { origin, futureOnly }) ||
+            this.parseDateWithSpecialTime(input, { origin, futureOnly })
         );
     }
 
     /**
      * @param {string} input
-     * @param {Date} origin
-     * @param {boolean} futureOnly
+     * @param {{ origin: Date, futureOnly: boolean }} params
      */
-    parseDateWithSpecialTime(input, origin, futureOnly) {
+    parseDateWithSpecialTime(input, { origin, futureOnly }) {
         const indexOf = input.lastIndexOf(' ');
         if (indexOf === -1) return null;
 
         const [rawDate, rawTime] = [input.slice(0, indexOf), input.slice(indexOf + 1)];
 
-        const date = this.parse(rawDate, origin, futureOnly);
+        const date = this.parse(rawDate, { origin, futureOnly });
         if (!date) return null;
         date.setUTCHours(0);
         date.setUTCMinutes(0);
         date.setUTCSeconds(0);
         date.setUTCMilliseconds(0);
 
-        const time = this.parseSpecial(rawTime, date);
+        const time = this.parseSpecial(rawTime, { origin: date, futureOnly, skipDateIfNecessary: true });
         return time;
     }
 
     /**
      * @param {string} input
-     * @param {Date} origin
-     * @param {boolean} futureOnly
+     * @param {{ origin: Date, futureOnly: boolean }} params
      */
-    parseDateTime(input, origin, futureOnly) {
+    parseDateTime(input, { origin, futureOnly }) {
         if (!input.includes(' в ')) return null;
         const [rawDate, rawTime] = input.split(' в ');
 
-        const date = this.parse(rawDate, origin, futureOnly);
-        const time = this.parse('в ' + rawTime, origin, futureOnly);
+        const date = this.parse(rawDate, { origin, futureOnly });
+        const time = this.parse('в ' + rawTime, { origin, futureOnly });
 
         if (date && time) {
-            return this.combineDateTime(date, time);
+            return this.combineDateAndTime(date, time);
         }
     }
 
@@ -162,7 +159,7 @@ class RussianDateParser {
      * @param {Date} date
      * @param {Date} time
      */
-    combineDateTime(date, time) {
+    combineDateAndTime(date, time) {
         return new Date(Date.UTC(
             date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),
             time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), time.getUTCMilliseconds()
@@ -171,14 +168,14 @@ class RussianDateParser {
 
     /**
      * @param {string} input
-     * @param {Date} origin
+     * @param {{ origin: Date, futureOnly: boolean }} params
      */
-    parseSpecialDateTime(input, origin) {
+    parseSpecialDateTime(input, { origin, futureOnly }) {
         const parts = input.split(' ');
         let specialDate = new Date(origin);
 
         for (const value of parts) {
-            specialDate = this.parseSpecial(value, specialDate);
+            specialDate = this.parseSpecial(value, { origin: specialDate, futureOnly, skipDateIfNecessary: true });
             if (!specialDate) break;
         }
 
@@ -187,9 +184,9 @@ class RussianDateParser {
 
     /**
      * @param {string} input
-     * @param {Date} origin
+     * @param {{ origin: Date }} params
      */
-    parseRelativeDate(input, origin) {
+    parseRelativeDate(input, { origin }) {
         if (!input.startsWith('через ')) return null;
         input = input.slice('через '.length);
 
@@ -204,7 +201,7 @@ class RussianDateParser {
         }
         
         if (value && unit) {
-            return this.getRelativeDate(value, unit, origin);
+            return this.getRelativeDate({ value, unit, origin });
         }
 
         return null;
@@ -212,13 +209,13 @@ class RussianDateParser {
 
     /**
      * @param {string} input
-     * @param {Date} origin
+     * @param {{ origin: Date, futureOnly: boolean }} params
      */
-    parseAbsoluteDate(input, origin) {
+    parseAbsoluteDate(input, { origin, futureOnly }) {
         const inputParts = input.split(' ');
 
         let specialPart = null;
-        if (this.parseSpecial(inputParts[0], origin)) {
+        if (this.parseSpecial(inputParts[0], { origin, futureOnly, skipDateIfNecessary: true })) {
             specialPart = inputParts.shift();
         }
 
@@ -250,7 +247,7 @@ class RussianDateParser {
 
             if (monthPart === 'числа') {
                 monthIndex = origin.getUTCMonth();
-                if (dateNumber <= origin.getUTCDate()) {
+                if (futureOnly && dateNumber <= origin.getUTCDate()) {
                     monthIndex++;
                 }
             } else {
@@ -284,12 +281,12 @@ class RussianDateParser {
             return null;
         }
         
-        if (dateCopy <= origin) {
+        if (futureOnly && dateCopy <= origin) {
             dateCopy.setUTCFullYear(dateCopy.getUTCFullYear() + 1);
         }
         
         if (specialPart !== null) {
-            return this.parseSpecial(specialPart, dateCopy, false);
+            return this.parseSpecial(specialPart, { origin: dateCopy, futureOnly, skipDateIfNecessary: false });
         }
 
         return dateCopy;
@@ -297,9 +294,9 @@ class RussianDateParser {
 
     /**
      * @param {string} input
-     * @param {Date} origin
+     * @param {{ origin: Date, futureOnly: boolean }} params
      */
-    parseAbsoluteTime(input, origin) {
+    parseAbsoluteTime(input, { origin, futureOnly }) {
         if (!input.startsWith('в ')) return null;
         input = input.slice('в '.length);
 
@@ -343,7 +340,7 @@ class RussianDateParser {
             return null;
         }
 
-        if (dateCopy <= origin) {
+        if (futureOnly && dateCopy <= origin) {
             dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
         }
 
@@ -360,10 +357,9 @@ class RussianDateParser {
 
     /**
      * @param {string} value
-     * @param {Date} date
-     * @param {boolean} skipDateIfNecessary
+     * @param {{ origin: Date, futureOnly: boolean, skipDateIfNecessary: boolean }} params
      */
-    parseSpecial(value, date, skipDateIfNecessary = true) {
+    parseSpecial(value, { origin, futureOnly, skipDateIfNecessary }) {
         if (typeof value !== 'string' || value.length === 0) {
             return null;
         }
@@ -373,76 +369,74 @@ class RussianDateParser {
             return null;
         }
 
-        const dateCopy = new Date(date);
+        const dateCopy = new Date(origin);
         match[1](dateCopy);
 
-        if (skipDateIfNecessary && dateCopy <= date) {
+        if (futureOnly && skipDateIfNecessary && dateCopy <= origin) {
             dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
         }
 
         return dateCopy;
     }
 
-    /**
-     * @param {number} value
-     * @param {string} unit
-     * @param {Date} date
-     */
-    getRelativeDate(value, unit, date) {
+    /** @param {{ value: number, unit: string, origin: Date }} params */
+    getRelativeDate({ value, unit, origin }) {
+        const dateCopy = new Date(origin);
+
         const hasExtraHalf = Math.trunc(value) !== value;
         value = Math.trunc(value);
 
         switch (unit) {
             case Unit.MINUTE:
-                date.setUTCMinutes(date.getUTCMinutes() + value);
+                dateCopy.setUTCMinutes(origin.getUTCMinutes() + value);
                 break;
             case Unit.HALF_HOUR:
-                date.setUTCMinutes(date.getUTCMinutes() + 30);
+                dateCopy.setUTCMinutes(origin.getUTCMinutes() + 30);
                 break;
             case Unit.HOUR:
-                date.setUTCHours(date.getUTCHours() + value);
+                dateCopy.setUTCHours(origin.getUTCHours() + value);
                 break;
             case Unit.DAY:
-                date.setUTCDate(date.getUTCDate() + value);
+                dateCopy.setUTCDate(origin.getUTCDate() + value);
                 break;
             case Unit.WEEK:
-                date.setUTCDate(date.getUTCDate() + value * 7);
+                dateCopy.setUTCDate(origin.getUTCDate() + value * 7);
                 break;
             case Unit.MONTH:
-                date.setUTCMonth(date.getUTCMonth() + value);
+                dateCopy.setUTCMonth(origin.getUTCMonth() + value);
                 break;
             case Unit.HALF_YEAR:
-                date.setUTCMonth(date.getUTCMonth() + 6);
+                dateCopy.setUTCMonth(origin.getUTCMonth() + 6);
                 break;
             case Unit.YEAR:
-                date.setUTCFullYear(date.getUTCFullYear() + value);
+                dateCopy.setUTCFullYear(origin.getUTCFullYear() + value);
                 break;
         }
 
         if (hasExtraHalf) {
             switch (unit) {
                 case Unit.MINUTE:
-                    date.setUTCSeconds(date.getUTCSeconds() + 30);
+                    dateCopy.setUTCSeconds(dateCopy.getUTCSeconds() + 30);
                     break;
                 case Unit.HOUR:
-                    date.setUTCMinutes(date.getUTCMinutes() + 30);
+                    dateCopy.setUTCMinutes(dateCopy.getUTCMinutes() + 30);
                     break;
                 case Unit.DAY:
-                    date.setUTCHours(date.getUTCHours() + 12);
+                    dateCopy.setUTCHours(dateCopy.getUTCHours() + 12);
                     break;
                 case Unit.WEEK:
-                    date.setUTCDate(date.getUTCDate() + 3);
+                    dateCopy.setUTCDate(dateCopy.getUTCDate() + 3);
                     break;
                 case Unit.MONTH:
-                    date.setUTCDate(date.getUTCDate() + 15);
+                    dateCopy.setUTCDate(dateCopy.getUTCDate() + 15);
                     break;
                 case Unit.YEAR:
-                    date.setUTCMonth(date.getUTCMonth() + 6);
+                    dateCopy.setUTCMonth(dateCopy.getUTCMonth() + 6);
                     break;
             }
         }
 
-        return date;
+        return dateCopy;
     }
 
     parseUnit(value) {
