@@ -1,5 +1,9 @@
 class NoteMatchers {
     constructor() {
+        this.metadata = {
+            tag: { array: true }
+        };
+
         this.note = this.note.bind(this);
         this.tag = this.tag.bind(this);
     }
@@ -13,9 +17,7 @@ class NoteMatchers {
                 startIndex = input.toLowerCase().lastIndexOf(nextToken.value.toLowerCase(), startIndex - 1);
             }
 
-            if (results.length === 0) {
-                return input;
-            }
+            results.push(input);
 
             return results;
         }

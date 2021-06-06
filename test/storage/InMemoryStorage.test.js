@@ -6,6 +6,7 @@ const InMemoryStorage = require('../../app/storage/InMemoryStorage');
 const NotionAccountNotFound = require('../../app/errors/NotionAccountNotFound');
 const List = require('../../app/lists/List');
 const Template = require('../../app/templates/Template');
+const NotionDatabase = require('../../app/notion/NotionDatabase');
 
 const { expect } = chai;
 chai.use(require('chai-as-promised'));
@@ -85,44 +86,30 @@ describe('InMemoryStorage', () => {
             expect(await inMemoryStorage.findNotionAccount(2)).to.eq(notionAccount2);
             expect(await inMemoryStorage.findNotionAccount(3)).to.eq(notionAccount3);
             expect(await inMemoryStorage.findNotionAccount(4)).to.be.null;
-
-            expect(notionAccount1.notesDatabaseId).to.be.null;
-            expect(notionAccount1.remindersDatabaseId).to.be.null;
-
-            await inMemoryStorage.setNotesDatabaseId(1, 'fake-notes-database-id');
-            await inMemoryStorage.setRemindersDatabaseId(1, 'fake-reminders-database-id');
-            
-            expect(notionAccount1.notesDatabaseId).to.eq('fake-notes-database-id');
-            expect(notionAccount1.remindersDatabaseId).to.eq('fake-reminders-database-id');
-
-            await expect(inMemoryStorage.setNotesDatabaseId(4, 'fake-notes-database-id'))
-                .to.eventually.be.rejectedWith(NotionAccountNotFound);
-            await expect(inMemoryStorage.setRemindersDatabaseId(4, 'fake-reminders-database-id'))
-                .to.eventually.be.rejectedWith(NotionAccountNotFound);
         });
 
         it('should implement notion list management', async () => {
-            const notionList1 = await inMemoryStorage.storeList(new List({ userId: user1.id, id: 'fake-list-id-1', alias: 'alias-1' }));
-            const notionList2 = await inMemoryStorage.storeList(new List({ userId: user2.id, id: 'fake-list-id-2', alias: 'alias-2' }));
-            const notionList3 = await inMemoryStorage.storeList(new List({ userId: user2.id, id: 'fake-list-id-3', alias: 'alias-3' }));
+            const notionList1 = await inMemoryStorage.storeDatabase(new NotionDatabase({ userId: user1.id, notionDatabaseId: 'fake-list-id-1', alias: 'alias-1' }));
+            const notionList2 = await inMemoryStorage.storeDatabase(new NotionDatabase({ userId: user2.id, notionDatabaseId: 'fake-list-id-2', alias: 'alias-2' }));
+            const notionList3 = await inMemoryStorage.storeDatabase(new NotionDatabase({ userId: user2.id, notionDatabaseId: 'fake-list-id-3', alias: 'alias-3' }));
 
-            expect(notionList1).to.deep.eq(new List({ userId: 1, id: 'fake-list-id-1', alias: 'alias-1' }));
-            expect(notionList2).to.deep.eq(new List({ userId: 2, id: 'fake-list-id-2', alias: 'alias-2' }));
-            expect(notionList3).to.deep.eq(new List({ userId: 2, id: 'fake-list-id-3', alias: 'alias-3' }));
+            expect(notionList1).to.deep.eq(new NotionDatabase({ userId: 1, notionDatabaseId: 'fake-list-id-1', alias: 'alias-1' }));
+            expect(notionList2).to.deep.eq(new NotionDatabase({ userId: 2, notionDatabaseId: 'fake-list-id-2', alias: 'alias-2' }));
+            expect(notionList3).to.deep.eq(new NotionDatabase({ userId: 2, notionDatabaseId: 'fake-list-id-3', alias: 'alias-3' }));
 
-            expect(await inMemoryStorage.findListsByUserId(1)).to.deep.eq([notionList1]);
-            expect(await inMemoryStorage.findListsByUserId(2)).to.deep.eq([notionList2, notionList3]);
-            expect(await inMemoryStorage.findListsByUserId(3)).to.deep.eq([]);
-            expect(await inMemoryStorage.findListsByUserId(4)).to.deep.eq([]);
+            expect(await inMemoryStorage.findDatabasesByUserId(1)).to.deep.eq([notionList1]);
+            expect(await inMemoryStorage.findDatabasesByUserId(2)).to.deep.eq([notionList2, notionList3]);
+            expect(await inMemoryStorage.findDatabasesByUserId(3)).to.deep.eq([]);
+            expect(await inMemoryStorage.findDatabasesByUserId(4)).to.deep.eq([]);
 
-            expect(await inMemoryStorage.findListByAlias({ alias: 'alias-1', userId: 1 })).to.eq(notionList1);
-            expect(await inMemoryStorage.findListByAlias({ alias: 'alias-2', userId: 2 })).to.eq(notionList2);
-            expect(await inMemoryStorage.findListByAlias({ alias: 'alias-3', userId: 2 })).to.eq(notionList3);
+            expect(await inMemoryStorage.findDatabaseByAlias(1, 'alias-1')).to.eq(notionList1);
+            expect(await inMemoryStorage.findDatabaseByAlias(2, 'alias-2')).to.eq(notionList2);
+            expect(await inMemoryStorage.findDatabaseByAlias(2, 'alias-3')).to.eq(notionList3);
 
-            expect(await inMemoryStorage.findListByAlias({ alias: 'alias-2', userId: 1 })).to.be.null;
-            expect(await inMemoryStorage.findListByAlias({ alias: 'alias-1', userId: 2 })).to.be.null;
-            expect(await inMemoryStorage.findListByAlias({ alias: 'alias-3', userId: 3 })).to.be.null;
-            expect(await inMemoryStorage.findListByAlias({ alias: 'alias-4', userId: 4 })).to.be.null;
+            expect(await inMemoryStorage.findDatabaseByAlias(1, 'alias-2')).to.be.null;
+            expect(await inMemoryStorage.findDatabaseByAlias(2, 'alias-1')).to.be.null;
+            expect(await inMemoryStorage.findDatabaseByAlias(3, 'alias-3')).to.be.null;
+            expect(await inMemoryStorage.findDatabaseByAlias(4, 'alias-4')).to.be.null;
         });
 
         it('should implement template management', async () => {

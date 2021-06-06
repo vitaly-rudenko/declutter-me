@@ -1,10 +1,8 @@
 const NotionAccount = require('../notion/NotionAccount');
-const List = require('../lists/List');
 const Reminder = require('../reminders/Reminder');
 const TelegramAccount = require('../telegram/TelegramAccount');
 const Template = require('../templates/Template');
 const User = require('../users/User');
-const NotionAccountNotFound = require('../errors/NotionAccountNotFound');
 
 class InMemoryStorage {
     constructor() {
@@ -18,8 +16,6 @@ class InMemoryStorage {
         this._telegramAccounts = [];
         /** @type {NotionAccount[]} */
         this._notionAccounts = [];
-        /** @type {List[]} */
-        this._lists = [];
         /** @type {Template[]} */
         this._templates = [];
         /** @type {Reminder[][]} */
@@ -65,6 +61,8 @@ class InMemoryStorage {
         return this._notionAccounts.find(a => a.userId === userId) || null;
     }
 
+    // TODO: there should be a default database for reminders to sync them properly
+
     /** @param {import('../notion/NotionDatabase')} database */
     async storeDatabase(database) {
         if (this._databases.some(d => d.userId === database.userId && d.alias === database.alias)) {
@@ -79,7 +77,7 @@ class InMemoryStorage {
         return this._databases.filter(d => d.userId === userId);
     }
 
-    async findDatabaseByAlias({ userId, alias }) {
+    async findDatabaseByAlias(userId, alias) {
         return this._databases.find(d => d.userId === userId && d.alias === alias) || null;
     }
 
@@ -133,7 +131,7 @@ class InMemoryStorage {
         this._users = [];
         this._telegramAccounts = [];
         this._notionAccounts = [];
-        this._lists = [];
+        this._databases = [];
         this._templates = [];
         this._closeReminders = [];
     }

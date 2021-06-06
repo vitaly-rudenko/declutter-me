@@ -30,9 +30,12 @@ class PatternMatcher {
                 let value = token.value;
 
                 if (token.type === 'variable') {
-                    const matcher = matchers[token.value];
+                    const variableName = token.value;
+                    const fieldType = token.fieldType || token.value;
+
+                    const matcher = matchers[fieldType];
                     if (!matcher) {
-                        throw new Error(`Unsupported matcher: ${token.value}`);
+                        throw new Error(`Unsupported matcher: ${fieldType}`);
                     }
 
                     const nextTokens = combination.slice(i + 1);
@@ -51,17 +54,19 @@ class PatternMatcher {
                         }
                     }
 
-                    if (variables[token.value] === undefined) {
-                        variables[token.value] = value;
-                    } else if (Array.isArray(variables[token.value])) {
-                        variables[token.value].push(value);
+                    if (matchers.metadata?.[fieldType]?.array) {
+                        if (variables[variableName]) {
+                            variables[variableName].push(value);
+                        } else {
+                            variables[variableName] = [value];
+                        }
                     } else {
-                        variables[token.value] = [variables[token.value], value];
+                        variables[variableName] = value;
                     }
 
-                    delete bang[token.value];
-                    if (variables[token.value] !== undefined && token.bang) {
-                        bang[token.value] = token.bang;
+                    delete bang[variableName];
+                    if (variables[variableName] !== undefined && token.bang) {
+                        bang[variableName] = token.bang;
                     }
                 }
 

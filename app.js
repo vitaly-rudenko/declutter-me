@@ -4,17 +4,10 @@ const { URL } = require('url');
 const PatternBuilder = require('./app/PatternBuilder');
 const PatternMatcher = require('./app/PatternMatcher');
 const RussianDateParser = require('./app/date-parsers/RussianDateParser');
-const NoteMatchers = require('./app/notes/NoteMatchers');
-const ListItemMatchers = require('./app/lists/ListItemMatchers');
 const ReminderMatchers = require('./app/reminders/ReminderMatchers');
 const InMemoryStorage = require('./app/storage/InMemoryStorage');
 const Reminder = require('./app/reminders/Reminder');
-const List = require('./app/lists/List');
 const Template = require('./app/templates/Template');
-const NotionNoteSerializer = require('./app/notes/NotionNoteSerializer');
-const Note = require('./app/notes/Note');
-const ListItem = require('./app/lists/ListItem');
-const NotionListItemSerializer = require('./app/lists/NotionListItemSerializer');
 const NotionReminderSerializer = require('./app/reminders/NotionReminderSerializer');
 const PatternStringifier = require('./app/PatternStringifier');
 const NotionSessionManager = require('./app/notion/NotionSessionManager');
@@ -30,6 +23,9 @@ require('dotenv').config();
 
 const en = require('./assets/localization/en.json');
 const NotionDatabase = require('./app/notion/NotionDatabase');
+const Entry = require('./app/entries/Entry');
+const NotionEntrySerializer = require('./app/entries/NotionEntrySerializer');
+const EntryMatchers = require('./app/entries/EntryMatchers');
 const localize = (message, replacements = null) => {
     const path = message.split('.');
 
@@ -64,16 +60,16 @@ const localize = (message, replacements = null) => {
     const user = await storage.createUser({ language: 'russian', timezoneOffsetMinutes: 3 * 60 });
     await storage.createTelegramAccount(user.id, 56681133);
     await storage.createNotionAccount(user.id, 'secret_sUmg2sizdQDYmfGrQ0amjXSuOv4tHTevLn4PVgcopG6');
-    // await storage.setNotesDatabaseId(user.id, 'a64b650b4036407385272f3867de44f3');
-    // await storage.setRemindersDatabaseId(user.id, 'edfe4ac495d24ddd88cbe45e635d0418');
-    await storage.storeTemplate(new Template({ userId: user.id, order: 1, type: 'reminder', pattern: new PatternBuilder().build('[напомни[ть][ мне] ]{reminder} {date}') }));
-    await storage.storeTemplate(new Template({ userId: user.id, order: 2, type: 'reminder', pattern: new PatternBuilder().build('{date} [напомни[ть][ мне] ]{reminder}') }));
-    await storage.storeTemplate(new Template({ userId: user.id, order: 3, type: 'list', pattern: new PatternBuilder().build('купить {item}'), defaultVariables: { list: 'shopping' } }));
-    await storage.storeTemplate(new Template({ userId: user.id, order: 4, type: 'list', pattern: new PatternBuilder().build('#{list} {item}') }));
-    await storage.storeTemplate(new Template({ userId: user.id, order: 5, type: 'list', pattern: new PatternBuilder().build('{item} #{list!}') }));
-    await storage.storeTemplate(new Template({ userId: user.id, order: 6, type: 'note', pattern: new PatternBuilder().build('{note}[ #{tag}][ #{tag}][ #{tag}]') }));
+    await storage.storeTemplate(new Template({ userId: user.id, order: 1, type: 'reminder', pattern: new PatternBuilder().build('[напомни[ть][ мне] ]{reminder} {date}'), defaultVariables: { database: 'reminders' } }));
+    await storage.storeTemplate(new Template({ userId: user.id, order: 2, type: 'reminder', pattern: new PatternBuilder().build('{date} [напомни[ть][ мне] ]{reminder}'), defaultVariables: { database: 'reminders' } }));
+    await storage.storeTemplate(new Template({ userId: user.id, order: 3, type: 'entry', pattern: new PatternBuilder().build('купить {content}'), defaultVariables: { database: 'shopping' } }));
+    await storage.storeTemplate(new Template({ userId: user.id, order: 4, type: 'entry', pattern: new PatternBuilder().build('#{database} {content}') }));
+    await storage.storeTemplate(new Template({ userId: user.id, order: 5, type: 'entry', pattern: new PatternBuilder().build('{content} #{database!}') }));
+    await storage.storeTemplate(new Template({ userId: user.id, order: 6, type: 'entry', pattern: new PatternBuilder().build('{content}[ #{tag}][ #{tag}][ #{tag}]'), defaultVariables: { database: 'notes' } }));
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'shopping', notionDatabaseId: 'ca75e1d762c24d4893e2d682c1823797' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'recipes', notionDatabaseId: '3af8dfb79d18428b86419bd7a211084a' }))
+    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'reminders', notionDatabaseId: 'edfe4ac495d24ddd88cbe45e635d0418' }))
+    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'notes', notionDatabaseId: 'a64b650b4036407385272f3867de44f3' }))
 
     const debugChatId = process.env.DEBUG_CHAT_ID;
 
@@ -188,21 +184,12 @@ const localize = (message, replacements = null) => {
         await ctx.reply(
             'Choose template type:',
             Markup.inlineKeyboard([
-                Markup.button.callback('Note', 'template:note'),
-                Markup.button.callback('List', 'template:list'),
+                Markup.button.callback('Entry', 'template:entry'),
                 Markup.button.callback('Reminder', 'template:reminder'),
             ])
         );
         userSessionManager.setPhase(ctx.state.userId, 'template:type');
     });
-
-    bot.action('template:note', withPhase('template:type', async (ctx) => {
-        await ctx.answerCbQuery();
-        await ctx.reply('Got it! Now send me the template:');
-
-        userSessionManager.context(ctx.state.userId).type = 'note';
-        userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
-    }));
 
     bot.action('template:reminder', withPhase('template:type', async (ctx) => {
         await ctx.answerCbQuery();
@@ -212,40 +199,39 @@ const localize = (message, replacements = null) => {
         userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
     }));
 
-    bot.action('template:list', withPhase('template:type', async (ctx) => {
+    bot.action('template:entry', withPhase('template:type', async (ctx) => {
         await ctx.answerCbQuery();
 
-        userSessionManager.context(ctx.state.userId).type = 'list';
+        userSessionManager.context(ctx.state.userId).type = 'entry';
 
-        const lists = await storage.findListsByUserId(ctx.state.userId);
-        if (lists.length > 0) {
+        const databases = await storage.findDatabasesByUserId(ctx.state.userId);
+        if (databases.length > 0) {
             await ctx.reply(
-                'Got it! What list would you like to use by default?',
+                'Got it! What database would you like to use by default?',
                 Markup.inlineKeyboard([
-                    ...lists.map(list => Markup.button.callback(list.alias, 'template:list:' + list.alias)),
+                    ...databases.map(database => Markup.button.callback(database.alias, 'template:list:' + database.alias)),
                     Markup.button.callback('Skip', 'template:list:alias:skip'),
                 ])
             );
     
-            userSessionManager.setPhase(ctx.state.userId, 'template:list:alias');
+            userSessionManager.setPhase(ctx.state.userId, 'template:database:alias');
         } else {
             await ctx.reply(`Okay! Now send me the template:`);
             userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
         }
     }));
 
-    bot.action(/template:list:(.+)/, withPhase('template:list:alias', async (ctx) => {
+    bot.action(/template:database:(.+)/, withPhase('template:database:alias', async (ctx) => {
         await ctx.answerCbQuery();
         
-        const alias = ctx.match[1];
+        const databaseAlias = ctx.match[1];
+        userSessionManager.context(ctx.state.userId).defaultVariables = { database: databaseAlias };
 
-        userSessionManager.context(ctx.state.userId).defaultVariables = { list: alias };
-
-        await ctx.reply(`Default list: "${alias}".\nNow send me the template:`);
+        await ctx.reply(`Default database: "${databaseAlias}".\nNow send me the template:`);
         userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
     }));
 
-    bot.action('template:list:alias:skip', withPhase('template:list:alias', async (ctx) => {
+    bot.action('template:database:alias:skip', withPhase('template:database:alias', async (ctx) => {
         await ctx.answerCbQuery();
         await ctx.reply(`Okay! Now send me the template:`);
         userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
@@ -258,25 +244,9 @@ const localize = (message, replacements = null) => {
             const token = ctx.message.text;
 
             await storage.createNotionAccount(ctx.state.userId, token);
-            await ctx.reply(ctx.state.localize('command.notion.yourNotesDatabase', { token }));
+            await ctx.reply(ctx.state.localize('command.notion.allSet', { token }));
 
-            userSessionManager.setPhase(ctx.state.userId, 'notion:notes');
-        }),
-        withPhase('notion:notes', async (ctx) => {
-            const databaseId = notionDatabaseIdFromUrl(ctx.message.text);
-
-            await storage.setNotesDatabaseId(ctx.state.userId, databaseId);
-            await ctx.reply(ctx.state.localize('command.notion.yourRemindersDatabase', { databaseId }));
-
-            userSessionManager.setPhase(ctx.state.userId, 'notion:reminders');
-        }),
-        withPhase('notion:reminders', async (ctx) => {
-            const databaseId = notionDatabaseIdFromUrl(ctx.message.text);
-
-            await storage.setRemindersDatabaseId(ctx.state.userId, databaseId);
-            await ctx.reply(ctx.state.localize('command.notion.allSet', { databaseId }));
-
-            userSessionManager.reset(ctx.state.userId);
+            userSessionManager.reset
         }),
         // Databases
         withPhase('database:link', async (ctx) => {
@@ -312,7 +282,6 @@ const localize = (message, replacements = null) => {
         // Patterns
         withPhase('template:pattern', async (ctx) => {
             const pattern = new PatternBuilder().build(ctx.message.text);
-
             const { type, defaultVariables } = userSessionManager.context(ctx.state.userId);
 
             await storage.storeTemplate(
@@ -340,38 +309,19 @@ const localize = (message, replacements = null) => {
     
             const dateParser = new RussianDateParser();
             const patternMatcher = new PatternMatcher();
-            const noteMatchers = new NoteMatchers();
-            const listItemMatchers = new ListItemMatchers();
+            const entryMatchers = new EntryMatchers();
             const reminderMatchers = new ReminderMatchers({ dateParser });
 
             for (const template of templates) {
-                const matchers = template.type === 'note'
-                    ? noteMatchers
-                    : template.type === 'reminder'
-                        ? reminderMatchers
-                        : listItemMatchers;
+                const matchers = template.type === 'entry'
+                    ? entryMatchers
+                    : reminderMatchers;
     
                 const result = patternMatcher.match(ctx.message.text, template.pattern, matchers);
                 const variables = { ...template.defaultVariables, ...result.variables };
     
                 if (result.match) {    
-                    if (template.type === 'note') {
-                        const note = new Note({
-                            content: variables.note,
-                            tags: variables.tag
-                                ? Array.isArray(variables.tag)
-                                    ? variables.tag
-                                    : [variables.tag]
-                                : []
-                        });
-        
-                        await notion.pages.create(
-                            new NotionNoteSerializer().serialize({
-                                databaseId: notionAccount.notesDatabaseId,
-                                note,
-                            })
-                        );
-                    } else if (template.type === 'reminder') {
+                    if (template.type === 'reminder') {
                         const reminder = new Reminder({
                             content: variables.reminder,
                             date: dateParser.parse(variables.date),
@@ -389,26 +339,33 @@ const localize = (message, replacements = null) => {
                         if (parsedReminder && reminderManager.isClose(parsedReminder)) {
                             await storage.addCloseReminder(userId, parsedReminder);
                         }
-                    } else if (template.type === 'list') {
-                        const listItem = new ListItem({ content: variables.item });
+                    } else if (template.type === 'entry') {
+                        const entry = new Entry({
+                            content: variables.content,
+                            tags: variables.tag
+                            ? Array.isArray(variables.tag)
+                                ? variables.tag
+                                : [variables.tag]
+                            : []
+                        });
 
-                        const alias = variables.list;
-                        if (!alias) {
-                            await ctx.reply('Please add a default list for this pattern');
+                        const databaseAlias = variables.database;
+                        if (!databaseAlias) {
+                            await ctx.reply('Please add a default database for this pattern');
                             return;
                         }
 
-                        const list = await storage.findListByAlias({ alias, userId });
-                        if (!list) {
-                            if (result.bang?.list) continue;
-                            await ctx.reply(`Could not find the list: "${alias}"`);
+                        const database = await storage.findDatabaseByAlias(userId, databaseAlias);
+                        if (!database) {
+                            if (result.bang?.database) continue;
+                            await ctx.reply(`Could not find the database: "${databaseAlias}"`);
                             return;
                         }
                         
                         await notion.pages.create(
-                            new NotionListItemSerializer().serialize({
-                                listItem,
-                                databaseId: list.id,
+                            new NotionEntrySerializer().serialize({
+                                databaseId: database.notionDatabaseId,
+                                entry,
                             })
                         );
                     }

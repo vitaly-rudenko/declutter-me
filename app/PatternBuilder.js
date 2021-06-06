@@ -1,7 +1,5 @@
 class PatternBuilder {
     build(input) {
-        input = input.toLowerCase();
-
         const result = [];
 
         let currentType = 'text';
@@ -72,14 +70,20 @@ class PatternBuilder {
                     value = value.slice(0, -1);
                 }
 
+                let fieldType;
+                if (currentType === 'variable' && value.includes(':')) {
+                    [value, fieldType] = value.split(':');
+                }
+
                 result.push({
                     type: currentType,
                     value: currentType === 'optional'
                         ? this.build(value)
                         : currentType === 'variational'
                             ? value.split('|').map(v => this.build(v))
-                            : value,
+                            : value.toLowerCase(),
                     ...isBang && { bang: true },
+                    ...fieldType && { fieldType },
                 });
                 value = '';
             }

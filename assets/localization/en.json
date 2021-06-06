@@ -20,23 +20,16 @@
                 "  - Templates: {templates}"
             ],
             "database": "    - {alias} ({notionDatabaseId})",
-            "template": "    - {type} ({pattern})",
+            "template": "    - {type}: {pattern}",
             "notProvided": "<not provided>",
             "none": "<none>"
         },
         "notion": {
             "yourToken": "Your Notion integration token:",
-            "yourNotesDatabase": [
-                "It's \"{token}\".",
-                "Link to notes database:"
-            ],
-            "yourRemindersDatabase": [
-                "It's \"{databaseId}\".",
-                "Link to reminders database:"
-            ],
             "allSet": [
-                "It's \"{databaseId}\".",
-                "Great, your Notion integration is all set!"
+                "It's \"{token}\".",
+                "Great, your Notion integration is all set!",
+                "Start adding databases using /database command."
             ]
         },
         "database": {
@@ -45,7 +38,7 @@
                 "It's \"{match}\".",
                 "Alias for the database:"
             ],
-            "added": "List \"{alias}\" has been added!"
+            "added": "Database \"{alias}\" has been added!"
         }
     }
 }

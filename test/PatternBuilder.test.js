@@ -222,5 +222,24 @@ describe('PatternBuilder', () => {
                     ]
                 }]);
         });
+
+        it('should parse custom field types', () => {
+            expect(patternBuilder.build('#{database!} buy {note:text}, please[ {when:futureDate}][ #{my tag:word}]'))
+                .to.deep.eq([
+                    { type: 'text', value: '#' },
+                    { type: 'variable', value: 'database', bang: true },
+                    { type: 'text', value: ' buy ' },
+                    { type: 'variable', value: 'note', fieldType: 'text' },
+                    { type: 'text', value: ', please' },
+                    { type: 'optional', value: [
+                        { type: 'text', value: ' ' },
+                        { type: 'variable', value: 'when', fieldType: 'futureDate' },
+                    ] },
+                    { type: 'optional', value: [
+                        { type: 'text', value: ' #' },
+                        { type: 'variable', value: 'my tag', fieldType: 'word' },
+                    ] },
+                ]);
+        });
     });
 });

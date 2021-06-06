@@ -99,8 +99,9 @@ class RussianDateParser {
     /**
      * @param {string} input
      * @param {Date} [origin]
+     * @param {boolean} [futureOnly]
      */
-    parse(input, origin) {
+    parse(input, origin, futureOnly = true) {
         input = input.toLowerCase();
 
         if (!origin) {
