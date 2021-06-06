@@ -93,6 +93,20 @@ describe('RussianDateParser', () => {
                     expect(russianDateParser.parse(input, { futureOnly: true }), input).to.deep.eq(output);
                 }
             });
+
+            it.skip('should not parse dates in the past', () => {
+                for (const input of [
+                    'сейчас',
+                    'вчера',
+                    'позавчера',
+                    'сегодня в 4:05',
+                    '01.01.2020 12:30',
+                    'первого января этого года',
+                    'первого мая 2020 года в 8:00',
+                ]) {
+                    expect(russianDateParser.parse(input, { futureOnly: true }), input).to.be.null;
+                }
+            });
         });
 
         it('should match relative dates', () => {
