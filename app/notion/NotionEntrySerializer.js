@@ -20,7 +20,7 @@ class NotionEntrySerializer {
                 properties[field.name] = this.serializeMultiSelect(field.value);
             }
 
-            if (field.type === 'date' || field.type === 'futureDate') {
+            if (field.type === 'date' || field.type === 'future_date') {
                 properties[field.name] = this.serializeDate(field.value, user.timezoneOffsetMinutes);
             }
         }

@@ -114,22 +114,23 @@ class RussianDateParser {
             this.parseAbsoluteTime(input, origin) ||
             this.parseSpecialDateTime(input, origin) ||
             this.parseAbsoluteDate(input, origin) ||
-            this.parseDateTime(input, origin) ||
-            this.parseDateWithSpecialTime(input, origin)
+            this.parseDateTime(input, origin, futureOnly) ||
+            this.parseDateWithSpecialTime(input, origin, futureOnly)
         );
     }
 
     /**
      * @param {string} input
      * @param {Date} origin
+     * @param {boolean} futureOnly
      */
-    parseDateWithSpecialTime(input, origin) {
+    parseDateWithSpecialTime(input, origin, futureOnly) {
         const indexOf = input.lastIndexOf(' ');
         if (indexOf === -1) return null;
 
         const [rawDate, rawTime] = [input.slice(0, indexOf), input.slice(indexOf + 1)];
 
-        const date = this.parse(rawDate, origin);
+        const date = this.parse(rawDate, origin, futureOnly);
         if (!date) return null;
         date.setUTCHours(0);
         date.setUTCMinutes(0);
@@ -143,13 +144,14 @@ class RussianDateParser {
     /**
      * @param {string} input
      * @param {Date} origin
+     * @param {boolean} futureOnly
      */
-    parseDateTime(input, origin) {
+    parseDateTime(input, origin, futureOnly) {
         if (!input.includes(' в ')) return null;
         const [rawDate, rawTime] = input.split(' в ');
 
-        const date = this.parse(rawDate, origin);
-        const time = this.parse('в ' + rawTime, origin);
+        const date = this.parse(rawDate, origin, futureOnly);
+        const time = this.parse('в ' + rawTime, origin, futureOnly);
 
         if (date && time) {
             return this.combineDateTime(date, time);

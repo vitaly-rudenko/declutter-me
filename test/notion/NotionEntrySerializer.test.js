@@ -55,7 +55,7 @@ describe('NotionEntrySerializer', () => {
                         }),
                         new Field({
                             name: 'Date In The Future',
-                            type: 'futureDate',
+                            type: 'future_date',
                             value: utcDate('2020-01-01 10:00'),
                         }),
                     ]

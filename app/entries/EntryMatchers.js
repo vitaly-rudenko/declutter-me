@@ -3,29 +3,20 @@ class EntryMatchers {
     constructor({ dateParser }) {
         this._dateParser = dateParser;
 
-        this.metadata = {
-            texts: { array: true },
-            words: { array: true },
-            urls: { array: true },
-            phones: { array: true },
-        };
+        this['database'] = this._word.bind(this);
 
-        this.text = this.text.bind(this);
-        this.word = this.word.bind(this);
-        this.url = this.word.bind(this);
-        this.phone = this.word.bind(this);
+        this['text'] = this._text.bind(this);
+        this['word'] = this._word.bind(this);
 
-        this.database = this.word.bind(this);
-        this.texts = this.text.bind(this);
-        this.words = this.word.bind(this);
-        this.urls = this.url.bind(this);
-        this.phones = this.phone.bind(this);
+        this['date'] = (input) => this._date(input, false);
+        this['future_date'] = (input) => this._date(input, true);
 
-        this.date = this.date.bind(this);
-        this.futureDate = this.futureDate.bind(this);
+        this['url'] = this._word.bind(this); // TODO: parse URLs
+        this['phone'] = this._word.bind(this); // TODO: parse phone numbers
+        this['number'] = this._word.bind(this); // TODO: parse numbers
     }
 
-    text(input, { nextTokens: [nextToken, nextToken2] }) {
+    _text(input, { nextTokens: [nextToken, nextToken2] }) {
         if (!nextToken) {
             return input;
         }
@@ -36,15 +27,15 @@ class EntryMatchers {
             while (startIndex > 0) {
                 results.push(input.slice(0, startIndex));
                 startIndex = input.toLowerCase().lastIndexOf(nextToken.value.toLowerCase(), startIndex - 1);
-            }
+            }   
 
             results.push(input);
 
-            if (nextToken2 && nextToken2.fieldType === 'futureDate') {
+            if (nextToken2 && nextToken2.inputType === 'future_date') {
                 return results.map(result => this._removeDateFromInput(result, { nextTokens: [nextToken2] }, true))
             }
 
-            if (nextToken2 && nextToken2.fieldType === 'date') {
+            if (nextToken2 && nextToken2.inputType === 'date') {
                 return results.map(result => this._removeDateFromInput(result, { nextTokens: [nextToken2] }, false))
             }
 
@@ -83,16 +74,8 @@ class EntryMatchers {
         return input;
     }
 
-    word(input) {
+    _word(input) {
         return input.split(' ')[0];
-    }
-
-    futureDate(input) {
-        return this._date(input, true);
-    }
-
-    date(input) {
-        return this._date(input, false);
     }
 
     _date(input, futureOnly) {

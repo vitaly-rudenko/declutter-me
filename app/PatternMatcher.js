@@ -31,11 +31,11 @@ class PatternMatcher {
 
                 if (token.type === 'variable') {
                     const variableName = token.value;
-                    const fieldType = token.fieldType || token.value;
+                    const inputType = token.inputType || token.value;
 
-                    const matcher = matchers[fieldType];
+                    const matcher = matchers[inputType];
                     if (!matcher) {
-                        throw new Error(`Unsupported matcher: ${fieldType}`);
+                        throw new Error(`Unsupported matcher: ${inputType}`);
                     }
 
                     const nextTokens = combination.slice(i + 1);
@@ -54,7 +54,7 @@ class PatternMatcher {
                         }
                     }
 
-                    if (matchers.metadata?.[fieldType]?.array) {
+                    if (token.outputType === 'multi_select') {
                         if (variables[variableName]) {
                             variables[variableName].push(value);
                         } else {

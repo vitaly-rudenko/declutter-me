@@ -23,7 +23,7 @@ describe('EntryMatchers', () => {
 
     describe('[notes]', () => {
         it('should match simple pattern', () => {
-            const pattern = patternBuilder.build('#{tag:word} {note:text}');
+            const pattern = patternBuilder.build('#{tag:word:select} {note:text:title}');
     
             expect(patternMatcher.match('#ideas Draw fan-art of Haruhi', pattern, entryMatchers))
                 .to.deep.eq({
@@ -51,7 +51,7 @@ describe('EntryMatchers', () => {
         });
     
         it('should separate variables properly', () => {
-            const pattern = patternBuilder.build('{note:text} #{tag:word}');
+            const pattern = patternBuilder.build('{note:text:title} #{tag:word:select}');
             
             expect(patternMatcher.match('Draw fan-art of Haruhi #art-ideas', pattern, entryMatchers))
                 .to.deep.eq({
@@ -76,7 +76,7 @@ describe('EntryMatchers', () => {
         });
     
         it('should separate variables properly in complete sentences', () => {
-            const pattern = patternBuilder.build('save {note:text} to the {tag:word} notes');
+            const pattern = patternBuilder.build('save {note:text:title} to the {tag:word:select} notes');
     
             expect(patternMatcher.match('Save Pygmalion effect to the idea notes', pattern, entryMatchers))
                 .to.deep.eq({
@@ -89,7 +89,7 @@ describe('EntryMatchers', () => {
         });
 
         it('should override word when repeated (from the start)', () => {
-            const pattern = patternBuilder.build('[#{tag:word} ][#{tag:word} ][#{tag:word} ]{note:text}');
+            const pattern = patternBuilder.build('[#{tag:word:select} ][#{tag:word:select} ][#{tag:word:select} ]{note:text:title}');
     
             expect(patternMatcher.match('my note', pattern, entryMatchers))
                 .to.deep.eq({
@@ -146,7 +146,7 @@ describe('EntryMatchers', () => {
         });
     
         it('should allow matching multiple tags (from the start)', () => {
-            const pattern = patternBuilder.build('[#{tag:words} ][#{tag:words} ][#{tag:words} ]{note:text}');
+            const pattern = patternBuilder.build('[#{tag:word:multi_select} ][#{tag:word:multi_select} ][#{tag:word:multi_select} ]{note:text:title}');
     
             expect(patternMatcher.match('my note', pattern, entryMatchers))
                 .to.deep.eq({
@@ -203,7 +203,7 @@ describe('EntryMatchers', () => {
         });
 
         it('should override word when repeated (from the end)', () => {
-            const pattern = patternBuilder.build('save {note:text}[ #{tag:word}][ #{tag:word}][ #{tag:word}]');
+            const pattern = patternBuilder.build('save {note:text:title}[ #{tag:word:select}][ #{tag:word:select}][ #{tag:word:select}]');
     
             expect(patternMatcher.match('Save my note', pattern, entryMatchers))
                 .to.deep.eq({
@@ -260,7 +260,7 @@ describe('EntryMatchers', () => {
         });
         
         it('should allow matching multiple tags (from the end)', () => {
-            const pattern = patternBuilder.build('save {note:text}[ #{tag:words}][ #{tag:words}][ #{tag:words}]');
+            const pattern = patternBuilder.build('save {note:text:title}[ #{tag:word:multi_select}][ #{tag:word:multi_select}][ #{tag:word:multi_select}]');
     
             expect(patternMatcher.match('Save my note', pattern, entryMatchers))
                 .to.deep.eq({
@@ -317,7 +317,7 @@ describe('EntryMatchers', () => {
         });
     
         it('should match complex patterns', () => {
-            const pattern = patternBuilder.build('[[#]{database} ](add|save) {note:text}[ to[ the] {tag:word}[ notes]]');
+            const pattern = patternBuilder.build('[[#]{database} ](add|save) {note:text:title}[ to[ the] {tag:word:select}[ notes]]');
     
             for (const input of ['Add my unique idea', 'save my unique idea']) {
                 expect(patternMatcher.match(input, pattern, entryMatchers), input)
@@ -367,7 +367,7 @@ describe('EntryMatchers', () => {
 
     describe('[reminders]', () => {
         it('should match dates properly from the start', () => {
-            const pattern = patternBuilder.build('{date:futureDate} {reminder:text}');
+            const pattern = patternBuilder.build('{date:future_date} {reminder:text:title}');
     
             expect(patternMatcher.match('послезавтра купить морковку', pattern, entryMatchers))
                     .to.deep.eq({
@@ -416,7 +416,7 @@ describe('EntryMatchers', () => {
         });
     
         it('should match dates properly from the end (unique separator)', () => {
-            const pattern = patternBuilder.build('{reminder:text}; {date:futureDate}')
+            const pattern = patternBuilder.build('{reminder:text:title}; {date:future_date}')
     
             expect(patternMatcher.match('купить морковку; послезавтра', pattern, entryMatchers))
                     .to.deep.eq({
@@ -447,7 +447,7 @@ describe('EntryMatchers', () => {
         });
     
         it('should match dates properly from the end (non-unique separator)', () => {
-            const pattern = patternBuilder.build('{reminder:text}, {date:futureDate}')
+            const pattern = patternBuilder.build('{reminder:text:title}, {date:future_date}')
     
             expect(patternMatcher.match('купить морковку, баклажан и капусту, послезавтра', pattern, entryMatchers))
                     .to.deep.eq({
@@ -478,7 +478,7 @@ describe('EntryMatchers', () => {
         });
     
         it('should match dates properly from the end (space separator)', () => {
-            const pattern = patternBuilder.build('{reminder:text} {date:futureDate}')
+            const pattern = patternBuilder.build('{reminder:text:title} {date:future_date}')
     
             expect(patternMatcher.match('купить морковку послезавтра', pattern, entryMatchers))
                     .to.deep.eq({
@@ -527,7 +527,7 @@ describe('EntryMatchers', () => {
         });
     
         it('should match complex patterns', () => {
-            const pattern = patternBuilder.build('[напомни ]({reminder:text} {date:futureDate}|{date:futureDate} {reminder:text})')
+            const pattern = patternBuilder.build('[напомни ]({reminder:text:title} {date:future_date}|{date:future_date} {reminder:text:title})')
     
             expect(patternMatcher.match('напомни съесть морковку через минуту', pattern, entryMatchers))
                 .to.deep.eq({

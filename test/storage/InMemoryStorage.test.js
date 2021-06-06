@@ -3,8 +3,6 @@ const TelegramAccount = require('../../app/telegram/TelegramAccount');
 const NotionAccount = require('../../app/notion/NotionAccount');
 const User = require('../../app/users/User');
 const InMemoryStorage = require('../../app/storage/InMemoryStorage');
-const NotionAccountNotFound = require('../../app/errors/NotionAccountNotFound');
-const List = require('../../app/lists/List');
 const Template = require('../../app/templates/Template');
 const NotionDatabase = require('../../app/notion/NotionDatabase');
 

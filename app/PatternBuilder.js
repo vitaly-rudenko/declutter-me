@@ -70,9 +70,9 @@ class PatternBuilder {
                     value = value.slice(0, -1);
                 }
 
-                let fieldType;
+                let inputType, outputType;
                 if (currentType === 'variable' && value.includes(':')) {
-                    [value, fieldType] = value.split(':');
+                    [value, inputType, outputType] = value.split(':');
                 }
 
                 result.push({
@@ -85,7 +85,8 @@ class PatternBuilder {
                                 ? value
                                 : value.toLowerCase(),
                     ...isBang && { bang: true },
-                    ...fieldType && { fieldType },
+                    ...inputType && { inputType },
+                    ...outputType && { outputType },
                 });
                 value = '';
             }
