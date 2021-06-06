@@ -1,4 +1,5 @@
 class SharedPresets {
+    // TODO: rename "value" to "name"
     get({ value, inputType, outputType }) {
         if (inputType && outputType) {
             return { value, inputType, outputType };

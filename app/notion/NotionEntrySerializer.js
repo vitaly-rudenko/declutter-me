@@ -1,4 +1,13 @@
+function last(arrayOrValue) {
+    return Array.isArray(arrayOrValue) ? arrayOrValue[arrayOrValue.length - 1] : arrayOrValue;
+}
+
 class NotionEntrySerializer {
+    /** @param {{ dateParser: import('../date-parsers/DateParser') }} dependencies */
+    constructor({ dateParser }) {
+        this._dateParser = dateParser;
+    }
+
     /**
      * @param {import('./NotionEntry')} notionEntry
      * @param {import('../users/User')} user
@@ -8,20 +17,21 @@ class NotionEntrySerializer {
         const properties = {};
 
         for (const field of notionEntry.fields) {
-            if (field.type === 'word' || field.type === 'text') {
-                properties[field.name] = this.serializeTitle(field.value);
-            }
-
-            if (field.type === 'wordSelect' || field.type === 'textSelect') {
-                properties[field.name] = this.serializeSelect(field.value);
-            }
-
-            if (field.type === 'words' || field.type === 'texts') {
+            if (field.outputType === 'title') {
+                properties[field.name] = this.serializeTitle(last(field.value));
+            } else if (field.outputType === 'select') {
+                properties[field.name] = this.serializeSelect(last(field.value));
+            } else if (field.outputType === 'multi_select') {
                 properties[field.name] = this.serializeMultiSelect(field.value);
-            }
+            } else if (field.outputType === 'date') {
+                const date = this._dateParser.parse(last(field.value), {
+                    language: user.language,
+                    futureOnly: field.inputType === 'future_date',
+                });
 
-            if (field.type === 'date' || field.type === 'future_date') {
-                properties[field.name] = this.serializeDate(field.value, user.timezoneOffsetMinutes);
+                properties[field.name] = this.serializeDate(date, user.timezoneOffsetMinutes);
+            } else {
+                throw new Error('Unsupported field output type: ' + field.outputType);
             }
         }
 

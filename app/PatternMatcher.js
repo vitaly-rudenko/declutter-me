@@ -1,29 +1,29 @@
-function toString(token) {
-    if (token.type === 'variable') {
-
-    }
-}
+const Field = require('./fields/Field');
 
 class PatternMatcher {
     /**
      * 
      * @param {string} input
      * @param {any[]} pattern
-     * @param {any} matchers
+     * @param {{
+     *     matchers: import('./entries/EntryMatchers'),
+     *     presets?: import('./presets/EnglishPresets'),
+     * }} params
      * @returns {{
      *     match: boolean,
-     *     variables?: any,
-     *     bang?: any
+     *     fields?: Field[],
+     *     bang?: { [variable: string]: boolean }
      * }}
      */
-    match(input, pattern, matchers) {
+    match(input, pattern, { matchers, presets }) {
         const combinations = this.getPatternCombinations(pattern);
 
-        for (const [j, combination] of combinations.entries()) {
+        for (const combination of combinations) {
             let remainingInput = input;
 
             let match = true;
-            const variables = {};
+            /** @type {{ [variable: string]: Field }} */
+            const fieldMap = {};
             const bang = {};
 
             for (const [i, token] of combination.entries()) {
@@ -42,7 +42,7 @@ class PatternMatcher {
                     value = matcher(remainingInput, { nextTokens });
                     if (Array.isArray(value)) {
                         for (const valueVariation of value) {
-                            const matchResult = this.match(remainingInput.slice(valueVariation.length), nextTokens, matchers);
+                            const matchResult = this.match(remainingInput.slice(valueVariation.length), nextTokens, { matchers, presets });
                             if (matchResult.match) {
                                 value = valueVariation;
                                 break;
@@ -54,19 +54,29 @@ class PatternMatcher {
                         }
                     }
 
-                    if (token.outputType === 'multi_select') {
-                        if (variables[variableName]) {
-                            variables[variableName].push(value);
+                    if (value !== undefined) {
+                        if (token.outputType === 'multi_select') {
+                            fieldMap[variableName] = new Field({
+                                name: token.value,
+                                inputType: token.inputType,
+                                outputType: token.outputType,
+                                value: fieldMap[variableName]
+                                    ? [...fieldMap[variableName].value, value]
+                                    : [value]
+                            })
                         } else {
-                            variables[variableName] = [value];
+                            fieldMap[variableName] = new Field({
+                                name: token.value,
+                                inputType: token.inputType,
+                                outputType: token.outputType,
+                                value,
+                            });
                         }
-                    } else {
-                        variables[variableName] = value;
-                    }
-
-                    delete bang[variableName];
-                    if (variables[variableName] !== undefined && token.bang) {
+    
                         bang[variableName] = token.bang;
+                    } else {
+                        fieldMap[variableName] = undefined;
+                        bang[variableName] = false;
                     }
                 }
 
@@ -79,10 +89,13 @@ class PatternMatcher {
             }
 
             if (match && remainingInput.length === 0) {
+                const filteredBang = Object.entries(bang).filter(([,value]) => value);
+                const fields = Object.values(fieldMap);
+
                 return {
                     match: true,
-                    variables,
-                    ...Object.keys(bang).length > 0 && { bang },
+                    ...fields.length > 0 && { fields },
+                    ...filteredBang.length > 0 && { bang: Object.fromEntries(filteredBang) },
                 };
             }
         }

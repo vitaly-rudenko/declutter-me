@@ -319,6 +319,8 @@ describe('RussianDateParser', () => {
         });
     });
 
+    // TODO: add support for past dates
+
     describe('parseNumber()', () => {
         it('should parse regular numbers', () => {
             for (const value of ['1', '123', '1000', '156000']) {

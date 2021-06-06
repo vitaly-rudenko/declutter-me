@@ -1,7 +1,16 @@
 class Field {
-    constructor({ name, type, value }) {
+    /**
+     * @param {{
+     *     name: string,
+     *     outputType?: string,
+     *     inputType?: string,
+     *     value: string | string[],
+     * }} attributes
+     */
+    constructor({ name, inputType, outputType, value }) {
         this._name = name;
-        this._type = type;
+        this._inputType = inputType;
+        this._outputType = outputType;
         this._value = value;
     }
 
@@ -9,8 +18,12 @@ class Field {
         return this._name;
     }
 
-    get type() {
-        return this._type;
+    get inputType() {
+        return this._inputType;
+    }
+
+    get outputType() {
+        return this._outputType;
     }
 
     get value() {

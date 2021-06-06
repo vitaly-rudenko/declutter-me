@@ -1,15 +1,24 @@
-const { expect } = require('chai');
+const chai = require('chai');
+const { spy } = require('sinon');
 const Field = require('../../app/fields/Field');
 const NotionEntry = require('../../app/notion/NotionEntry');
 const NotionEntrySerializer = require('../../app/notion/NotionEntrySerializer');
 const User = require('../../app/users/User');
 
+chai.use(require('sinon-chai'));
+const { expect } = chai;
+
 describe('NotionEntrySerializer', () => {
     /** @type {NotionEntrySerializer} */
     let notionEntrySerializer;
+    let dateParser;
 
     beforeEach(() => {
-        notionEntrySerializer = new NotionEntrySerializer();
+        dateParser = spy({ parse: () => utcDate('2015-06-07 12:34') });
+
+        notionEntrySerializer = new NotionEntrySerializer({
+            dateParser,
+        });
     });
 
     describe('serialize()', () => {
@@ -20,43 +29,33 @@ describe('NotionEntrySerializer', () => {
                     fields: [
                         new Field({
                             name: '@the Title',
-                            type: 'word',
+                            inputType: 'text',
+                            outputType: 'title',
                             value: 'hey_there',
                         }),
                         new Field({
-                            name: 'the: Note',
-                            type: 'text',
-                            value: 'hello world',
-                        }),
-                        new Field({
                             name: '@the TAG',
-                            type: 'wordSelect',
+                            inputType: 'word',
+                            outputType: 'select',
                             value: '!hey_there!',
                         }),
                         new Field({
-                            name: 'TAG!!!',
-                            type: 'textSelect',
-                            value: 'hello WORLD',
-                        }),
-                        new Field({
                             name: 'My Tags',
-                            type: 'words',
+                            inputType: 'word',
+                            outputType: 'multi_select',
                             value: ['My Tag 1', 'My Other Tag 2'],
                         }),
                         new Field({
-                            name: 'note_texts',
-                            type: 'texts',
-                            value: ['hello world', 'hello there!'],
-                        }),
-                        new Field({
                             name: 'date',
-                            type: 'date',
-                            value: utcDate('2015-06-07 12:34'),
+                            inputType: 'date',
+                            outputType: 'date',
+                            value: 'в 8:05',
                         }),
                         new Field({
-                            name: 'Date In The Future',
-                            type: 'future_date',
-                            value: utcDate('2020-01-01 10:00'),
+                            name: 'Reminder Date',
+                            inputType: 'future_date',
+                            outputType: 'date',
+                            value: 'в 12:00',
                         }),
                     ]
                 }),
@@ -79,53 +78,40 @@ describe('NotionEntrySerializer', () => {
                             }
                         }]
                     },
-                    'the: Note': {
-                        'type': 'title',
-                        'title': [{
-                            'type': 'text',
-                            'text': {
-                                'content': 'hello world',
-                            }
-                        }]
-                    },
                     '@the TAG': {
                         'type': 'select',
                         'select': {
                             'name': '!hey_there!'
                         }
                     },
-                    'TAG!!!': {
-                        'type': 'select',
-                        'select': {
-                            'name': 'hello WORLD'
-                        }
-                    },
                     'My Tags': {
                         'type': 'multi_select',
                         'multi_select': [{
-                            'name': 'My Tag 1',
+                            'name': 'My Tag 1'
                         }, {
-                            'name': 'My Other Tag 2',
-                        }]
-                    },
-                    'note_texts': {
-                        'type': 'multi_select',
-                        'multi_select': [{
-                            'name': 'hello world',
-                        }, {
-                            'name': 'hello there!',
+                            'name': 'My Other Tag 2'
                         }]
                     },
                     'date': {
                         'type': 'date',
                         'date': '2015-06-07T15:34:00.000+03:00'
                     },
-                    'Date In The Future': {
+                    'Reminder Date': {
                         'type': 'date',
-                        'date': '2020-01-01T13:00:00.000+03:00'
-                    }
+                        'date': '2015-06-07T15:34:00.000+03:00'
+                    },
                 }
-            })
+            });
+
+            expect(dateParser.parse).to.have.been.calledTwice;
+            expect(dateParser.parse).to.have.been.calledWithExactly('в 8:05', {
+                language: 'fake-language',
+                futureOnly: false,
+            });
+            expect(dateParser.parse).to.have.been.calledWithExactly('в 12:00', {
+                language: 'fake-language',
+                futureOnly: true,
+            });
         });
     });
 });
