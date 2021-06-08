@@ -1,20 +1,22 @@
-const EnglishPresets = require('./EnglishPresets');
+const CommonPresets = require('./CommonPresets');
 const RussianPresets = require('./RussianPresets');
 const UkrainianPresets = require('./UkrainianPresets');
 
 class PresetsFactory {
     create(language) {
-        if (language === 'english') {
-            return new EnglishPresets();
-        }
+        const commonPresets = new CommonPresets();
+        const russianPresets = new RussianPresets();
+        const ukrainianPresets = new UkrainianPresets();
 
         if (language === 'russian') {
-            return new RussianPresets();
+            return [russianPresets, ukrainianPresets, commonPresets];
         }
 
         if (language === 'ukrainian') {
-            return new UkrainianPresets();
+            return [ukrainianPresets, russianPresets, commonPresets];
         }
+
+        return [commonPresets, russianPresets, ukrainianPresets];
     }
 }
 
