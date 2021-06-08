@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const EnglishPresents = require('../../app/presets/CommonPresets');
 
-describe.only('EnglishPresents', () => {
+describe('EnglishPresents', () => {
     /** @type {EnglishPresents} */
     let commonPresets;
 
