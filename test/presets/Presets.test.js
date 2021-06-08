@@ -48,6 +48,10 @@ describe('Presets', () => {
             const inputType = 'my-input-type';
             const outputType = 'my-output-type';
 
+            const get1 = stub(presets1, 'get').callThrough()
+            const get2 = stub(presets2, 'get').callThrough()
+            const get3 = stub(presets3, 'get').callThrough()
+
             expect(
                 presets.get({ value, inputType }, [presets1, presets2, presets3])
             ).to.deep.eq({
@@ -56,7 +60,8 @@ describe('Presets', () => {
                 outputType: 'fake-output-1',
             })
 
-            stub(presets1, 'get').returns(null)
+            get1.resetBehavior()
+            get1.returns(null)
 
             expect(
                 presets.get({ value }, [presets1, presets2, presets3])
@@ -66,7 +71,8 @@ describe('Presets', () => {
                 outputType: 'fake-output-2',
             })
 
-            stub(presets2, 'get').returns(null)
+            get2.resetBehavior()
+            get2.returns(null)
 
             expect(
                 presets.get({ value, outputType }, [presets1, presets2, presets3])
@@ -75,6 +81,10 @@ describe('Presets', () => {
                 inputType: 'fake-input-3',
                 outputType: 'fake-output-3',
             })
+
+            expect(presets1.get).to.have.been.calledWithExactly({ value, inputType, outputType: undefined })
+            expect(presets2.get).to.have.been.calledWithExactly({ value, inputType: undefined, outputType: undefined })
+            expect(presets3.get).to.have.been.calledWithExactly({ value, inputType: undefined, outputType })
         })
 
         it('should return default preset when non are matching', () => {
