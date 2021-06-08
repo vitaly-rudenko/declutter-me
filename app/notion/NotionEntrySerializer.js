@@ -3,7 +3,7 @@ function last(arrayOrValue) {
 }
 
 class NotionEntrySerializer {
-    /** @param {{ dateParser: import('../date-parsers/DateParser') }} dependencies */
+    /** @param {{ dateParser: import('../date-parsers/DateParserFactory') }} dependencies */
     constructor({ dateParser }) {
         this._dateParser = dateParser;
     }

@@ -1,12 +1,12 @@
 const { expect } = require('chai');
-const EnglishPresents = require('../../app/presets/EnglishPresets');
+const EnglishPresents = require('../../app/presets/CommonPresets');
 
-describe('EnglishPresents', () => {
+describe.only('EnglishPresents', () => {
     /** @type {EnglishPresents} */
-    let englishPresets;
+    let commonPresets;
 
     beforeEach(() => {
-        englishPresets = new EnglishPresents();
+        commonPresets = new EnglishPresents();
     });
 
     describe('get()', () => {
@@ -16,26 +16,11 @@ describe('EnglishPresents', () => {
                 { value: 'my_value', inputType: 'word', outputType: 'multi_select' },
                 { value: 'SOME value!!', inputType: 'future_date', outputType: 'date' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq(input);
+                expect(commonPresets.get(input)).to.be.null
             }
         });
 
-        it('should accept aliases for "database" variable', () => {
-            for (const input of [
-                { value: 'database' },
-                { value: 'DataBase' },
-                { value: 'db' },
-                { value: 'DB' },
-                { value: 'list' },
-                { value: 'lIsT' },
-                { value: 'table' },
-                { value: 'Table' },
-            ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: 'database' });
-            }
-        });
-
-        it('should apply special preset to all type-less variables', () => {
+        it('should not apply preset to all type-less variables', () => {
             for (const input of [
                 { value: 'note' },
                 { value: 'item' },
@@ -48,7 +33,22 @@ describe('EnglishPresents', () => {
                 { value: 'My Field' },
                 { value: 'name' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'text', outputType: 'title' });
+                expect(commonPresets.get(input)).to.be.null
+            }
+        });
+
+        it('should accept aliases for "database" variable', () => {
+            for (const { value } of [
+                { value: 'database' },
+                { value: 'DataBase' },
+                { value: 'db' },
+                { value: 'DB' },
+                { value: 'list' },
+                { value: 'lIsT' },
+                { value: 'table' },
+                { value: 'Table' },
+            ]) {
+                expect(commonPresets.get({ value })).to.deep.eq({ value, inputType: 'database', outputType: 'database' });
             }
         });
 
@@ -57,7 +57,7 @@ describe('EnglishPresents', () => {
                 { value: 'My Custom Field', inputType: 'select' },
                 { value: 'My Field', inputType: 'SeLeCt' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'word', outputType: 'select' });
+                expect(commonPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'word', outputType: 'select' });
             }
         });
 
@@ -68,7 +68,7 @@ describe('EnglishPresents', () => {
                 { value: 'Field', inputType: 'mUlTiSeLecT' },
                 { value: 'field', inputType: 'mUlTi_SeLecT' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'word', outputType: 'multi_select' });
+                expect(commonPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'word', outputType: 'multi_select' });
             }
         });
 
@@ -77,7 +77,7 @@ describe('EnglishPresents', () => {
                 { value: 'My Custom Field', inputType: 'date' },
                 { value: 'My Field', inputType: 'DaTe' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'date', outputType: 'date' });
+                expect(commonPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'date', outputType: 'date' });
             }
         });
 
@@ -95,7 +95,7 @@ describe('EnglishPresents', () => {
                 { value: '~Field!! ^_^', inputType: 'Future_Date' },
                 { value: 'Field...', inputType: 'FuTuRe_DaTe' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'future_date', outputType: 'date' });
+                expect(commonPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'future_date', outputType: 'date' });
             }
         });
 
@@ -105,7 +105,7 @@ describe('EnglishPresents', () => {
                 { value: 'My Custom Field', inputType: 'NUMBER' },
                 { value: 'My Field', inputType: 'NuMBEr' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'number', outputType: 'number' });
+                expect(commonPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'number', outputType: 'number' });
             }
         });
 
@@ -115,7 +115,7 @@ describe('EnglishPresents', () => {
                 { value: 'My Custom Field', inputType: 'URL' },
                 { value: 'My Field', inputType: 'Url' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'url', outputType: 'url' });
+                expect(commonPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'url', outputType: 'url' });
             }
         });
 
@@ -125,7 +125,7 @@ describe('EnglishPresents', () => {
                 { value: 'My Custom Field', inputType: 'PHONE' },
                 { value: 'My Field', inputType: 'Phone' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'phone', outputType: 'phone' });
+                expect(commonPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'phone', outputType: 'phone' });
             }
         });
 
@@ -135,7 +135,7 @@ describe('EnglishPresents', () => {
                 { value: 'My Custom Field', inputType: 'EMAIL' },
                 { value: 'My Field', inputType: 'Email' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'email', outputType: 'email' });
+                expect(commonPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'email', outputType: 'email' });
             }
         });
         
@@ -145,7 +145,7 @@ describe('EnglishPresents', () => {
                 { value: 'Tag' },
                 { value: 'TAG' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: 'Tags', inputType: 'word', outputType: 'multiselect' });
+                expect(commonPresets.get(input)).to.deep.eq({ value: 'Tags', inputType: 'word', outputType: 'multiselect' });
             }
         });
 
@@ -158,7 +158,7 @@ describe('EnglishPresents', () => {
                 { value: 'ReminderDate' },
                 { value: 'REMINDERDATE' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: 'Date', inputType: 'future_date', outputType: 'date' });
+                expect(commonPresets.get(input)).to.deep.eq({ value: 'Date', inputType: 'future_date', outputType: 'date' });
             }
         });
 
@@ -168,7 +168,7 @@ describe('EnglishPresents', () => {
                 { value: 'Date' },
                 { value: 'DATE' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: 'Date', inputType: 'date', outputType: 'date' });
+                expect(commonPresets.get(input)).to.deep.eq({ value: 'Date', inputType: 'date', outputType: 'date' });
             }
         });
 
@@ -178,7 +178,7 @@ describe('EnglishPresents', () => {
                 { value: 'Phone' },
                 { value: 'PHONE' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: 'Phone', inputType: 'phone', outputType: 'phone' });
+                expect(commonPresets.get(input)).to.deep.eq({ value: 'Phone', inputType: 'phone', outputType: 'phone' });
             }
         });
 
@@ -188,7 +188,7 @@ describe('EnglishPresents', () => {
                 { value: 'Url' },
                 { value: 'URL' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: 'URL', inputType: 'url', outputType: 'url' });
+                expect(commonPresets.get(input)).to.deep.eq({ value: 'URL', inputType: 'url', outputType: 'url' });
             }
         });
 
@@ -198,7 +198,7 @@ describe('EnglishPresents', () => {
                 { value: 'Email' },
                 { value: 'EMAIL' },
             ]) {
-                expect(englishPresets.get(input)).to.deep.eq({ value: 'Email', inputType: 'email', outputType: 'email' });
+                expect(commonPresets.get(input)).to.deep.eq({ value: 'Email', inputType: 'email', outputType: 'email' });
             }
         });
     });

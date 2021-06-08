@@ -296,6 +296,21 @@ describe('RussianDateParser', () => {
             }
         });
 
+        it.skip('should parse dates in the past', () => {
+            for (const [input, output] of [
+                ['сейчас', utcDate('2020-05-05 10:00')],
+                ['вчера', utcDate('2020-05-04 10:00')],
+                ['позавчера', utcDate('2020-05-03 10:00')],
+                ['сегодня в 4:05', utcDate('2020-05-05 04:05')],
+                ['01.01.2020 12:30', utcDate('2020-01-01 12:30')],
+                ['третьего февраля этого года', utcDate('2020-02-03 10:00')],
+                ['ночью второго марта', utcDate('2020-03-03 00:00')],
+                ['первого мая 2020 года в 8:00', utcDate('2020-05-01 08:00')],
+            ]) {
+                expect(russianDateParser.parse(input), input).to.deep.eq(output);
+            }
+        });
+
         it('should return null for invalid dates', () => {
             for (const input of [
                 'через NaN недель',
@@ -318,8 +333,6 @@ describe('RussianDateParser', () => {
             }
         });
     });
-
-    // TODO: add support for past dates
 
     describe('parseNumber()', () => {
         it('should parse regular numbers', () => {

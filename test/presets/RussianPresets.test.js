@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const RussianPresents = require('../../app/presets/RussianPresets');
 
-describe('RussianPresents', () => {
+describe.only('RussianPresents', () => {
     /** @type {RussianPresents} */
     let russianPresets;
 
@@ -16,26 +16,11 @@ describe('RussianPresents', () => {
                 { value: 'my_value', inputType: 'word', outputType: 'multi_select' },
                 { value: 'SOME value!!', inputType: 'future_date', outputType: 'date' },
             ]) {
-                expect(russianPresets.get(input)).to.deep.eq(input);
+                expect(russianPresets.get(input)).to.be.null
             }
         });
 
-        it('should accept aliases for "database" variable', () => {
-            for (const input of [
-                { value: 'database' },
-                { value: 'DataBase' },
-                { value: 'db' },
-                { value: 'DB' },
-                { value: 'list' },
-                { value: 'lIsT' },
-                { value: 'table' },
-                { value: 'Table' },
-            ]) {
-                expect(russianPresets.get(input)).to.deep.eq({ value: 'database' });
-            }
-        });
-
-        it('should apply special preset to all type-less variables', () => {
+        it('should not apply preset to all type-less variables', () => {
             for (const input of [
                 { value: 'note' },
                 { value: 'item' },
@@ -48,14 +33,31 @@ describe('RussianPresents', () => {
                 { value: 'My Field' },
                 { value: 'name' },
             ]) {
-                expect(russianPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'text', outputType: 'title' });
+                expect(russianPresets.get(input)).to.be.null
+            }
+        });
+
+        it('should accept aliases for "database" variable', () => {
+            for (const { value } of [
+                { value: 'база_данных' },
+                { value: 'базаданных' },
+                { value: 'базаДанных' },
+                { value: 'БазаДанныХ' },
+                { value: 'бд' },
+                { value: 'БД' },
+                { value: 'список' },
+                { value: 'СпиСОк' },
+                { value: 'таблица' },
+                { value: 'ТаБлИцА' },
+            ]) {
+                expect(russianPresets.get({ value })).to.deep.eq({ value, inputType: 'database', outputType: 'database' });
             }
         });
 
         it('should apply special preset to "select" input type', () => {
             for (const input of [
-                { value: 'My Custom Field', inputType: 'select' },
-                { value: 'My Field', inputType: 'SeLeCt' },
+                { value: 'My Custom Field', inputType: 'выбор' },
+                { value: 'My Field', inputType: 'ВыБоР' },
             ]) {
                 expect(russianPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'word', outputType: 'select' });
             }
@@ -63,10 +65,10 @@ describe('RussianPresents', () => {
 
         it('should apply special preset to "multi_select" input type', () => {
             for (const input of [
-                { value: 'My Custom Field', inputType: 'multi_select' },
-                { value: 'My Field', inputType: 'multiselect' },
-                { value: 'Field', inputType: 'mUlTiSeLecT' },
-                { value: 'field', inputType: 'mUlTi_SeLecT' },
+                { value: 'My Custom Field', inputType: 'множественный_выбор' },
+                { value: 'My Field', inputType: 'множественный выбор' },
+                { value: 'Field', inputType: 'Множественный Выбор' },
+                { value: 'field', inputType: 'МноЖествеННыЙ-Выбор' },
             ]) {
                 expect(russianPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'word', outputType: 'multi_select' });
             }
@@ -74,8 +76,8 @@ describe('RussianPresents', () => {
 
         it('should apply special preset to "date" input type', () => {
             for (const input of [
-                { value: 'My Custom Field', inputType: 'date' },
-                { value: 'My Field', inputType: 'DaTe' },
+                { value: 'My Custom Field', inputType: 'ДаТа' },
+                { value: 'My Field', inputType: 'дата' },
             ]) {
                 expect(russianPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'date', outputType: 'date' });
             }
@@ -83,17 +85,15 @@ describe('RussianPresents', () => {
 
         it('should apply special preset to "future_date" input type', () => {
             for (const input of [
-                { value: 'Custom Field', inputType: 'reminderdate' },
-                { value: 'My Custom Field 123', inputType: 'reminderDate' },
-                { value: 'Field', inputType: 'ReMinDerDate' },
-                { value: 'Field', inputType: 'Reminder_Date' },
-                { value: 'The Date', inputType: 'reminder_date' },
-                { value: 'My Custom Field', inputType: 'futuredate' },
-                { value: 'My Field', inputType: 'futureDate' },
-                { value: '@My Field', inputType: 'future_date' },
-                { value: 'My Field', inputType: 'FuTuReDaTe' },
-                { value: '~Field!! ^_^', inputType: 'Future_Date' },
-                { value: 'Field...', inputType: 'FuTuRe_DaTe' },
+                { value: 'Custom Field', inputType: 'будущая_дата' },
+                { value: 'My Custom Field 123', inputType: 'дата_уведомления' },
+                { value: 'Field', inputType: 'дата_напоминания' },
+                { value: 'Field', inputType: 'будущаяДата' },
+                { value: 'The Date', inputType: 'датаУведомления' },
+                { value: 'My Custom Field', inputType: 'датаНапоминания' },
+                { value: 'My Field', inputType: 'БУДУщая-ДАТА' },
+                { value: '@My Field', inputType: 'ДаТа-УведоМления' },
+                { value: 'My Field', inputType: 'ДаТА-НапоминАНИЯ' },
             ]) {
                 expect(russianPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'future_date', outputType: 'date' });
             }
@@ -101,9 +101,10 @@ describe('RussianPresents', () => {
 
         it('should apply special preset to "number" input type', () => {
             for (const input of [
-                { value: 'Custom Field', inputType: 'number' },
-                { value: 'My Custom Field', inputType: 'NUMBER' },
-                { value: 'My Field', inputType: 'NuMBEr' },
+                { value: 'Custom Field', inputType: 'число' },
+                { value: 'Custom Field', inputType: 'ЧиСло' },
+                { value: 'My Custom Field', inputType: 'цифра' },
+                { value: 'My Custom Field', inputType: 'ЦиФрА' },
             ]) {
                 expect(russianPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'number', outputType: 'number' });
             }
@@ -111,9 +112,13 @@ describe('RussianPresents', () => {
 
         it('should apply special preset to "url" input type', () => {
             for (const input of [
-                { value: 'Custom Field', inputType: 'url' },
-                { value: 'My Custom Field', inputType: 'URL' },
-                { value: 'My Field', inputType: 'Url' },
+                { value: 'Custom Field', inputType: 'ссылка' },
+                { value: 'My Custom Field', inputType: 'Ссылка' },
+                { value: 'My Field', inputType: 'Веб-страница' },
+                { value: 'My Field', inputType: 'ВебСтраница' },
+                { value: 'My Field', inputType: 'сайт' },
+                { value: 'My Field', inputType: 'Сайт' },
+                { value: 'My Field', inputType: 'САЙТ' },
             ]) {
                 expect(russianPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'url', outputType: 'url' });
             }
@@ -121,9 +126,14 @@ describe('RussianPresents', () => {
 
         it('should apply special preset to "phone" input type', () => {
             for (const input of [
-                { value: 'Custom Field', inputType: 'phone' },
-                { value: 'My Custom Field', inputType: 'PHONE' },
-                { value: 'My Field', inputType: 'Phone' },
+                { value: 'Custom Field', inputType: 'телефон' },
+                { value: 'My Custom Field', inputType: 'Номер Телефона' },
+                { value: 'My Field', inputType: 'мобильный-номер' },
+                { value: 'My Field', inputType: 'МобИльНый' },
+                { value: 'Custom Field', inputType: 'Телефон' },
+                { value: 'My Custom Field', inputType: 'Номер_телефона' },
+                { value: 'My Field', inputType: 'мобильный номер' },
+                { value: 'My Field', inputType: 'мобильный' },
             ]) {
                 expect(russianPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'phone', outputType: 'phone' });
             }
@@ -131,9 +141,14 @@ describe('RussianPresents', () => {
 
         it('should apply special preset to "email" input type', () => {
             for (const input of [
-                { value: 'Custom Field', inputType: 'email' },
-                { value: 'My Custom Field', inputType: 'EMAIL' },
-                { value: 'My Field', inputType: 'Email' },
+                { value: 'Custom Field', inputType: 'почта' },
+                { value: 'My Custom Field', inputType: 'почтовый-адрес' },
+                { value: 'My Field', inputType: 'ЭлектроннаяПочта' },
+                { value: 'My Field', inputType: 'ПочтовыйЯщик' },
+                { value: 'My Field', inputType: 'Эл. почта' },
+                { value: 'My Field', inputType: 'Электронный Адрес' },
+                { value: 'My Field', inputType: 'эл._адрес' },
+                { value: 'My Field', inputType: 'МЫЛО' },
             ]) {
                 expect(russianPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'email', outputType: 'email' });
             }
@@ -141,9 +156,10 @@ describe('RussianPresents', () => {
         
         it('should apply special preset for "tag" variable', () => {
             for (const input of [
-                { value: 'tag' },
-                { value: 'Tag' },
-                { value: 'TAG' },
+                { value: 'тег' },
+                { value: 'Тег' },
+                { value: 'теги' },
+                { value: 'ТЕГИ' },
             ]) {
                 expect(russianPresets.get(input)).to.deep.eq({ value: 'Теги', inputType: 'word', outputType: 'multiselect' });
             }
@@ -151,22 +167,26 @@ describe('RussianPresents', () => {
 
         it('should apply special preset for "reminder_date" variable', () => {
             for (const input of [
-                { value: 'reminder_date' },
-                { value: 'Reminder_Date' },
-                { value: 'reminderdate' },
-                { value: 'reminderDate' },
-                { value: 'ReminderDate' },
-                { value: 'REMINDERDATE' },
+                { value: 'будущая_дата' },
+                { value: 'дата_уведомления' },
+                { value: 'дата_напоминания' },
+                { value: 'будущаяДата' },
+                { value: 'датаУведомления' },
+                { value: 'датаНапоминания' },
+                { value: 'БУДУщая-ДАТА' },
+                { value: 'ДаТа-УведоМления' },
+                { value: 'ДаТА-НапоминАНИЯ' },
             ]) {
-                expect(russianPresets.get(input)).to.deep.eq({ value: 'Дата', inputType: 'future_date', outputType: 'date' });
+                expect(russianPresets.get(input), JSON.stringify(input))
+                    .to.deep.eq({ value: 'Дата', inputType: 'future_date', outputType: 'date' });
             }
         });
 
         it('should apply special preset for "date" variable', () => {
             for (const input of [
-                { value: 'date' },
-                { value: 'Date' },
-                { value: 'DATE' },
+                { value: 'дата' },
+                { value: 'Дата' },
+                { value: 'ДАТА' },
             ]) {
                 expect(russianPresets.get(input)).to.deep.eq({ value: 'Дата', inputType: 'date', outputType: 'date' });
             }
@@ -174,9 +194,14 @@ describe('RussianPresents', () => {
 
         it('should apply special preset for "phone" variable', () => {
             for (const input of [
-                { value: 'phone' },
-                { value: 'Phone' },
-                { value: 'PHONE' },
+                { value: 'телефон' },
+                { value: 'Номер Телефона' },
+                { value: 'мобильный-номер' },
+                { value: 'МобИльНый' },
+                { value: 'Телефон' },
+                { value: 'Номер_телефона' },
+                { value: 'мобильный номер' },
+                { value: 'мобильный' },
             ]) {
                 expect(russianPresets.get(input)).to.deep.eq({ value: 'Телефон', inputType: 'phone', outputType: 'phone' });
             }
@@ -184,9 +209,13 @@ describe('RussianPresents', () => {
 
         it('should apply special preset for "url" variable', () => {
             for (const input of [
-                { value: 'url' },
-                { value: 'Url' },
-                { value: 'URL' },
+                { value: 'ссылка' },
+                { value: 'Ссылка' },
+                { value: 'Веб-страница' },
+                { value: 'ВебСтраница' },
+                { value: 'сайт' },
+                { value: 'Сайт' },
+                { value: 'САЙТ' },
             ]) {
                 expect(russianPresets.get(input)).to.deep.eq({ value: 'URL', inputType: 'url', outputType: 'url' });
             }
@@ -194,9 +223,14 @@ describe('RussianPresents', () => {
 
         it('should apply special preset for "email" variable', () => {
             for (const input of [
-                { value: 'email' },
-                { value: 'Email' },
-                { value: 'EMAIL' },
+                { value: 'почта' },
+                { value: 'почтовый-адрес' },
+                { value: 'ЭлектроннаяПочта' },
+                { value: 'ПочтовыйЯщик' },
+                { value: 'Эл. почта' },
+                { value: 'Электронный Адрес' },
+                { value: 'эл._адрес' },
+                { value: 'МЫЛО' },
             ]) {
                 expect(russianPresets.get(input)).to.deep.eq({ value: 'Email', inputType: 'email', outputType: 'email' });
             }

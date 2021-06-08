@@ -1,37 +1,82 @@
-const SharedPresets = require('./SharedPresets');
+const fuzzyEquals = require('../utils/fuzzyEquals');
+
+const FUTURE_DATE = ['будущая_дата', 'дата_уведомления', 'дата_напоминания'];
+const DATE = ['дата', 'время'];
+const PHONE = ['телефон', 'номер_телефона', 'мобильный_номер', 'мобильный'];
+const EMAIL = [
+    'почта', 'почтовый_адрес', 'электронная_почта',
+    'почтовый_ящик', 'эл_почта', 'электронный_адрес',
+    'эл_адрес', 'мыло'
+];
+const URL = ['ссылка', 'веб_страница', 'страница', 'сайт'];
 
 class RussianPresets {
     get({ value, inputType, outputType }) {
-        if (!inputType && !outputType) {
-            if (
-                value.toLowerCase() === 'reminder_date' ||
-                value.toLowerCase() === 'reminderdate'
-            ) {
-                return { value: 'Дата', inputType: 'future_date', outputType: 'date' };
+        if (inputType && !outputType) {
+            if (fuzzyEquals(inputType, 'выбор')) {
+                return { value, inputType: 'word', outputType: 'select' };
             }
-    
-            if (value.toLowerCase() === 'date') {
-                return { value: 'Дата', inputType: 'date', outputType: 'date' };
+
+            if (fuzzyEquals(inputType, 'множественный_выбор')) {
+                return { value, inputType: 'word', outputType: 'multi_select' };
             }
-    
-            if (value.toLowerCase() === 'tag') {
-                return { value: 'Теги', inputType: 'word', outputType: 'multiselect' };
+
+            if (fuzzyEquals(inputType, ...DATE)) {
+                return { value, inputType: 'date', outputType: 'date' };
             }
-    
-            if (value.toLowerCase() === 'phone') {
-                return { value: 'Телефон', inputType: 'phone', outputType: 'phone' };
+
+            if (fuzzyEquals(inputType, ...FUTURE_DATE)) {
+                return { value, inputType: 'future_date', outputType: 'date' };
             }
-    
-            if (value.toLowerCase() === 'url') {
-                return { value: 'URL', inputType: 'url', outputType: 'url' };
+
+            if (fuzzyEquals(inputType, 'число', 'цифра')) {
+                return { value, inputType: 'number', outputType: 'number' };
             }
-    
-            if (value.toLowerCase() === 'email') {
-                return { value: 'Email', inputType: 'email', outputType: 'email' };
+
+            if (fuzzyEquals(inputType, ...URL)) {
+                return { value, inputType: 'url', outputType: 'url' };
+            }
+
+            if (fuzzyEquals(inputType, ...PHONE)) {
+                return { value, inputType: 'phone', outputType: 'phone' };
+            }
+
+            if (fuzzyEquals(inputType, ...EMAIL)) {
+                return { value, inputType: 'email', outputType: 'email' };
             }
         }
 
-        return new SharedPresets().get({ value, inputType, outputType });
+        if (!inputType && !outputType) {
+            if (fuzzyEquals(value, ...FUTURE_DATE)) {
+                return { value: 'Дата', inputType: 'future_date', outputType: 'date' };
+            }
+    
+            if (fuzzyEquals(value, ...DATE)) {
+                return { value: 'Дата', inputType: 'date', outputType: 'date' };
+            }
+    
+            if (fuzzyEquals(value, 'тег', 'теги')) {
+                return { value: 'Теги', inputType: 'word', outputType: 'multiselect' };
+            }
+    
+            if (fuzzyEquals(value, ...PHONE)) {
+                return { value: 'Телефон', inputType: 'phone', outputType: 'phone' };
+            }
+    
+            if (fuzzyEquals(value, ...URL)) {
+                return { value: 'URL', inputType: 'url', outputType: 'url' };
+            }
+    
+            if (fuzzyEquals(value, ...EMAIL)) {
+                return { value: 'Email', inputType: 'email', outputType: 'email' };
+            }
+
+            if (fuzzyEquals(value, 'база_данных', 'бд', 'список', 'таблица')) {
+                return { value, inputType: 'database', outputType: 'database' };
+            }
+        }
+
+        return null;
     }
 }
 
