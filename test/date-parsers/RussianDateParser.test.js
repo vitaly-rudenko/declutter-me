@@ -276,6 +276,10 @@ describe('RussianDateParser', () => {
                 ['первого января в 1:30', utcDate('2020-01-01 01:30')],
                 ['через две недели в 8:00', utcDate('2020-05-19 8:00')],
                 ['послезавтра в 23:59', utcDate('2020-05-07 23:59')],
+                ['сегодня в 0', utcDate('2020-05-05 00:00')],
+                ['сегодня в 24', utcDate('2020-05-06 00:00')],
+                ['завтра в 0:00', utcDate('2020-05-06 00:00')],
+                ['завтра в 24:30', utcDate('2020-05-07 00:30')],
                 ['через несколько часов в 15:00', utcDate('2020-05-05 15:00')], // absolute time overrides relative one
             ]) {
                 expect(russianDateParser.parse(input), input).to.deep.eq(output);
@@ -313,11 +317,13 @@ describe('RussianDateParser', () => {
 
         it('should return null for invalid dates', () => {
             for (const input of [
+                'сентября в 21:00',
                 'через NaN недель',
                 'вчера',
                 'через много недель',
                 'в 21:60',
-                'в 25:60',
+                'в 25:20',
+                'в 1.5:6.3',
                 'через много лет',
                 'через 0 минут',
                 'через 0 лет',
@@ -330,6 +336,68 @@ describe('RussianDateParser', () => {
                 '31 февраля'
             ]) {
                 expect(russianDateParser.parse(input), input).to.be.null;
+            }
+        });
+    });
+
+    describe('isValidHours()', () => {
+        it('should return false for invalid minutes', () => {
+            for (const hours of [
+                null,
+                undefined,
+                '',
+                -1,
+                -46,
+                25,
+                26,
+                100,
+            ]) {
+                expect(russianDateParser.isValidHours(hours)).to.be.false
+            }
+        });
+    });
+
+    describe('isValidMinutes()', () => {
+        it('should return false for invalid minutes', () => {
+            for (const minutes of [
+                null,
+                undefined,
+                '',
+                -1,
+                -46,
+                60,
+                61,
+                100,
+            ]) {
+                expect(russianDateParser.isValidMinutes(minutes)).to.be.false
+            }
+        });
+    });
+
+    describe('parseSpecial()', () => {
+        it('should return null for invalid special dates', () => {
+            for (const date of [
+                123,
+                { hello: 'world' },
+                null,
+                undefined,
+                ''
+            ]) {
+                expect(russianDateParser.parseSpecial(date, {})).to.be.null
+            }
+        });
+    });
+
+    describe('parseUnit()', () => {
+        it('should return null for invalid units', () => {
+            for (const unit of [
+                123,
+                { hello: 'world' },
+                null,
+                undefined,
+                ''
+            ]) {
+                expect(russianDateParser.parseUnit(unit)).to.be.null
             }
         });
     });
@@ -367,6 +435,18 @@ describe('RussianDateParser', () => {
             }
         });
 
+        it('should parse edge cases', () => {
+            for (const [value, result] of [
+                ['ноль', 0],
+                ['две сотни тысяч', 200000],
+                ['тысяча тысяч', 1000000],
+                ['две тысячи тысяч одиннадцать', 2000011],
+                ['сотня сотен и один', 10001],
+            ]) {
+                expect(russianDateParser.parseNumber(value), value).to.eq(result);
+            }
+        })
+
         it('should return null for invalid or non-numbers', () => {
             for (const value of [
                 '',
@@ -377,6 +457,7 @@ describe('RussianDateParser', () => {
                 'трыцтры',
                 '123abc',
                 '1 2 3',
+                'два и три',
                 true,
                 { hello: 'world' }
             ]) {

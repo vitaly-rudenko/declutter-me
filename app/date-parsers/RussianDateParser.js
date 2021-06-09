@@ -23,6 +23,7 @@ const UNIT_MATCHERS = [
 
 /** @type [string[], number][] */
 const NUMBER_MATCHERS = [
+    [['ноль', 'нуль'], 0],
     [['один', 'одну', 'первого'], 1],
     [['полтора', 'полторы'], 1.5],
     [['два', 'две', 'пару', 'второго'], 2],
@@ -51,7 +52,7 @@ const NUMBER_MATCHERS = [
     [['семьдесят', 'семидесятого'], 70],
     [['восемьдесят', 'восьмидесятого'], 80],
     [['девяносто', 'девяностого'], 90],
-    [['сто', 'сотни', 'сотню', 'сотен'], 100],
+    [['сто', 'сотня', 'сотни', 'сотню', 'сотен'], 100],
     [['двести', 'двести', 'двухсотого'], 200],
     [['триста', 'трехсотого', 'трёхсотого'], 300],
     [['четыреста', 'четырехсотого', 'четырёхсотого'], 400],
@@ -65,6 +66,7 @@ const NUMBER_MATCHERS = [
 
 /** @type {[string[], (date: Date) => any][]} */
 const SPECIAL_MATCHERS = [
+    [['сегодня'], () => {}],
     [['завтра'], date => date.setUTCDate(date.getUTCDate() + 1)],
     [['послезавтра'], date => date.setUTCDate(date.getUTCDate() + 2)],
     [['утром'], date => date.setUTCHours(8, 0, 0, 0)],
@@ -147,8 +149,8 @@ class RussianDateParser {
         if (!input.includes(' в ')) return null;
         const [rawDate, rawTime] = input.split(' в ');
 
-        const date = this.parse(rawDate, { origin, futureOnly });
         const time = this.parse('в ' + rawTime, { origin, futureOnly });
+        const date = this.parse(rawDate, { origin: time, futureOnly });
 
         if (date && time) {
             return this.combineDateAndTime(date, time);
@@ -306,8 +308,14 @@ class RussianDateParser {
         for (const part of parts) {
             const number = this.parseNumber(part);
 
-            if (number && this.isValidHours(number)) {
-                dateCopy.setUTCHours(number);
+            if (this.isValidHours(number)) {
+                if (number === 24) {
+                    dateCopy.setUTCHours(0);
+                    dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+                } else {
+                    dateCopy.setUTCHours(number);
+                }
+                dateCopy.setUTCMinutes(0);
                 continue;
             } 
 
@@ -316,13 +324,13 @@ class RussianDateParser {
                 const hours = Number(rawHours);
                 const minutes = Number(rawMinutes);
 
-                if (
-                    !Number.isNaN(hours) &&
-                    !Number.isNaN(minutes) &&
-                    this.isValidHours(hours) && 
-                    this.isValidMinutes(minutes)
-                ) {
-                    dateCopy.setUTCHours(hours);
+                if (this.isValidHours(hours) && this.isValidMinutes(minutes)) {
+                    if (hours === 24) {
+                        dateCopy.setUTCHours(0);
+                        dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+                    } else {
+                        dateCopy.setUTCHours(hours);
+                    }
                     dateCopy.setUTCMinutes(minutes);
                     continue;
                 }
@@ -348,11 +356,11 @@ class RussianDateParser {
     }
 
     isValidHours(hours) {
-        return hours >= 0 && hours <= 24;
+        return Number.isInteger(hours) && hours >= 0 && hours <= 24;
     }
 
     isValidMinutes(minutes) {
-        return minutes >= 0 && minutes < 60;
+        return Number.isInteger(minutes) && minutes >= 0 && minutes < 60;
     }
 
     /**
@@ -369,11 +377,15 @@ class RussianDateParser {
             return null;
         }
 
-        const dateCopy = new Date(origin);
-        match[1](dateCopy);
+        const [_, matcher] = match;
 
-        if (futureOnly && skipDateIfNecessary && dateCopy <= origin) {
-            dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+        const dateCopy = new Date(origin);
+        matcher(dateCopy);
+
+        if (futureOnly && dateCopy <= origin) {
+            if (skipDateIfNecessary) {
+                dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+            }
         }
 
         return dateCopy;
@@ -462,13 +474,16 @@ class RussianDateParser {
         }
 
         const parts = value.split(' ');
-
-        let result = 0;
-        let multiplier = 0;
-        let reduced = false;
         
-        for (let i = 0; i < parts.length; i++) {
-            const part = parts[parts.length - i - 1];
+        let largestNumber = 0;
+        let result = 0;
+        let glue = false;
+
+        for (const part of parts) {
+            if (part === 'и') {
+                glue = true;
+                continue;
+            }
 
             const match = NUMBER_MATCHERS.find(([values]) => values.includes(part));
             if (!match) {
@@ -477,16 +492,14 @@ class RussianDateParser {
 
             const number = Number(match[1]);
 
-            if (multiplier > number) {
-                if (!reduced) {
-                    result -= multiplier;
-                    reduced = true;
-                }
-                result += number * multiplier;
+            if (number >= largestNumber) {
+                if (glue) return null;
+                if (result === 0) result = 1;
+                
+                result *= number;
+                largestNumber = number;
             } else {
                 result += number;
-                multiplier = number;
-                reduced = false;
             }
         }
 
