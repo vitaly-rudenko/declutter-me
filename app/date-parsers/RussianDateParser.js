@@ -66,7 +66,10 @@ const NUMBER_MATCHERS = [
 
 /** @type {[string[], (date: Date) => any][]} */
 const SPECIAL_MATCHERS = [
+    // [['сейчас'], () => {}],
     [['сегодня'], () => {}],
+    // [['вчера'], date => date.setUTCDate(date.getUTCDate() - 1)],
+    // [['позавчера'], date => date.setUTCDate(date.getUTCDate() - 2)],
     [['завтра'], date => date.setUTCDate(date.getUTCDate() + 1)],
     [['послезавтра'], date => date.setUTCDate(date.getUTCDate() + 2)],
     [['утром'], date => date.setUTCHours(8, 0, 0, 0)],
@@ -122,75 +125,6 @@ class RussianDateParser {
 
     /**
      * @param {string} input
-     * @param {{ origin: Date, futureOnly: boolean }} params
-     */
-    parseDateWithSpecialTime(input, { origin, futureOnly }) {
-        const indexOf = input.lastIndexOf(' ');
-        if (indexOf === -1) return null;
-
-        const [rawDate, rawTime] = [input.slice(0, indexOf), input.slice(indexOf + 1)];
-
-        const date = this.parse(rawDate, { origin, futureOnly });
-        if (!date) return null;
-        date.setUTCHours(0);
-        date.setUTCMinutes(0);
-        date.setUTCSeconds(0);
-        date.setUTCMilliseconds(0);
-
-        const time = this.parseSpecial(rawTime, { origin: date, futureOnly, skipDateIfNecessary: true });
-        return time;
-    }
-
-    /**
-     * @param {string} input
-     * @param {{ origin: Date, futureOnly: boolean }} params
-     */
-    parseDateTime(input, { origin, futureOnly }) {
-        const inputParts = input.split(' в ');
-        if (inputParts.length !== 2) {
-            return null;
-        }
-
-        const [rawDate, rawTime] = inputParts;
-        const time = this.parse('в ' + rawTime, { origin, futureOnly });
-        const date = this.parse(rawDate, { origin: time, futureOnly });
-
-        if (date && time) {
-            return this.combineDateAndTime(date, time);
-        }
-
-        return null;
-    }
-
-    /**
-     * @param {Date} date
-     * @param {Date} time
-     */
-    combineDateAndTime(date, time) {
-        return new Date(Date.UTC(
-            date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),
-            time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), time.getUTCMilliseconds()
-        ));
-    }
-
-    /**
-     * @param {string} input
-     * @param {{ origin: Date, futureOnly: boolean }} params
-     */
-    parseSpecialDateTime(input, { origin, futureOnly }) {
-        const parts = input.split(' ');
-        let specialDate = new Date(origin);
-
-        for (const value of parts) {
-            specialDate = this.parseSpecial(value, { origin: specialDate, futureOnly, skipDateIfNecessary: true });
-            if (!specialDate) break;
-        }
-
-        return specialDate;
-    }
-
-    /**
-     * @param {string} input
      * @param {{ origin: Date }} params
      */
     parseRelativeDate(input, { origin }) {
@@ -208,196 +142,14 @@ class RussianDateParser {
         }
         
         if (value && unit) {
-            return this.getRelativeDate({ value, unit, origin });
+            return this._getRelativeDate({ value, unit, origin });
         }
 
         return null;
     }
 
-    /**
-     * @param {string} input
-     * @param {{ origin: Date, futureOnly: boolean }} params
-     */
-    parseAbsoluteDate(input, { origin, futureOnly }) {
-        const inputParts = input.split(' ');
-
-        let specialPart = null;
-        if (this.parseSpecial(inputParts[0], { origin, futureOnly, skipDateIfNecessary: true })) {
-            specialPart = inputParts.shift();
-        }
-
-        let yearNumber = origin.getUTCFullYear();
-        let dateNumber = null;
-        let monthIndex = -1;
-        if (inputParts[0] === 'в') {
-            inputParts.shift();
-            
-            dateNumber = origin.getUTCDate();
-
-            const monthPart = inputParts.shift();
-            monthIndex = MONTH_MATCHERS.findIndex(matchers => matchers.includes(monthPart));
-        } else {
-            let datePart = inputParts.shift();
-
-            while(inputParts.length > 0) {
-                const part = inputParts[0];
-                dateNumber = this.parseNumber(datePart + ' ' + part);
-                if (dateNumber === null) break;
-
-                datePart = datePart + ' ' + inputParts.shift();
-            }
-
-            const monthPart = inputParts.shift();
-
-            dateNumber = this.parseNumber(datePart);
-            if (dateNumber === null) return null;
-
-            if (monthPart === 'числа') {
-                monthIndex = origin.getUTCMonth();
-                if (futureOnly && dateNumber <= origin.getUTCDate()) {
-                    monthIndex++;
-                }
-            } else {
-                monthIndex = MONTH_MATCHERS.findIndex(matchers => matchers.includes(monthPart));
-            }
-        }
-
-        if (inputParts.length > 0) {
-            if (endsWith(inputParts, 'года')) {
-                inputParts.pop();
-            }
-
-            yearNumber = this.parseNumber(inputParts.join(' '));
-            if (yearNumber === null) {
-                return null;
-            }
-        }
-
-        if (monthIndex === -1) return null;
-
-        if (yearNumber < 100) {
-            yearNumber += Math.floor(origin.getUTCFullYear() / 1000) * 1000;
-        }
-
-        const dateCopy = new Date(origin);
-        dateCopy.setUTCDate(dateNumber);
-        dateCopy.setUTCMonth(monthIndex);
-        dateCopy.setUTCFullYear(yearNumber);
-
-        if (dateCopy.getUTCDate() !== dateNumber || dateCopy.getUTCMonth() !== monthIndex) {
-            return null;
-        }
-        
-        if (futureOnly && dateCopy <= origin) {
-            dateCopy.setUTCFullYear(dateCopy.getUTCFullYear() + 1);
-        }
-        
-        if (specialPart !== null) {
-            return this.parseSpecial(specialPart, { origin: dateCopy, futureOnly, skipDateIfNecessary: false });
-        }
-
-        return dateCopy;
-    }
-
-    /**
-     * @param {string} input
-     * @param {{ origin: Date, futureOnly: boolean }} params
-     */
-    parseAbsoluteTime(input, { origin, futureOnly }) {
-        if (!input.startsWith('в ')) return null;
-        input = input.slice('в '.length);
-
-        const dateCopy = new Date(origin);
-        const parts = input.split(' ');
-
-        for (const part of parts) {
-            const number = this.parseNumber(part);
-
-            if (this.isValidHours(number)) {
-                if (number === 24) {
-                    dateCopy.setUTCHours(0);
-                    dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
-                } else {
-                    dateCopy.setUTCHours(number);
-                }
-                dateCopy.setUTCMinutes(0);
-                continue;
-            } 
-
-            if (part.includes(':')) {
-                const [rawHours, rawMinutes] = part.split(':');
-                const hours = Number(rawHours);
-                const minutes = Number(rawMinutes);
-
-                if (this.isValidHours(hours) && this.isValidMinutes(minutes)) {
-                    if (hours === 24) {
-                        dateCopy.setUTCHours(0);
-                        dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
-                    } else {
-                        dateCopy.setUTCHours(hours);
-                    }
-                    dateCopy.setUTCMinutes(minutes);
-                    continue;
-                }
-            }
-
-            if (part === 'вечера' && dateCopy.getUTCHours() <= 12) {
-                dateCopy.setUTCHours(dateCopy.getUTCHours() + 12);
-                continue;
-            }
-
-            if (['утра', 'дня', 'ночи'].includes(part)) {
-                continue;
-            }
-
-            return null;
-        }
-
-        if (futureOnly && dateCopy <= origin) {
-            dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
-        }
-
-        return dateCopy;
-    }
-
-    isValidHours(hours) {
-        return Number.isSafeInteger(hours) && hours >= 0 && hours <= 24;
-    }
-
-    isValidMinutes(minutes) {
-        return Number.isSafeInteger(minutes) && minutes >= 0 && minutes < 60;
-    }
-
-    /**
-     * @param {string} value
-     * @param {{ origin: Date, futureOnly: boolean, skipDateIfNecessary: boolean }} params
-     */
-    parseSpecial(value, { origin, futureOnly, skipDateIfNecessary }) {
-        if (typeof value !== 'string' || value.length === 0) {
-            return null;
-        }
-
-        const match = SPECIAL_MATCHERS.find(([values]) => values.includes(value));
-        if (!match) {
-            return null;
-        }
-
-        const [_, transformDate] = match;
-
-        const dateCopy = new Date(origin);
-        transformDate(dateCopy);
-
-        if (futureOnly && dateCopy <= origin) {
-            if (skipDateIfNecessary) {
-                dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
-            }
-        }
-
-        return dateCopy;
-    }
-
     /** @param {{ value: number, unit: string, origin: Date }} params */
-    getRelativeDate({ value, unit, origin }) {
+    _getRelativeDate({ value, unit, origin }) {
         const dateCopy = new Date(origin);
 
         const hasExtraHalf = Math.trunc(value) !== value;
@@ -454,6 +206,286 @@ class RussianDateParser {
         }
 
         return dateCopy;
+    }
+
+    /**
+     * @param {string} input
+     * @param {{ origin: Date, futureOnly: boolean }} params
+     */
+    parseAbsoluteTime(input, { origin, futureOnly }) {
+        if (!input.startsWith('в ')) return null;
+        input = input.slice('в '.length);
+
+        const dateCopy = new Date(origin);
+        const parts = input.split(' ');
+
+        for (const part of parts) {
+            const number = this.parseNumber(part);
+
+            if (this.isValidHours(number)) {
+                if (number === 24) {
+                    dateCopy.setUTCHours(0);
+                    dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+                } else {
+                    dateCopy.setUTCHours(number);
+                }
+                dateCopy.setUTCMinutes(0);
+                continue;
+            } 
+
+            if (part.includes(':')) {
+                const [rawHours, rawMinutes] = part.split(':');
+                const hours = Number(rawHours);
+                const minutes = Number(rawMinutes);
+
+                if (this.isValidHours(hours) && this.isValidMinutes(minutes)) {
+                    if (hours === 24) {
+                        dateCopy.setUTCHours(0);
+                        dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+                    } else {
+                        dateCopy.setUTCHours(hours);
+                    }
+                    dateCopy.setUTCMinutes(minutes);
+                    continue;
+                }
+            }
+
+            if (['дня', 'вечера'].includes(part) && dateCopy.getUTCHours() <= 12) {
+                dateCopy.setUTCHours(dateCopy.getUTCHours() + 12);
+                continue;
+            }
+
+            if (part === 'полночь') {
+                dateCopy.setUTCHours(0);
+                dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+                continue;
+            }
+
+            if (part === 'час') {
+                dateCopy.setUTCHours(1);
+                continue;
+            }
+
+            if (['часа', 'часов'].includes(part) || ['утра', 'ночи'].includes(part)) {
+                continue;
+            }
+
+            return null;
+        }
+
+        if (futureOnly && dateCopy <= origin) {
+            dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+        }
+
+        return dateCopy;
+    }
+
+    isValidHours(hours) {
+        return Number.isSafeInteger(hours) && hours >= 0 && hours <= 24;
+    }
+
+    isValidMinutes(minutes) {
+        return Number.isSafeInteger(minutes) && minutes >= 0 && minutes < 60;
+    }
+
+    /**
+     * @param {string} input
+     * @param {{ origin: Date, futureOnly: boolean }} params
+     */
+    parseSpecialDateTime(input, { origin, futureOnly }) {
+        const parts = input.split(' ');
+        let specialDate = new Date(origin);
+
+        for (const value of parts) {
+            specialDate = this.parseSpecial(value, { origin: specialDate, futureOnly, skipDateIfNecessary: true });
+            if (!specialDate) break;
+        }
+
+        return specialDate;
+    }
+
+    /**
+     * @param {string} input
+     * @param {{ origin: Date, futureOnly: boolean }} params
+     */
+    parseAbsoluteDate(input, { origin, futureOnly }) {
+        const inputParts = input.split(' ');
+
+        let specialPart = null;
+        if (this.parseSpecial(inputParts[0], { origin, futureOnly, skipDateIfNecessary: true })) {
+            specialPart = inputParts.shift();
+        }
+
+        let yearNumber = origin.getUTCFullYear();
+        let dateNumber = null;
+        let monthIndex = -1;
+        if (inputParts[0] === 'в') {
+            inputParts.shift();
+            
+            dateNumber = origin.getUTCDate();
+
+            const monthPart = inputParts.shift();
+            monthIndex = MONTH_MATCHERS.findIndex(matchers => matchers.includes(monthPart));
+        } else {
+            let datePart = inputParts.shift();
+
+            while(inputParts.length > 0) {
+                const part = inputParts[0];
+                dateNumber = this.parseNumber(datePart + ' ' + part);
+                if (dateNumber === null) break;
+
+                datePart = datePart + ' ' + inputParts.shift();
+            }
+
+            const monthPart = inputParts.shift();
+
+            dateNumber = this.parseNumber(datePart);
+            if (dateNumber === null) return null;
+
+            if (monthPart === 'числа') {
+                monthIndex = origin.getUTCMonth();
+                if (futureOnly && dateNumber <= origin.getUTCDate()) {
+                    monthIndex++;
+                }
+            } else {
+                monthIndex = MONTH_MATCHERS.findIndex(matchers => matchers.includes(monthPart));
+            }
+        }
+
+        let hasYearPart = false;
+        let customYear = false;
+
+        if (inputParts.length > 0) {
+            if (endsWith(inputParts, 'года')) {
+                hasYearPart = true;
+                inputParts.pop();
+            }
+
+            yearNumber = this.parseNumber(inputParts.join(' '));
+            if (yearNumber === null) {
+                return null;
+            }
+
+            customYear = true;
+        }
+
+        if (monthIndex === -1) return null;
+
+        if (yearNumber < 100) {
+            if (!hasYearPart) return null;
+
+            if (yearNumber >= 70) {
+                yearNumber += 1900;
+            } else {
+                yearNumber += 2000;
+            }
+        }
+
+        const dateCopy = new Date(origin);
+        dateCopy.setUTCDate(dateNumber);
+        dateCopy.setUTCMonth(monthIndex);
+        dateCopy.setUTCFullYear(yearNumber);
+
+        if (dateCopy.getUTCDate() !== dateNumber || dateCopy.getUTCMonth() !== monthIndex) {
+            return null;
+        }
+        
+        if (futureOnly && dateCopy <= origin) {
+            if (customYear) {
+                while(dateCopy <= origin) {
+                    dateCopy.setUTCFullYear(dateCopy.getUTCFullYear() + 100);
+                }
+            } else {
+                dateCopy.setUTCFullYear(dateCopy.getUTCFullYear() + 1);
+            }
+        }
+        
+        if (specialPart !== null) {
+            return this.parseSpecial(specialPart, { origin: dateCopy, futureOnly, skipDateIfNecessary: false });
+        }
+
+        return dateCopy;
+    }
+
+    /**
+     * @param {string} value
+     * @param {{ origin: Date, futureOnly: boolean, skipDateIfNecessary: boolean }} params
+     */
+    parseSpecial(value, { origin, futureOnly, skipDateIfNecessary }) {
+        if (typeof value !== 'string' || value.length === 0) {
+            return null;
+        }
+
+        const match = SPECIAL_MATCHERS.find(([values]) => values.includes(value));
+        if (!match) {
+            return null;
+        }
+
+        const [_, transformDate] = match;
+
+        const dateCopy = new Date(origin);
+        transformDate(dateCopy);
+
+        if (futureOnly && dateCopy <= origin) {
+            if (skipDateIfNecessary) {
+                dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+            }
+        }
+
+        return dateCopy;
+    }
+
+    /**
+     * @param {string} input
+     * @param {{ origin: Date, futureOnly: boolean }} params
+     */
+    parseDateTime(input, { origin, futureOnly }) {
+        const inputParts = input.split(' в ');
+        if (inputParts.length !== 2) {
+            return null;
+        }
+
+        const [rawDate, rawTime] = inputParts;
+        const time = this.parse('в ' + rawTime, { origin, futureOnly });
+        const date = this.parse(rawDate, { origin: time, futureOnly });
+
+        if (date && time) {
+            return this._combineDateAndTime(date, time);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param {Date} date
+     * @param {Date} time
+     */
+    _combineDateAndTime(date, time) {
+        return new Date(Date.UTC(
+            date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),
+            time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), time.getUTCMilliseconds()
+        ));
+    }
+
+    /**
+     * @param {string} input
+     * @param {{ origin: Date, futureOnly: boolean }} params
+     */
+    parseDateWithSpecialTime(input, { origin, futureOnly }) {
+        const indexOf = input.lastIndexOf(' ');
+        if (indexOf === -1) return null;
+
+        const [rawDate, rawTime] = [input.slice(0, indexOf), input.slice(indexOf + 1)];
+
+        const date = this.parse(rawDate, { origin, futureOnly });
+        if (!date) return null;
+        date.setUTCHours(0);
+        date.setUTCMinutes(0);
+        date.setUTCSeconds(0);
+        date.setUTCMilliseconds(0);
+
+        const time = this.parseSpecial(rawTime, { origin: date, futureOnly, skipDateIfNecessary: true });
+        return time;
     }
 
     parseUnit(value) {

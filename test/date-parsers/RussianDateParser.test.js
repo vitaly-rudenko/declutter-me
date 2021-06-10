@@ -54,6 +54,8 @@ describe('RussianDateParser', () => {
                     ['первого числа', utcDate('2020-06-01 10:00')],
                     ['четвертого числа', utcDate('2020-06-04 10:00')],
                     ['пятого числа', utcDate('2020-06-05 10:00')],
+                    ['в декабре девяносто девятого года', utcDate('2099-12-05 10:00')],
+                    ['в августе девятнадцатого года', utcDate('2119-08-05 10:00')],
                 ]) {
                     expect(russianDateParser.parse(input, { futureOnly: true }), input).to.deep.eq(output);
                 }
@@ -177,9 +179,15 @@ describe('RussianDateParser', () => {
                 ['в 10:15', utcDate('2020-05-05 10:15')],
                 ['в 11:30', utcDate('2020-05-05 11:30')],
                 ['в 21:12', utcDate('2020-05-05 21:12')],
+                ['в полночь', utcDate('2020-05-06 00:00')],
+                ['в час ночи', utcDate('2020-05-05 01:00')],
                 ['в 9 вечера', utcDate('2020-05-05 21:00')],
+                ['в 9 часов вечера', utcDate('2020-05-05 21:00')],
                 ['в 8 утра', utcDate('2020-05-05 08:00')],
                 ['в 2 ночи', utcDate('2020-05-05 02:00')],
+                ['в 2 часа ночи', utcDate('2020-05-05 02:00')],
+                ['в 3 часа дня', utcDate('2020-05-05 15:00')],
+                ['в час дня', utcDate('2020-05-05 13:00')],
             ]) {
                 expect(russianDateParser.parse(input), input).to.deep.eq(output);
             }
@@ -247,9 +255,12 @@ describe('RussianDateParser', () => {
         it('should match absolute dates (exact month with year)', () => {
             for (const [input, output] of [
                 ['в январе 2022', utcDate('2022-01-05 10:00')],
+                ['в январе 73 года', utcDate('1973-01-05 10:00')],
                 ['в мае 2025 года', utcDate('2025-05-05 10:00')],
                 ['в июле две тысячи двадцать третьего года', utcDate('2023-07-05 10:00')],
                 ['в декабре двадцать второго года', utcDate('2022-12-05 10:00')],
+                ['в декабре девяносто девятого года', utcDate('1999-12-05 10:00')],
+                ['в декабре девятнадцатого года', utcDate('2019-12-05 10:00')],
             ]) {
                 expect(russianDateParser.parse(input), input).to.deep.eq(output);
             }
@@ -300,6 +311,16 @@ describe('RussianDateParser', () => {
             }
         });
 
+        it.skip('should parse exact dates', () => {
+            for (const [input, output] of [
+                ['12.12.2022 12:12', utcDate('2022-12-12 12:12')],
+                ['01.01.2001 00:00', utcDate('2001-01-01 00:00')],
+                ['3.5.98 9:5', utcDate('1998-05-03 9:05')],
+            ]) {
+                expect(russianDateParser.parse(input), input).to.deep.eq(output);
+            }
+        })
+
         it.skip('should parse dates in the past', () => {
             for (const [input, output] of [
                 ['сейчас', utcDate('2020-05-05 10:00')],
@@ -332,6 +353,9 @@ describe('RussianDateParser', () => {
                 '18:00',
                 'в городе',
                 'через дорогу',
+                '31 февраля',
+                'в январе 73',
+                'в декабре 15',
                 '31 февраля'
             ]) {
                 expect(russianDateParser.parse(input), input).to.be.null;
