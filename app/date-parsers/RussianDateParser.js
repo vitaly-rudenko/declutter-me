@@ -146,15 +146,20 @@ class RussianDateParser {
      * @param {{ origin: Date, futureOnly: boolean }} params
      */
     parseDateTime(input, { origin, futureOnly }) {
-        if (!input.includes(' в ')) return null;
-        const [rawDate, rawTime] = input.split(' в ');
+        const inputParts = input.split(' в ');
+        if (inputParts.length !== 2) {
+            return null;
+        }
 
+        const [rawDate, rawTime] = inputParts;
         const time = this.parse('в ' + rawTime, { origin, futureOnly });
         const date = this.parse(rawDate, { origin: time, futureOnly });
 
         if (date && time) {
             return this.combineDateAndTime(date, time);
         }
+
+        return null;
     }
 
     /**
@@ -356,11 +361,11 @@ class RussianDateParser {
     }
 
     isValidHours(hours) {
-        return Number.isInteger(hours) && hours >= 0 && hours <= 24;
+        return Number.isSafeInteger(hours) && hours >= 0 && hours <= 24;
     }
 
     isValidMinutes(minutes) {
-        return Number.isInteger(minutes) && minutes >= 0 && minutes < 60;
+        return Number.isSafeInteger(minutes) && minutes >= 0 && minutes < 60;
     }
 
     /**
@@ -377,10 +382,10 @@ class RussianDateParser {
             return null;
         }
 
-        const [_, matcher] = match;
+        const [_, transformDate] = match;
 
         const dateCopy = new Date(origin);
-        matcher(dateCopy);
+        transformDate(dateCopy);
 
         if (futureOnly && dateCopy <= origin) {
             if (skipDateIfNecessary) {
