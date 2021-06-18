@@ -15,8 +15,8 @@ describe('PatternMatcher', () => {
     describe('match()', () => {
         it('should throw error for non-existing matchers', () => {
             expect(() => patternMatcher.match(
-                'my-name', [{ type: 'variable', value: 'name' }], { matchers: {}, presets: null })
-            ).to.throw('Unsupported matcher: name');
+                'my-name', [{ type: 'variable', value: 'name', inputType: 'text' }], { matchers: {}, presets: null })
+            ).to.throw('Unsupported matcher: text');
         });
     });
 

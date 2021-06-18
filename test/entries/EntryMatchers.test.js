@@ -345,7 +345,7 @@ describe('EntryMatchers', () => {
                     .to.deep.eq({
                         match: true,
                         fields: [
-                            new Field({ name: 'database', value: 'shopping' }),
+                            new Field({ name: 'database', inputType: 'text', outputType: 'title', value: 'shopping' }),
                             new Field({ name: 'note', inputType: 'text', outputType: 'title', value: 'my unique idea' }),
                             new Field({ name: 'tag', inputType: 'word', outputType: 'select', value: 'my-ideas' }),
                         ]

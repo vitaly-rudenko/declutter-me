@@ -47,7 +47,7 @@ class CommonPresets {
             }
     
             if (fuzzyEquals(value, 'tag')) {
-                return { value: 'Tags', inputType: 'word', outputType: 'multiselect' };
+                return { value: 'Tags', inputType: 'word', outputType: 'multi_select' };
             }
     
             if (fuzzyEquals(value, 'phone')) {

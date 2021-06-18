@@ -12,8 +12,6 @@ module.exports = organizeValues({
     }
 });
 
-console.log(JSON.stringify(module.exports, null, 4))
-
 /**
  * @param {T} values
  * @returns {T}

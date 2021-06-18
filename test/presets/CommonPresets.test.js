@@ -145,7 +145,7 @@ describe('EnglishPresents', () => {
                 { value: 'Tag' },
                 { value: 'TAG' },
             ]) {
-                expect(commonPresets.get(input)).to.deep.eq({ value: 'Tags', inputType: 'word', outputType: 'multiselect' });
+                expect(commonPresets.get(input)).to.deep.eq({ value: 'Tags', inputType: 'word', outputType: 'multi_select' });
             }
         });
 

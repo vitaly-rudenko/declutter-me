@@ -161,7 +161,7 @@ describe('RussianPresents', () => {
                 { value: 'теги' },
                 { value: 'ТЕГИ' },
             ]) {
-                expect(russianPresets.get(input)).to.deep.eq({ value: 'Теги', inputType: 'word', outputType: 'multiselect' });
+                expect(russianPresets.get(input)).to.deep.eq({ value: 'Теги', inputType: 'word', outputType: 'multi_select' });
             }
         });
 

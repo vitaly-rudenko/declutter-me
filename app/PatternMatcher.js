@@ -1,4 +1,5 @@
 const Field = require('./fields/Field');
+const Presets = require('./presets/Presets');
 
 class PatternMatcher {
     /**
@@ -15,7 +16,8 @@ class PatternMatcher {
      *     bang?: { [variable: string]: boolean }
      * }}
      */
-    match(input, pattern, { matchers, presets }) {
+    match(input, pattern, { matchers, presets: presetList }) {
+        const presets = new Presets();
         const combinations = this.getPatternCombinations(pattern);
 
         for (const combination of combinations) {
@@ -28,11 +30,13 @@ class PatternMatcher {
 
             for (const [i, token] of combination.entries()) {
                 let value = token.value;
+                let { value: name, inputType, outputType } = presets.get({
+                    value: token.value,
+                    inputType: token.inputType,
+                    outputType: token.outputType,
+                }, presetList);
 
                 if (token.type === 'variable') {
-                    const variableName = token.value;
-                    const inputType = token.inputType || token.value;
-
                     const matcher = matchers[inputType];
                     if (!matcher) {
                         throw new Error(`Unsupported matcher: ${inputType}`);
@@ -42,7 +46,7 @@ class PatternMatcher {
                     value = matcher(remainingInput, { nextTokens });
                     if (Array.isArray(value)) {
                         for (const valueVariation of value) {
-                            const matchResult = this.match(remainingInput.slice(valueVariation.length), nextTokens, { matchers, presets });
+                            const matchResult = this.match(remainingInput.slice(valueVariation.length), nextTokens, { matchers, presets: presetList });
                             if (matchResult.match) {
                                 value = valueVariation;
                                 break;
@@ -55,28 +59,28 @@ class PatternMatcher {
                     }
 
                     if (value !== undefined) {
-                        if (token.outputType === 'multi_select') {
-                            fieldMap[variableName] = new Field({
-                                name: token.value,
-                                inputType: token.inputType,
-                                outputType: token.outputType,
-                                value: fieldMap[variableName]
-                                    ? [...fieldMap[variableName].value, value]
+                        if (outputType === 'multi_select') {
+                            fieldMap[name] = new Field({
+                                name,
+                                inputType,
+                                outputType,
+                                value: fieldMap[name]
+                                    ? [...fieldMap[name].value, value]
                                     : [value]
                             })
                         } else {
-                            fieldMap[variableName] = new Field({
-                                name: token.value,
-                                inputType: token.inputType,
-                                outputType: token.outputType,
+                            fieldMap[name] = new Field({
+                                name,
+                                inputType,
+                                outputType,
                                 value,
                             });
                         }
     
-                        bang[variableName] = token.bang;
+                        bang[name] = token.bang;
                     } else {
-                        fieldMap[variableName] = undefined;
-                        bang[variableName] = false;
+                        fieldMap[name] = undefined;
+                        bang[name] = false;
                     }
                 }
 

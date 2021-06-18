@@ -39,6 +39,9 @@
                 "Alias for the database:"
             ],
             "added": "Database \"{alias}\" has been added!"
+        },
+        "template": {
+            "skipDatabase": "[skip]"
         }
     }
 }

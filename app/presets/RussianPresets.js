@@ -56,7 +56,7 @@ class RussianPresets {
             }
     
             if (fuzzyEquals(value, 'тег', 'теги')) {
-                return { value: 'Теги', inputType: 'word', outputType: 'multiselect' };
+                return { value: 'Теги', inputType: 'word', outputType: 'multi_select' };
             }
     
             if (fuzzyEquals(value, ...PHONE)) {

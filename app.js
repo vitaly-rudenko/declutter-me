@@ -67,56 +67,44 @@ const localize = (message, replacements = null) => {
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 1,
-        pattern: new PatternBuilder().build('[напомни[ть][ мне] ]{reminder} {date}'),
+        pattern: new PatternBuilder().build('купить [{Количество} (шт|штук|гр|грамм|кг|килограмм) ]{Товар}'),
         defaultFields: [
-            new Field({ inputType: 'database', value: 'reminders' })
+            new Field({ inputType: 'database', value: 'to_watch' })
         ]
     }));
 
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 2,
-        pattern: new PatternBuilder().build('{date} [напомни[ть][ мне] ]{reminder}'),
+        pattern: new PatternBuilder().build('посмотреть {Название}[ #{Тип:tag}]'),
         defaultFields: [
-            new Field({ inputType: 'database', value: 'reminders' })
+            new Field({ inputType: 'database', value: 'shows' })
         ]
     }));
 
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 3,
-        pattern: new PatternBuilder().build('купить {content}'),
+        pattern: new PatternBuilder().build('(сделать|do|todo) {Задача}'),
         defaultFields: [
-            new Field({ inputType: 'database', value: 'shopping' })
+            new Field({ inputType: 'database', value: 'todo' })
         ]
     }));
 
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 4,
-        pattern: new PatternBuilder().build('#{database} {content}')
-    }));
-
-    await storage.storeTemplate(new Template({
-        userId: user.id,
-        order: 5,
-        pattern: new PatternBuilder().build('{content} #{database!}')
-    }));
-
-    await storage.storeTemplate(new Template({
-        userId: user.id,
-        order: 6,
-        pattern: new PatternBuilder().build('{content}[ #{tag}][ #{tag}][ #{tag}]'),
+        pattern: new PatternBuilder().build('{Note}'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'notes' })
         ]
     }));
 
-
-    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'shopping', notionDatabaseId: 'ca75e1d762c24d4893e2d682c1823797' }))
-    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'recipes', notionDatabaseId: '3af8dfb79d18428b86419bd7a211084a' }))
+    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'to_watch', notionDatabaseId: 'ca75e1d762c24d4893e2d682c1823797' }))
+    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'shows', notionDatabaseId: '3af8dfb79d18428b86419bd7a211084a' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'reminders', notionDatabaseId: 'edfe4ac495d24ddd88cbe45e635d0418' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'notes', notionDatabaseId: 'a64b650b4036407385272f3867de44f3' }))
+    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'todo', notionDatabaseId: '8c83e61c0fb848ef85d6644725296a15' }))
 
     const debugChatId = process.env.DEBUG_CHAT_ID;
 
@@ -222,8 +210,8 @@ const localize = (message, replacements = null) => {
             await ctx.reply(
                 'Got it! What database would you like to use by default?',
                 Markup.inlineKeyboard([
+                    Markup.button.callback(ctx.state.localize('command.template.skipDatabase'), 'template:skip-database'),
                     ...databases.map(database => Markup.button.callback(database.alias, 'template:database:' + database.alias)),
-                    Markup.button.callback('Skip', 'template:database:alias:skip'),
                 ])
             );
 
@@ -245,9 +233,9 @@ const localize = (message, replacements = null) => {
         userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
     }));
 
-    bot.action('template:database:alias:skip', withPhase(phases.template.databaseAlias, async (ctx) => {
+    bot.action('template:skip-database', withPhase(phases.template.databaseAlias, async (ctx) => {
         await ctx.answerCbQuery();
-        await ctx.reply(`Okay! Now send me the template:`);
+        await ctx.reply('Okay! Now send me the template:');
         userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
     }));
 
