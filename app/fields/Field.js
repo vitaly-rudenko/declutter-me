@@ -1,7 +1,7 @@
 class Field {
     /**
      * @param {{
-     *     name: string,
+     *     name?: string,
      *     outputType?: string,
      *     inputType?: string,
      *     value: string | string[],

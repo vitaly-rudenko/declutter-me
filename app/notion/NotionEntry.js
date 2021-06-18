@@ -1,17 +1,7 @@
 class NotionEntry {
-    /**
-     * @param {{
-     *     databaseId: string,
-     *     fields: import('../fields/Field')[]
-     * }} attributes 
-     */
-    constructor({ databaseId, fields }) {
-        this._databaseId = databaseId;
+    /** @param {{ fields: import('../fields/Field')[] }} attributes */
+    constructor({ fields }) {
         this._fields = fields;
-    }
-
-    get databaseId() {
-        return this._databaseId;
     }
 
     get fields() {

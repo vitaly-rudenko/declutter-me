@@ -20,7 +20,7 @@
                 "  - Templates: {templates}"
             ],
             "database": "    - {alias} ({notionDatabaseId})",
-            "template": "    - {type}: {pattern}",
+            "template": "    - {pattern}",
             "notProvided": "<not provided>",
             "none": "<none>"
         },

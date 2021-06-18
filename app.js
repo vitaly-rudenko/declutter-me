@@ -1,14 +1,13 @@
 const { Telegraf, Markup } = require('telegraf');
 const { URL } = require('url');
 
+const phases = require('./app/phases');
 const PatternBuilder = require('./app/PatternBuilder');
 const PatternMatcher = require('./app/PatternMatcher');
 const RussianDateParser = require('./app/date-parsers/RussianDateParser');
-const ReminderMatchers = require('./app/reminders/ReminderMatchers');
 const InMemoryStorage = require('./app/storage/InMemoryStorage');
 const Reminder = require('./app/reminders/Reminder');
 const Template = require('./app/templates/Template');
-const NotionReminderSerializer = require('./app/reminders/NotionReminderSerializer');
 const PatternStringifier = require('./app/PatternStringifier');
 const NotionSessionManager = require('./app/notion/NotionSessionManager');
 const UserSessionManager = require('./app/users/UserSessionManager');
@@ -17,15 +16,19 @@ const withTelegramAccount = require('./app/telegram/middlewares/withTelegramAcco
 const withPhaseFactory = require('./app/telegram/middlewares/withPhaseFactory');
 const withUserFactory = require('./app/telegram/middlewares/withUserFactory');
 const withNotionFactory = require('./app/telegram/middlewares/withNotionFactory');
-const ReminderManager = require('./app/reminders/ReminderManager');
 
 require('dotenv').config();
 
 const en = require('./assets/localization/en.json');
 const NotionDatabase = require('./app/notion/NotionDatabase');
-const Entry = require('./app/entries/Entry');
-const NotionEntrySerializer = require('./app/entries/NotionEntrySerializer');
 const EntryMatchers = require('./app/entries/EntryMatchers');
+const NotionEntrySerializer = require('./app/notion/NotionEntrySerializer');
+const NotionEntry = require('./app/notion/NotionEntry');
+const Field = require('./app/fields/Field');
+const CommonPresets = require('./app/presets/CommonPresets');
+const RussianPresets = require('./app/presets/RussianPresets');
+const UkrainianPresets = require('./app/presets/UkrainianPresets');
+
 const localize = (message, replacements = null) => {
     const path = message.split('.');
 
@@ -60,12 +63,56 @@ const localize = (message, replacements = null) => {
     const user = await storage.createUser({ language: 'russian', timezoneOffsetMinutes: 3 * 60 });
     await storage.createTelegramAccount(user.id, 56681133);
     await storage.createNotionAccount(user.id, 'secret_sUmg2sizdQDYmfGrQ0amjXSuOv4tHTevLn4PVgcopG6');
-    await storage.storeTemplate(new Template({ userId: user.id, order: 1, type: 'reminder', pattern: new PatternBuilder().build('[напомни[ть][ мне] ]{reminder} {date}'), defaultVariables: { database: 'reminders' } }));
-    await storage.storeTemplate(new Template({ userId: user.id, order: 2, type: 'reminder', pattern: new PatternBuilder().build('{date} [напомни[ть][ мне] ]{reminder}'), defaultVariables: { database: 'reminders' } }));
-    await storage.storeTemplate(new Template({ userId: user.id, order: 3, type: 'entry', pattern: new PatternBuilder().build('купить {content}'), defaultVariables: { database: 'shopping' } }));
-    await storage.storeTemplate(new Template({ userId: user.id, order: 4, type: 'entry', pattern: new PatternBuilder().build('#{database} {content}') }));
-    await storage.storeTemplate(new Template({ userId: user.id, order: 5, type: 'entry', pattern: new PatternBuilder().build('{content} #{database!}') }));
-    await storage.storeTemplate(new Template({ userId: user.id, order: 6, type: 'entry', pattern: new PatternBuilder().build('{content}[ #{tag}][ #{tag}][ #{tag}]'), defaultVariables: { database: 'notes' } }));
+
+    await storage.storeTemplate(new Template({
+        userId: user.id,
+        order: 1,
+        pattern: new PatternBuilder().build('[напомни[ть][ мне] ]{reminder} {date}'),
+        defaultFields: [
+            new Field({ inputType: 'database', value: 'reminders' })
+        ]
+    }));
+
+    await storage.storeTemplate(new Template({
+        userId: user.id,
+        order: 2,
+        pattern: new PatternBuilder().build('{date} [напомни[ть][ мне] ]{reminder}'),
+        defaultFields: [
+            new Field({ inputType: 'database', value: 'reminders' })
+        ]
+    }));
+
+    await storage.storeTemplate(new Template({
+        userId: user.id,
+        order: 3,
+        pattern: new PatternBuilder().build('купить {content}'),
+        defaultFields: [
+            new Field({ inputType: 'database', value: 'shopping' })
+        ]
+    }));
+
+    await storage.storeTemplate(new Template({
+        userId: user.id,
+        order: 4,
+        pattern: new PatternBuilder().build('#{database} {content}')
+    }));
+
+    await storage.storeTemplate(new Template({
+        userId: user.id,
+        order: 5,
+        pattern: new PatternBuilder().build('{content} #{database!}')
+    }));
+
+    await storage.storeTemplate(new Template({
+        userId: user.id,
+        order: 6,
+        pattern: new PatternBuilder().build('{content}[ #{tag}][ #{tag}][ #{tag}]'),
+        defaultFields: [
+            new Field({ inputType: 'database', value: 'notes' })
+        ]
+    }));
+
+
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'shopping', notionDatabaseId: 'ca75e1d762c24d4893e2d682c1823797' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'recipes', notionDatabaseId: '3af8dfb79d18428b86419bd7a211084a' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'reminders', notionDatabaseId: 'edfe4ac495d24ddd88cbe45e635d0418' }))
@@ -94,7 +141,6 @@ const localize = (message, replacements = null) => {
 
     const userSessionManager = new UserSessionManager();
     const notionSessionManager = new NotionSessionManager({ storage });
-    const reminderManager = new ReminderManager({ notionSessionManager, storage, bot });
 
     bot.telegram.setMyCommands([
         { command: '/help', description: 'Get help' },
@@ -104,7 +150,6 @@ const localize = (message, replacements = null) => {
         { command: '/list', description: 'Add list' },
         { command: '/database', description: 'Add database' },
         { command: '/template', description: 'Add template' },
-        { command: '/sync', description: 'Sync with Notion' },
     ]);
 
     const withPhase = withPhaseFactory(userSessionManager);
@@ -153,7 +198,7 @@ const localize = (message, replacements = null) => {
                     ? '\n' + databases.map(list => ctx.state.localize('command.info.database', { notionDatabaseId: list.notionDatabaseId, alias: list.alias })).join('\n')
                     : ctx.state.localize('command.info.none'),
                 templates: templates.length > 0
-                    ? '\n' + templates.map(template => ctx.state.localize('command.info.template', { type: template.type, pattern: new PatternStringifier().stringify(template.pattern) })).join('\n')
+                    ? '\n' + templates.map(template => ctx.state.localize('command.info.template', { pattern: new PatternStringifier().stringify(template.pattern) })).join('\n')
                     : ctx.state.localize('command.info.none'),
             })
         );
@@ -161,86 +206,57 @@ const localize = (message, replacements = null) => {
 
     bot.command('notion', withUser(), async (ctx) => {
         await ctx.reply(ctx.state.localize('command.notion.yourToken'));
-        userSessionManager.setPhase(ctx.state.userId, 'notion:token');
+        userSessionManager.setPhase(ctx.state.userId, phases.notion.token);
     });
 
     bot.command('database', withUser(), withNotion(), async (ctx) => {
         await ctx.reply(ctx.state.localize('command.database.link'));
-        userSessionManager.setPhase(ctx.state.userId, 'database:link');
-    });
-
-    bot.command('sync', withUser(), withNotion(), async (ctx) => {
-        const message = await ctx.reply('Syncing...');
-
-        await reminderManager.sync(ctx.state.userId);
-
-        const closeReminders = await storage.getCloseReminders(ctx.state.userId);
-        await bot.telegram.editMessageText(ctx.from.id, message.message_id, null, `Synced! You have ${closeReminders.length} close reminders.`);
-
-        await reminderManager.send(ctx.state.userId);
+        userSessionManager.setPhase(ctx.state.userId, phases.database.link);
     });
 
     bot.command('template', withUser(), withNotion(), async (ctx) => {
-        await ctx.reply(
-            'Choose template type:',
-            Markup.inlineKeyboard([
-                Markup.button.callback('Entry', 'template:entry'),
-                Markup.button.callback('Reminder', 'template:reminder'),
-            ])
-        );
-        userSessionManager.setPhase(ctx.state.userId, 'template:type');
-    });
-
-    bot.action('template:reminder', withPhase('template:type', async (ctx) => {
-        await ctx.answerCbQuery();
-        await ctx.reply('Got it! Now send me the template:');
-
-        userSessionManager.context(ctx.state.userId).type = 'reminder';
-        userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
-    }));
-
-    bot.action('template:entry', withPhase('template:type', async (ctx) => {
-        await ctx.answerCbQuery();
-
-        userSessionManager.context(ctx.state.userId).type = 'entry';
-
+        userSessionManager.context(ctx.state.userId).defaultFields = [];
+        
         const databases = await storage.findDatabasesByUserId(ctx.state.userId);
         if (databases.length > 0) {
             await ctx.reply(
                 'Got it! What database would you like to use by default?',
                 Markup.inlineKeyboard([
-                    ...databases.map(database => Markup.button.callback(database.alias, 'template:list:' + database.alias)),
-                    Markup.button.callback('Skip', 'template:list:alias:skip'),
+                    ...databases.map(database => Markup.button.callback(database.alias, 'template:database:' + database.alias)),
+                    Markup.button.callback('Skip', 'template:database:alias:skip'),
                 ])
             );
-    
-            userSessionManager.setPhase(ctx.state.userId, 'template:database:alias');
+
+            userSessionManager.setPhase(ctx.state.userId, phases.template.databaseAlias);
         } else {
             await ctx.reply(`Okay! Now send me the template:`);
-            userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
+            userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
         }
-    }));
+    });
 
-    bot.action(/template:database:(.+)/, withPhase('template:database:alias', async (ctx) => {
+    bot.action(/template:database:(.+)/, withPhase(phases.template.databaseAlias, async (ctx) => {
         await ctx.answerCbQuery();
         
         const databaseAlias = ctx.match[1];
-        userSessionManager.context(ctx.state.userId).defaultVariables = { database: databaseAlias };
+        userSessionManager.context(ctx.state.userId)
+            .defaultFields.push(new Field({ inputType: 'database', value: databaseAlias }));
 
         await ctx.reply(`Default database: "${databaseAlias}".\nNow send me the template:`);
-        userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
+        userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
     }));
 
-    bot.action('template:database:alias:skip', withPhase('template:database:alias', async (ctx) => {
+    bot.action('template:database:alias:skip', withPhase(phases.template.databaseAlias, async (ctx) => {
         await ctx.answerCbQuery();
         await ctx.reply(`Okay! Now send me the template:`);
-        userSessionManager.setPhase(ctx.state.userId, 'template:pattern');
+        userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
     }));
 
     bot.on('message',
         withUser(),
         // Notion
-        withPhase('notion:token', async (ctx) => {
+        withPhase(phases.notion.token, async (ctx) => {
+            if (!('text' in ctx.message)) return;
+
             const token = ctx.message.text;
 
             await storage.createNotionAccount(ctx.state.userId, token);
@@ -249,7 +265,9 @@ const localize = (message, replacements = null) => {
             userSessionManager.reset
         }),
         // Databases
-        withPhase('database:link', async (ctx) => {
+        withPhase(phases.database.link, async (ctx) => {
+            if (!('text' in ctx.message)) return;
+
             const notionDatabaseId = notionDatabaseIdFromUrl(ctx.message.text);
             if (!notionDatabaseId) {
                 await ctx.reply(ctx.state.localize('command.database.invalidLink'));
@@ -257,10 +275,12 @@ const localize = (message, replacements = null) => {
             }
 
             userSessionManager.context(ctx.state.userId).notionDatabaseId = notionDatabaseId;
-            userSessionManager.setPhase(ctx.state.userId, 'database:alias');
+            userSessionManager.setPhase(ctx.state.userId, phases.database.alias);
             await ctx.reply(ctx.state.localize('command.database.alias', { match: notionDatabaseId }));
         }),
-        withPhase('database:alias', async (ctx) => {
+        withPhase(phases.database.alias, async (ctx) => {
+            if (!('text' in ctx.message)) return;
+
             const alias = databaseAlias(ctx.message.text);
             if (!alias) {
                 await ctx.reply(ctx.state.localize('command.database.invalidAlias'));
@@ -280,15 +300,16 @@ const localize = (message, replacements = null) => {
             await ctx.reply(ctx.state.localize('command.databases.added', { alias }));
         }),
         // Patterns
-        withPhase('template:pattern', async (ctx) => {
+        withPhase(phases.template.pattern, async (ctx) => {
+            if (!('text' in ctx.message)) return;
+
             const pattern = new PatternBuilder().build(ctx.message.text);
-            const { type, defaultVariables } = userSessionManager.context(ctx.state.userId);
+            const { defaultFields } = userSessionManager.context(ctx.state.userId);
 
             await storage.storeTemplate(
                 new Template({
-                    type,
                     pattern,
-                    defaultVariables,
+                    defaultFields,
                     userId: ctx.state.userId,
                 })
             );
@@ -299,81 +320,93 @@ const localize = (message, replacements = null) => {
         // Handle message
         withNotion(),
         withPhase(null, async (ctx) => {
-            const { userId, user: { timezoneOffsetMinutes }, notionAccount, notion } = ctx.state;
-
-            if (!ctx.message.text || ctx.message.text.startsWith('/')) {
-                return;
-            }
+            if (!('text' in ctx.message)) return;
+            if (ctx.message.text.startsWith('/')) return;
+            
+            const { userId, user, notion } = ctx.state;
     
             const templates = await storage.findTemplatesByUserId(userId);
     
             const dateParser = new RussianDateParser();
             const patternMatcher = new PatternMatcher();
-            const entryMatchers = new EntryMatchers();
-            const reminderMatchers = new ReminderMatchers({ dateParser });
+            const entryMatchers = new EntryMatchers({ dateParser });
 
             for (const template of templates) {
-                const matchers = template.type === 'entry'
-                    ? entryMatchers
-                    : reminderMatchers;
-    
-                const result = patternMatcher.match(ctx.message.text, template.pattern, matchers);
-                const variables = { ...template.defaultVariables, ...result.variables };
-    
-                if (result.match) {    
-                    if (template.type === 'reminder') {
-                        const reminder = new Reminder({
-                            content: variables.reminder,
-                            date: dateParser.parse(variables.date),
-                        });
+                const result = patternMatcher.match(
+                    ctx.message.text,
+                    template.pattern,
+                    {
+                        matchers: entryMatchers,
+                        presets: [
+                            new UkrainianPresets(),
+                            new RussianPresets(),
+                            new CommonPresets(),
+                        ]
+                    }
+                );
 
-                        const reminderPage = await notion.pages.create(
-                            new NotionReminderSerializer().serialize({
-                                databaseId: notionAccount.remindersDatabaseId,
-                                timezoneOffsetMinutes,
-                                reminder,
-                            })
-                        );
+                if (!result.match) continue;
 
-                        const parsedReminder = new NotionReminderSerializer().deserialize(reminderPage);
-                        if (parsedReminder && reminderManager.isClose(parsedReminder)) {
-                            await storage.addCloseReminder(userId, parsedReminder);
+                /**
+                 * @param {Field[]} fields1
+                 * @param {Field[]} fields2
+                 */
+                function mergeFields(fields1, fields2) {
+                    const result = [...fields1];
+
+                    for (const field of fields2) {
+                        const index = result.findIndex(f => f.name === field.name);
+                        if (index !== -1) {
+                            result.splice(index, 1);
                         }
-                    } else if (template.type === 'entry') {
-                        const entry = new Entry({
-                            content: variables.content,
-                            tags: variables.tag
-                            ? Array.isArray(variables.tag)
-                                ? variables.tag
-                                : [variables.tag]
-                            : []
-                        });
-
-                        const databaseAlias = variables.database;
-                        if (!databaseAlias) {
-                            await ctx.reply('Please add a default database for this pattern');
-                            return;
-                        }
-
-                        const database = await storage.findDatabaseByAlias(userId, databaseAlias);
-                        if (!database) {
-                            if (result.bang?.database) continue;
-                            await ctx.reply(`Could not find the database: "${databaseAlias}"`);
-                            return;
-                        }
-                        
-                        await notion.pages.create(
-                            new NotionEntrySerializer().serialize({
-                                databaseId: database.notionDatabaseId,
-                                entry,
-                            })
-                        );
+                        result.push(field)
                     }
 
-                    await ctx.reply('It\'s a match! 🎉\n\n' + JSON.stringify(variables, null, 2));
-                    
+                    return result;
+                }
+
+                const fields = mergeFields(template.defaultFields, result.fields)
+
+                const databaseAlias = fields.find(field => field.inputType === 'database')?.value;
+                if (!databaseAlias) {
+                    await ctx.reply('Please add a default database for this pattern');
                     return;
                 }
+
+                const database = await storage.findDatabaseByAlias(userId, databaseAlias);
+                if (!database) {
+                    if (result.bang?.database) continue;
+                    await ctx.reply(`Could not find the database: "${databaseAlias}"`);
+                    return;
+                }
+
+                const notionEntry = new NotionEntry({
+                    fields,
+                });
+                
+                await notion.pages.create(
+                    new NotionEntrySerializer({
+                        dateParser,
+                    }).serialize(
+                        database.notionDatabaseId,
+                        notionEntry,
+                        user,
+                    )
+                );
+
+                await ctx.reply(
+                    'It\'s a match! 🎉\n\n' + JSON.stringify(
+                        fields.map(field => ({
+                            name: field.name,
+                            inputType: field.inputType,
+                            outputType: field.outputType,
+                            value: field.value,
+                        })),
+                        null,
+                        2
+                    )
+                );
+                return;
             }
     
             await ctx.reply('What was it? 🤔');

@@ -16,16 +16,14 @@ describe('NotionEntrySerializer', () => {
     beforeEach(() => {
         dateParser = spy({ parse: () => utcDate('2015-06-07 12:34') });
 
-        notionEntrySerializer = new NotionEntrySerializer({
-            dateParser,
-        });
+        notionEntrySerializer = new NotionEntrySerializer({ dateParser });
     });
 
     describe('serialize()', () => {
         it('should serialize entries properly', () => {
             expect(notionEntrySerializer.serialize(
+                'fake-database-id',
                 new NotionEntry({
-                    databaseId: 'fake-database-id',
                     fields: [
                         new Field({
                             name: '@the Title',
@@ -104,14 +102,8 @@ describe('NotionEntrySerializer', () => {
             });
 
             expect(dateParser.parse).to.have.been.calledTwice;
-            expect(dateParser.parse).to.have.been.calledWithExactly('в 8:05', {
-                language: 'fake-language',
-                futureOnly: false,
-            });
-            expect(dateParser.parse).to.have.been.calledWithExactly('в 12:00', {
-                language: 'fake-language',
-                futureOnly: true,
-            });
+            expect(dateParser.parse).to.have.been.calledWithExactly('в 8:05', { futureOnly: false });
+            expect(dateParser.parse).to.have.been.calledWithExactly('в 12:00', { futureOnly: true });
         });
     });
 });

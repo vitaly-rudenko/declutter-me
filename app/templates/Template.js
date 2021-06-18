@@ -1,29 +1,31 @@
 class Template {
-    constructor({ userId, type, pattern, order = null, defaultVariables = {} }) {
+    /**
+     * @param {{
+     *     userId: string,
+     *     pattern: any[],
+     *     order?: number | null,
+     *     defaultFields?: import('../fields/Field')[]
+     * }} attributes
+     */
+    constructor({ userId, pattern, order = null, defaultFields = [] }) {
         this._userId = userId;
-        this._type = type;
         this._order = order;
         this._pattern = pattern;
-        this._defaultVariables = defaultVariables;
+        this._defaultFields = defaultFields;
     }
 
     clone(override = {}) {
         return new Template({
             userId: this._userId,
-            type: this._type,
             order: this._order,
             pattern: this._pattern,
-            defaultVariables: this._defaultVariables,
+            defaultFields: this._defaultFields,
             ...override,
         });
     }
 
     get userId() {
         return this._userId;
-    }
-
-    get type() {
-        return this._type;
     }
 
     get order() {
@@ -34,8 +36,8 @@ class Template {
         return this._pattern;
     }
 
-    get defaultVariables() {
-        return this._defaultVariables;
+    get defaultFields() {
+        return this._defaultFields;
     }
 
 }

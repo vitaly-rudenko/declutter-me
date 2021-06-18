@@ -7,7 +7,7 @@ class PatternMatcher {
      * @param {any[]} pattern
      * @param {{
      *     matchers: import('./entries/EntryMatchers'),
-     *     presets?: import('./presets/EnglishPresets'),
+     *     presets?: import('./presets/CommonPresets')[],
      * }} params
      * @returns {{
      *     match: boolean,

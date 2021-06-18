@@ -3,17 +3,18 @@ function last(arrayOrValue) {
 }
 
 class NotionEntrySerializer {
-    /** @param {{ dateParser: import('../date-parsers/DateParserFactory') }} dependencies */
+    /** @param {{ dateParser: import('../date-parsers/RussianDateParser') }} dependencies */
     constructor({ dateParser }) {
         this._dateParser = dateParser;
     }
 
     /**
+     * @param {string} notionDatabaseId
      * @param {import('./NotionEntry')} notionEntry
      * @param {import('../users/User')} user
      * @returns {import('@notionhq/client/build/src/api-endpoints').PagesCreateParameters}
      */
-    serialize(notionEntry, user) {
+    serialize(notionDatabaseId, notionEntry, user) {
         const properties = {};
 
         for (const field of notionEntry.fields) {
@@ -25,7 +26,6 @@ class NotionEntrySerializer {
                 properties[field.name] = this.serializeMultiSelect(field.value);
             } else if (field.outputType === 'date') {
                 const date = this._dateParser.parse(last(field.value), {
-                    language: user.language,
                     futureOnly: field.inputType === 'future_date',
                 });
 
@@ -37,7 +37,7 @@ class NotionEntrySerializer {
 
         return {
             'parent': {
-                'database_id': notionEntry.databaseId
+                'database_id': notionDatabaseId
             },
             'properties': {
                 ...properties,
