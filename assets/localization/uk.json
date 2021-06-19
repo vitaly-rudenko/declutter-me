@@ -1,3 +1,82 @@
 {
-    
+    "chooseLanguage": "Мова: {language}",
+    "language": {
+        "ukrainian": "Українська",
+        "english": "English",
+        "russian": "Русский"
+    },
+    "command": {
+        "start": {
+            "readyToGo": "Все готово!",
+            "start.useNotionCommand": "Привіт! Скористайся командою /notion щоб підключити Notion."
+        },
+        "info": {
+            "response": [
+                "Привіт, {name}!",
+                "",
+                "Твої настройки:",
+                "  - Мова: {language}",
+                "  - Часовий пояс: {timezone}",
+                "  - Токен Notion: {notionToken}",
+                "  - Бази даних: {databases}",
+                "  - Шаблони: {templates}"
+            ],
+            "database": "    - {alias} ({notionDatabaseId})",
+            "template": "    - {pattern}",
+            "notProvided": "<не налаштовано>",
+            "none": "<порожньо>"
+        },
+        "notion": {
+            "yourToken": "Твій токен інтеграції з Notion:",
+            "allSet": [
+                "Зрозумів, це \"{token}\".",
+                "",
+                "Відмінно, ти підключив Notion!",
+                "Додай бази даних за допомогою команди /database."
+            ]
+        },
+        "database": {
+            "link": "Посилання на базу даних:",
+            "alias": [
+                "Зрозумів, це \"{match}\".",
+                "",
+                "Назва бази даних:"
+            ],
+            "added": "База даних \"{alias}\" була додана!"
+        },
+        "template": {
+            "chooseDatabase": "Відмінно! Яку базу даних використовувати за замовчуванням для цього шаблону?",
+            "skipDatabase": "[пропустити]",
+            "databaseChosen": [
+                "Зрозумів, база даних: \"{database}\".",
+                "",
+                "Тепер відправ сам шаблон:"
+            ],
+            "sendTemplate": "Зрозумів, тепер відправ сам шаблон:",
+            "added": "Шаблон був доданий!"
+        }
+    },
+    "match": {
+        "checking": "Хм, хвилинку... ⏳",
+        "noDatabaseSpecified": "Я не знаю в яку базу даних це записати 😔",
+        "databaseNotFound": "Я не знайшов цю базу даних: \"{database}\"",
+        "patternMatched": [
+            "Добре, я зберіг! 🎉",
+            "",
+            "Поля:",
+            "{fields}"
+        ],
+        "patternMatchDatabaseFieldName": "База даних",
+        "patternMatchField": "- {name}: {value}",
+        "noPatternMatched": "Що-що? 🤔"
+    },
+    "help": {
+        "command": {
+            "start": "Запустити бота",
+            "info": "Інформація",
+            "notion": "Налаштувати Notion",
+            "database": "Додати базу даних",
+            "template": "Додати шаблон"
+        }
+    }
 }

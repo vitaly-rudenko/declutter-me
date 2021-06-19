@@ -1,4 +1,5 @@
 {
+    "chooseLanguage": "Язык: {language}",
     "language": {
         "ukrainian": "Українська",
         "english": "English",
@@ -12,6 +13,7 @@
         "info": {
             "response": [
                 "Привет, {name}!",
+                "",
                 "Твои настройки:",
                 "  - Язык: {language}",
                 "  - Часовой пояс: {timezone}",
@@ -28,6 +30,7 @@
             "yourToken": "Твой токен интеграции с Notion:",
             "allSet": [
                 "Понял, это \"{token}\".",
+                "",
                 "Отлично, ты подключил Notion!",
                 "Добавь базы данных с помощью команды /database."
             ]
@@ -36,6 +39,7 @@
             "link": "Ссылка на базу данных:",
             "alias": [
                 "Понял, это \"{match}\".",
+                "",
                 "Название базы данных:"
             ],
             "added": "База данных \"{alias}\" была добавлена!"
@@ -43,22 +47,31 @@
         "template": {
             "chooseDatabase": "Отлично! Какую базу данных использовать по умолчанию для этого шаблона?",
             "skipDatabase": "[пропустить]",
-            "databaseChosen": "Понял, база данных: \"{database}\".\nТеперь отправь сам шаблон:",
+            "databaseChosen": [
+                "Понял, база данных: \"{database}\".",
+                "",
+                "Теперь отправь сам шаблон:"
+            ],
             "sendTemplate": "Понял, теперь отправь сам шаблон:",
             "added": "Шаблон был добавлен!"
         }
     },
     "match": {
+        "checking": "Хм, минутку... ⏳",
         "noDatabaseSpecified": "Я не знаю в какую базу данных это записать 😔",
         "databaseNotFound": "Я не нашел эту базу данных: \"{database}\"",
-        "patternMatched": "Хорошо, сохраняю! 🎉\nПоля:\n{fields}",
+        "patternMatched": [
+            "Хорошо, я сохранил! 🎉",
+            "",
+            "Поля:",
+            "{fields}"
+        ],
         "patternMatchDatabaseFieldName": "База данных",
         "patternMatchField": "  - {name}: {value}",
-        "noPatternMatched": "Что-то? 🤔"
+        "noPatternMatched": "Что-что? 🤔"
     },
     "help": {
         "command": {
-            "help": "Помощь",
             "start": "Запустить бота",
             "info": "Информация",
             "notion": "Настроить Notion",

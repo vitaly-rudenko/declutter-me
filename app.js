@@ -122,7 +122,7 @@ const Language = require('./app/Language');
     const notionSessionManager = new NotionSessionManager({ storage });
 
     bot.telegram.setMyCommands(
-        ['help', 'start', 'info', 'notion', 'database', 'template']
+        ['start', 'info', 'notion', 'database', 'template']
             .map(command => ({
                 command: `/${command}`,
                 description: localize(`help.command.${command}`, null, Language.ENGLISH)
@@ -320,6 +320,7 @@ const Language = require('./app/Language');
                 );
 
                 if (!result.match) continue;
+                const message = await ctx.reply(ctx.state.localize('match.checking'));
 
                 /**
                  * @param {Field[]} fields1
@@ -373,7 +374,10 @@ const Language = require('./app/Language');
                     )
                 );
 
-                await ctx.reply(
+                await bot.telegram.editMessageText(
+                    message.chat.id,
+                    message.message_id,
+                    null,
                     ctx.state.localize('match.patternMatched', {
                         fields: fields.map(field => ctx.state.localize(
                             'match.patternMatchField',
