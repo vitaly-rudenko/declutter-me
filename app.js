@@ -84,7 +84,7 @@ const Language = require('./app/Language');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 6,
-        pattern: new PatternBuilder().build('[заметка ]{Заметка:text:title}[ #{Теги:word:multi_select}][ #{Теги:word:multi_select}][ #{Теги:word:multi_select}]'),
+        pattern: new PatternBuilder().build('[#{database} ][заметка ]{Заметка:text:title}[ #{Теги:word:multi_select}][ #{Теги:word:multi_select}][ #{Теги:word:multi_select}]'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'notes' })
         ]
@@ -93,6 +93,7 @@ const Language = require('./app/Language');
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'to_watch', notionDatabaseId: 'ca75e1d762c24d4893e2d682c1823797' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'shows', notionDatabaseId: '3af8dfb79d18428b86419bd7a211084a' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'notes', notionDatabaseId: 'a64b650b4036407385272f3867de44f3' }))
+    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'backup_notes', notionDatabaseId: '6ea2673f45fe428aa758da2aaf1316d7' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'todo', notionDatabaseId: '8c83e61c0fb848ef85d6644725296a15' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'contacts', notionDatabaseId: 'ce850d3910b24a64b5cf4f6da28738bf' }))
 
@@ -193,7 +194,7 @@ const Language = require('./app/Language');
         const databases = await storage.findDatabasesByUserId(ctx.state.userId);
         if (databases.length > 0) {
             await ctx.reply(
-                'Got it! What database would you like to use by default?',
+                ctx.state.localize('command.template.chooseDatabase'),
                 Markup.inlineKeyboard([
                     Markup.button.callback(ctx.state.localize('command.template.skipDatabase'), 'template:skip-database'),
                     ...databases.map(database => Markup.button.callback(database.alias, 'template:database:' + database.alias)),
@@ -202,7 +203,7 @@ const Language = require('./app/Language');
 
             userSessionManager.setPhase(ctx.state.userId, phases.template.databaseAlias);
         } else {
-            await ctx.reply(`Okay! Now send me the template:`);
+            await ctx.reply(ctx.state.localize('command.template.sendTemplate'));
             userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
         }
     });
@@ -220,7 +221,7 @@ const Language = require('./app/Language');
 
     bot.action('template:skip-database', withPhase(phases.template.databaseAlias, async (ctx) => {
         await ctx.answerCbQuery();
-        await ctx.reply('Okay! Now send me the template:');
+        await ctx.reply(ctx.state.localize('command.template.sendTemplate'));
         userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
     }));
 
@@ -288,7 +289,7 @@ const Language = require('./app/Language');
             );
 
             userSessionManager.reset(ctx.state.userId);
-            await ctx.reply('Template has been added!');
+            await ctx.reply(ctx.state.localize('command.template.added'));
         }),
         // Handle message
         withNotion(),
@@ -328,10 +329,15 @@ const Language = require('./app/Language');
                     const result = [...fields1];
 
                     for (const field of fields2) {
-                        const index = result.findIndex(f => f.name === field.name);
+                        const index = result.findIndex(f => (
+                            f.name === field.name ||
+                            (f.inputType === 'database' && field.inputType === 'database')
+                        ));
+
                         if (index !== -1) {
                             result.splice(index, 1);
                         }
+
                         result.push(field)
                     }
 
@@ -342,14 +348,14 @@ const Language = require('./app/Language');
 
                 const databaseAlias = fields.find(field => field.inputType === 'database')?.value;
                 if (!databaseAlias) {
-                    await ctx.reply('Please add a default database for this pattern');
+                    await ctx.reply(ctx.state.localize('match.noDatabaseSpecified'));
                     return;
                 }
 
                 const database = await storage.findDatabaseByAlias(userId, databaseAlias);
                 if (!database) {
                     if (result.bang?.database) continue;
-                    await ctx.reply(`Could not find the database: "${databaseAlias}"`);
+                    await ctx.reply(ctx.state.localize('match.databaseNotFound', { database: databaseAlias }));
                     return;
                 }
 
@@ -368,28 +374,24 @@ const Language = require('./app/Language');
                 );
 
                 await ctx.reply(
-                    'It\'s a match! 🎉\n\n' + JSON.stringify(
-                        fields.map(field => ({
-                            name: field.name,
-                            inputType: field.inputType,
-                            outputType: field.outputType,
-                            value: field.value,
-                        })),
-                        null,
-                        2
-                    )
+                    ctx.state.localize('match.patternMatched', {
+                        fields: fields.map(field => ctx.state.localize(
+                            'match.patternMatchField',
+                            {
+                                name: field.inputType === 'database'
+                                    ? ctx.state.localize('match.patternMatchDatabaseFieldName')
+                                    : field.name,
+                                value: field.value
+                            }
+                        )).join('\n')
+                    })
                 );
                 return;
             }
     
-            await ctx.reply('What was it? 🤔');
+            await ctx.reply(ctx.state.localize('match.noPatternMatched'));
         })
     );
-
-    bot.command('reset', async (ctx) => {
-        await storage.cleanUp();
-        await ctx.reply('Done!');
-    });
 
     bot.catch(async (error) => {
         await logError(error);
