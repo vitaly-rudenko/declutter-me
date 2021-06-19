@@ -1,4 +1,3 @@
-const { Client } = require('@notionhq/client');
 const NotionAccountNotFound = require('../../errors/NotionAccountNotFound');
 
 /** @param {import('../../notion/NotionSessionManager')} notionSessionManager */

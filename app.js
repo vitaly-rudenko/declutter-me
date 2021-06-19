@@ -337,7 +337,7 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
             );
 
             userSessionManager.reset(ctx.state.userId);
-            await ctx.reply(ctx.state.localize('command.databases.added', { alias }));
+            await ctx.reply(ctx.state.localize('command.database.added', { alias }));
         }),
         // Patterns
         withPhase(phases.template.pattern, async (ctx) => {
@@ -415,14 +415,24 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
 
                 const databaseAlias = fields.find(field => field.inputType === 'database')?.value;
                 if (!databaseAlias) {
-                    await ctx.reply(ctx.state.localize('match.noDatabaseSpecified'));
+                    await bot.telegram.editMessageText(
+                        message.chat.id,
+                        message.message_id,
+                        null,
+                        ctx.state.localize('match.noDatabaseSpecified')
+                    );
                     return;
                 }
 
                 const database = await storage.findDatabaseByAlias(userId, databaseAlias);
                 if (!database) {
                     if (result.bang?.database) continue;
-                    await ctx.reply(ctx.state.localize('match.databaseNotFound', { database: databaseAlias }));
+                    await bot.telegram.editMessageText(
+                        message.chat.id,
+                        message.message_id,
+                        null,
+                        ctx.state.localize('match.databaseNotFound', { database: databaseAlias })
+                    );
                     return;
                 }
 
@@ -442,7 +452,12 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
                     );
                 } catch (error) {
                     try {
-                        await ctx.reply(ctx.state.localize('match.failed', { error: error.message }));
+                        await bot.telegram.editMessageText(
+                            message.chat.id,
+                            message.message_id,
+                            null,
+                            ctx.state.localize('match.failed', { error: error.message })
+                        );
                     } catch (error) {}
 
                     throw error;

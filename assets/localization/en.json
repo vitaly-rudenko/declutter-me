@@ -11,7 +11,10 @@
             "invalidTimezone": "Invalid timezone! Should look something like \"GMT+3\"",
             "timezone": [
                 "Got it! Now send your timezone offset.",
-                "Examples: +3:00, GMT-3, UTC"
+                "Examples: +3:00, GMT-3, UTC",
+                "",
+                "If confused, try this:",
+                "https://my-timezone.narcissemaximil.repl.co/"
             ],
             "finished": [
                 "Got it! 🚀",
