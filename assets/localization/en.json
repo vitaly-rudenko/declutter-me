@@ -1,0 +1,103 @@
+{
+    "chooseLanguage": "Language: {language}",
+    "language": {
+        "ukrainian": "Українська",
+        "english": "English",
+        "russian": "Русский"
+    },
+    "notionNotConfigured": "First you need to configure /notion 🙇",
+    "command": {
+        "help": "Hi! Use /notion to setup Notion integration.",
+        "start": {
+            "invalidTimezone": "Invalid timezone! Should look something like \"GMT+3\"",
+            "timezone": [
+                "Got it! Now send your timezone offset.",
+                "Examples: +3:00, GMT-3, UTC",
+                "",
+                "If confused, try this:",
+                "https://my-timezone.narcissemaximil.repl.co/"
+            ],
+            "finished": [
+                "Got it! 🚀",
+                "",
+                "Your language: {language}",
+                "Your timezone: {timezone}"
+            ]
+        },
+        "info": {
+            "response": [
+                "Hi, {name}!",
+                "",
+                "Language: {language}",
+                "Timezone: {timezone}",
+                "Notion token: {notionToken}",
+                "",
+                "Databases: {databases}",
+                "",
+                "Templates: {templates}"
+            ],
+            "database": "- {alias} ({notionDatabaseId})",
+            "template": "{order}. {pattern}",
+            "notProvided": "<not provided>",
+            "none": "<none>"
+        },
+        "notion": {
+            "yourToken": "Your Notion integration token:",
+            "allSet": [
+                "It's \"{token}\".",
+                "",
+                "Great, your Notion integration is all set!",
+                "Start adding databases using /database command."
+            ]
+        },
+        "database": {
+            "link": "Link to the database:",
+            "alias": [
+                "It's \"{match}\".",
+                "",
+                "Alias for the database:"
+            ],
+            "added": "Database \"{alias}\" has been added!"
+        },
+        "template": {
+            "chooseDatabase": "Got it! What database would you like to use by default?",
+            "skipDatabase": "[skip]",
+            "databaseChosen": [
+                "Default database: \"{database}\".",
+                "",
+                "Now send me the template:"
+            ],
+            "sendTemplate": "Okay! Now send me the template:",
+            "added": "Template has been added!"
+        }
+    },
+    "match": {
+        "checking": "Hm, wait a minute... ⏳",
+        "noDatabaseSpecified": "I don't know which database to use 😔",
+        "databaseNotFound": "Could not find the database: \"{database}\"",
+        "failed": [
+            "❌ Could not save the entry!",
+            "Please check your patterns and databases, or contact the administrator.",
+            "",
+            "Error: {error}"
+        ],
+        "patternMatched": [
+            "Got it, saved! 🎉",
+            "",
+            "Fields:",
+            "{fields}"
+        ],
+        "patternMatchDatabaseFieldName": "Database",
+        "patternMatchField": "- {name}: {value}",
+        "noPatternMatched": "What was it? 🤔"
+    },
+    "help": {
+        "command": {
+            "start": "Start the bot",
+            "info": "Get your information",
+            "notion": "Configure Notion integration",
+            "database": "Add a database",
+            "template": "Add a template"
+        }
+    }
+}

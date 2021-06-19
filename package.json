@@ -7,14 +7,18 @@
     "start": "node app.js",
     "debug": "nodemon app.js",
     "test": "mocha --recursive",
-    "test:watch": "npm run test -- --watch"
+    "test:watch": "npm run test -- --watch",
+    "test:mutate": "stryker run"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitaly-rudenko/declutter-me.git"
   },
   "keywords": [
-    "organizer"
+    "organizer",
+    "notes",
+    "telegram-bot",
+    "notion"
   ],
   "author": "Vitaly Rudenko",
   "license": "GPL-3.0-only",
@@ -23,6 +27,8 @@
   },
   "homepage": "https://github.com/vitaly-rudenko/declutter-me#readme",
   "devDependencies": {
+    "@stryker-mutator/core": "5.0.1",
+    "@stryker-mutator/mocha-runner": "5.0.1",
     "chai": "4.3.4",
     "chai-as-promised": "7.1.1",
     "deep-equal-in-any-order": "1.0.28",
@@ -35,6 +41,7 @@
     "@notionhq/client": "0.1.8",
     "better-sqlite3": "7.4.0",
     "dotenv": "10.0.0",
+    "log4js": "6.3.0",
     "telegraf": "4.3.0"
   }
 }

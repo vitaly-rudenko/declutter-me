@@ -1,16 +1,21 @@
+/** @typedef {import('telegraf').Context} Context */
+
 /** @param {import('../../users/UserSessionManager')} userSessionManager */
 const withPhaseFactory = (userSessionManager) => {
     /**
      * @param {string | null} phase
-     * @param {Function} middleware
+     * @param {(context: T, next: Function) => any} middleware
+     * @template {Context} T
      */
     return (phase, middleware) => {
-        /** @param {import('telegraf').Context} context @param {Function} next */
+        /** @param {T} context @param {Function} next */
         return async (context, next) => {
-            if ((userSessionManager.getPhase(context.state.userId) || null) === phase) {
-                return middleware(context, next);
+            const userId = context.state.userId ?? context.from.id;
+
+            if (userSessionManager.getPhase(userId) === phase) {
+                await middleware(context, next);
             } else {
-                return next();
+                next();
             }
         }
     };

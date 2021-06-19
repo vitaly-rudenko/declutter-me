@@ -1,45 +1,52 @@
-function toString(token) {
-    if (token.type === 'variable') {
-
-    }
-}
+const Field = require('./fields/Field');
+const Presets = require('./presets/Presets');
 
 class PatternMatcher {
     /**
      * 
      * @param {string} input
      * @param {any[]} pattern
-     * @param {any} matchers
+     * @param {{
+     *     matchers: import('./entries/EntryMatchers'),
+     *     presets?: import('./presets/CommonPresets')[],
+     * }} params
      * @returns {{
      *     match: boolean,
-     *     variables?: any,
-     *     bang?: any
+     *     fields?: Field[],
+     *     bang?: { [variable: string]: boolean }
      * }}
      */
-    match(input, pattern, matchers) {
+    match(input, pattern, { matchers, presets: presetList }) {
+        const presets = new Presets();
         const combinations = this.getPatternCombinations(pattern);
 
-        for (const [j, combination] of combinations.entries()) {
+        for (const combination of combinations) {
             let remainingInput = input;
 
             let match = true;
-            const variables = {};
+            /** @type {{ [variable: string]: Field }} */
+            const fieldMap = {};
             const bang = {};
 
             for (const [i, token] of combination.entries()) {
                 let value = token.value;
+                let { value: name, inputType, outputType } = presets.get({
+                    value: token.value,
+                    inputType: token.inputType,
+                    outputType: token.outputType,
+                }, presetList);
 
                 if (token.type === 'variable') {
-                    const matcher = matchers[token.value];
+                    const matcher = matchers[inputType];
                     if (!matcher) {
-                        throw new Error(`Unsupported matcher: ${token.value}`);
+                        throw new Error(`Unsupported matcher: ${inputType}`);
                     }
 
                     const nextTokens = combination.slice(i + 1);
                     value = matcher(remainingInput, { nextTokens });
                     if (Array.isArray(value)) {
                         for (const valueVariation of value) {
-                            const matchResult = this.match(remainingInput.slice(valueVariation.length), nextTokens, matchers);
+                            const matchResult = this.match(remainingInput.slice(valueVariation.length), nextTokens, { matchers, presets: presetList });
                             if (matchResult.match) {
                                 value = valueVariation;
                                 break;
@@ -51,17 +58,29 @@ class PatternMatcher {
                         }
                     }
 
-                    if (variables[token.value] === undefined) {
-                        variables[token.value] = value;
-                    } else if (Array.isArray(variables[token.value])) {
-                        variables[token.value].push(value);
+                    if (value !== undefined && value !== null) {
+                        if (outputType === 'multi_select') {
+                            fieldMap[name] = new Field({
+                                name,
+                                inputType,
+                                outputType,
+                                value: fieldMap[name]
+                                    ? [...fieldMap[name].value, value]
+                                    : [value]
+                            })
+                        } else {
+                            fieldMap[name] = new Field({
+                                name,
+                                inputType,
+                                outputType,
+                                value,
+                            });
+                        }
+    
+                        bang[name] = token.bang;
                     } else {
-                        variables[token.value] = [variables[token.value], value];
-                    }
-
-                    delete bang[token.value];
-                    if (variables[token.value] !== undefined && token.bang) {
-                        bang[token.value] = token.bang;
+                        fieldMap[name] = undefined;
+                        bang[name] = false;
                     }
                 }
 
@@ -74,10 +93,13 @@ class PatternMatcher {
             }
 
             if (match && remainingInput.length === 0) {
+                const filteredBang = Object.entries(bang).filter(([,value]) => value);
+                const fields = Object.values(fieldMap);
+
                 return {
                     match: true,
-                    variables,
-                    ...Object.keys(bang).length > 0 && { bang },
+                    ...fields.length > 0 && { fields },
+                    ...filteredBang.length > 0 && { bang: Object.fromEntries(filteredBang) },
                 };
             }
         }

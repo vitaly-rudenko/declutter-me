@@ -1,7 +1,5 @@
 class PatternBuilder {
     build(input) {
-        input = input.toLowerCase();
-
         const result = [];
 
         let currentType = 'text';
@@ -67,9 +65,19 @@ class PatternBuilder {
                 value.length > 0 &&
                 (currentType !== type || character === null)
             ) {
-                const isBang = currentType === 'variable' && value.endsWith('!');
-                if (isBang) {
-                    value = value.slice(0, -1);
+                const metadata = {};
+
+                if (currentType === 'variable') {
+                    if (value.endsWith('!')) {
+                        metadata.bang = true;
+                        value = value.slice(0, -1);
+                    }
+
+                    let inputType, outputType;
+                    [value, inputType, outputType] = value.split(':');
+
+                    if (inputType) metadata.inputType = inputType;
+                    if (outputType) metadata.outputType = outputType;
                 }
 
                 result.push({
@@ -78,8 +86,10 @@ class PatternBuilder {
                         ? this.build(value)
                         : currentType === 'variational'
                             ? value.split('|').map(v => this.build(v))
-                            : value,
-                    ...isBang && { bang: true },
+                            : currentType === 'variable'
+                                ? value
+                                : value.toLowerCase(),
+                    ...metadata,
                 });
                 value = '';
             }

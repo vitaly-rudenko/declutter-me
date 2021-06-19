@@ -1,25 +1,29 @@
 class Reminder {
-    constructor({ id = null, content, date, reminded = false }) {
+    constructor({ id, date, body }) {
         this._id = id;
-        this._content = content;
         this._date = date;
-        this._reminded = reminded;
+        this._body = body;
+    }
+
+    clone(attributeChanges = {}) {
+        return new Reminder({
+            id: this._id,
+            date: this._date,
+            body: this._body,
+            ...attributeChanges,
+        });
     }
 
     get id() {
         return this._id;
     }
 
-    get content() {
-        return this._content;
-    }
-
     get date() {
         return this._date;
     }
 
-    get reminded() {
-        return this._reminded;
+    get body() {
+        return this._body;
     }
 }
 

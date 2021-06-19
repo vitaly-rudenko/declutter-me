@@ -1,4 +1,3 @@
-const { Client } = require('@notionhq/client');
 const NotionAccountNotFound = require('../../errors/NotionAccountNotFound');
 
 /** @param {import('../../notion/NotionSessionManager')} notionSessionManager */
@@ -15,7 +14,7 @@ const withNotionFactory = (notionSessionManager) => {
             } catch (error) {
                 if (error instanceof NotionAccountNotFound) {
                     if (required) {
-                        await ctx.reply('Please use `/notion` first 🙇');
+                        await ctx.reply(ctx.state.localize('notionNotConfigured'));
                         return;
                     }
                 }
@@ -23,7 +22,7 @@ const withNotionFactory = (notionSessionManager) => {
                 throw error;
             }
 
-            return next();
+            next();
         };
     };
 };

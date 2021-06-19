@@ -1,0 +1,103 @@
+{
+    "chooseLanguage": "Язык: {language}",
+    "language": {
+        "ukrainian": "Українська",
+        "english": "English",
+        "russian": "Русский"
+    },
+    "notionNotConfigured": "Сначала тебе нужно настроить /notion 🙇",
+    "command": {
+        "help": "Привет! Воспользуйся командой /notion чтобы подключить Notion.",
+        "start": {
+            "invalidTimezone": "Неправильный часовой пояс! Должно выглядеть примерно так: \"GMT+3\"",
+            "timezone": [
+                "Принято! Теперь отправь свой часовой пояс.",
+                "Примеры: +3:00, GMT-3, UTC",
+                "",
+                "Если непонятно, попробуй это:",
+                "https://my-timezone.narcissemaximil.repl.co/"
+            ],
+            "finished": [
+                "Отлично! 🚀",
+                "",
+                "Язык: {language}",
+                "Часовой пояс: {timezone}"
+            ]
+        },
+        "info": {
+            "response": [
+                "Привет, {name}!",
+                "",
+                "Язык: {language}",
+                "Часовой пояс: {timezone}",
+                "Токен Notion: {notionToken}",
+                "",
+                "Базы данных: {databases}",
+                "",
+                "Шаблоны: {templates}"
+            ],
+            "database": "- {alias} ({notionDatabaseId})",
+            "template": "{order}. {pattern}",
+            "notProvided": "<не настроено>",
+            "none": "<пусто>"
+        },
+        "notion": {
+            "yourToken": "Твой токен интеграции с Notion:",
+            "allSet": [
+                "Понял, это \"{token}\".",
+                "",
+                "Отлично, ты подключил Notion!",
+                "Добавь базы данных с помощью команды /database."
+            ]
+        },
+        "database": {
+            "link": "Ссылка на базу данных:",
+            "alias": [
+                "Понял, это \"{match}\".",
+                "",
+                "Название базы данных:"
+            ],
+            "added": "База данных \"{alias}\" была добавлена!"
+        },
+        "template": {
+            "chooseDatabase": "Отлично! Какую базу данных использовать по умолчанию для этого шаблона?",
+            "skipDatabase": "[пропустить]",
+            "databaseChosen": [
+                "Понял, база данных: \"{database}\".",
+                "",
+                "Теперь отправь сам шаблон:"
+            ],
+            "sendTemplate": "Понял, теперь отправь сам шаблон:",
+            "added": "Шаблон был добавлен!"
+        }
+    },
+    "match": {
+        "checking": "Хм, минутку... ⏳",
+        "noDatabaseSpecified": "Я не знаю в какую базу данных это записать 😔",
+        "databaseNotFound": "Я не нашел эту базу данных: \"{database}\"",
+        "failed": [
+            "❌ Не удалось сохранить запись!",
+            "Проверь свои шаблоны и базы данных, или обратись к администратору.",
+            "",
+            "Ошибка: {error}"
+        ],
+        "patternMatched": [
+            "Хорошо, я сохранил! 🎉",
+            "",
+            "Поля:",
+            "{fields}"
+        ],
+        "patternMatchDatabaseFieldName": "База данных",
+        "patternMatchField": "- {name}: {value}",
+        "noPatternMatched": "Что-что? 🤔"
+    },
+    "help": {
+        "command": {
+            "start": "Запустить бота",
+            "info": "Информация",
+            "notion": "Настроить Notion",
+            "database": "Добавить базу данных",
+            "template": "Добавить шаблон"
+        }
+    }
+}

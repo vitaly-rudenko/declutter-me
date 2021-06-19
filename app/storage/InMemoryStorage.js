@@ -1,10 +1,8 @@
 const NotionAccount = require('../notion/NotionAccount');
-const List = require('../lists/List');
 const Reminder = require('../reminders/Reminder');
 const TelegramAccount = require('../telegram/TelegramAccount');
 const Template = require('../templates/Template');
 const User = require('../users/User');
-const NotionAccountNotFound = require('../errors/NotionAccountNotFound');
 
 class InMemoryStorage {
     constructor() {
@@ -12,12 +10,12 @@ class InMemoryStorage {
 
         /** @type {User[]} */
         this._users = [];
+        /** @type {import('../notion/NotionDatabase')[]} */
+        this._databases = [];
         /** @type {TelegramAccount[]} */
         this._telegramAccounts = [];
         /** @type {NotionAccount[]} */
         this._notionAccounts = [];
-        /** @type {List[]} */
-        this._lists = [];
         /** @type {Template[]} */
         this._templates = [];
         /** @type {Reminder[][]} */
@@ -29,6 +27,18 @@ class InMemoryStorage {
         const user = new User({ id: this._id, language, timezoneOffsetMinutes });
         this._users.push(user);
         return user;
+    }
+
+    async updateUser(userId, { language, timezoneOffsetMinutes }) {
+        const index = this._users.findIndex(u => u.id === userId);
+        if (index === -1) {
+            throw new Error(`User "${userId}" not found!`);
+        }
+
+        this._users[index] = this._users[index].clone({
+            language,
+            timezoneOffsetMinutes,
+        });
     }
 
     async findUserById(id) {
@@ -63,40 +73,37 @@ class InMemoryStorage {
         return this._notionAccounts.find(a => a.userId === userId) || null;
     }
 
-    async setNotesDatabaseId(userId, databaseId) {
-        const notionAccount = await this.findNotionAccount(userId);
-        if (!notionAccount) {
-            throw new NotionAccountNotFound();
+    // TODO: there should be a default database for reminders to sync them properly
+
+    /** @param {import('../notion/NotionDatabase')} database */
+    async storeDatabase(database) {
+        if (this._databases.some(d => d.userId === database.userId && d.alias === database.alias)) {
+            throw new Error('Database alias already exists!');
         }
 
-        notionAccount.setNotesDatabaseId(databaseId);
+        this._databases.push(database);
+        return database;
     }
 
-    async setRemindersDatabaseId(userId, databaseId) {
-        const notionAccount = await this.findNotionAccount(userId);
-        if (!notionAccount) {
-            throw new NotionAccountNotFound();
-        }
-
-        notionAccount.setRemindersDatabaseId(databaseId);
+    async findDatabasesByUserId(userId) {
+        return this._databases.filter(d => d.userId === userId);
     }
 
-    /** @param {import('../lists/List')} list */
-    async storeList(list) {
-        this._lists.push(list);
-        return list;
-    }
-
-    async findListsByUserId(userId) {
-        return this._lists.filter(l => l.userId === userId);
-    }
-
-    async findListByAlias({ alias, userId }) {
-        return this._lists.find(l => l.userId === userId && l.alias === alias) || null;
+    async findDatabaseByAlias(userId, alias) {
+        return this._databases.find(d => d.userId === userId && d.alias === alias) || null;
     }
 
     /** @param {import('../templates/Template')} template */
     async storeTemplate(template) {
+        if (!template.order) {
+            const templates = this._templates.filter(t => t.userId === template.userId);
+            template = template.clone({
+                order: templates.length === 0
+                    ? 1
+                    : (Math.max(...templates.map(t => t.order)) + 1)
+            });
+        }
+
         this._templates.push(template);
         return template;
     }
@@ -136,7 +143,7 @@ class InMemoryStorage {
         this._users = [];
         this._telegramAccounts = [];
         this._notionAccounts = [];
-        this._lists = [];
+        this._databases = [];
         this._templates = [];
         this._closeReminders = [];
     }

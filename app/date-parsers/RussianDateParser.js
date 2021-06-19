@@ -23,6 +23,7 @@ const UNIT_MATCHERS = [
 
 /** @type [string[], number][] */
 const NUMBER_MATCHERS = [
+    [['ноль', 'нуль'], 0],
     [['один', 'одну', 'первого'], 1],
     [['полтора', 'полторы'], 1.5],
     [['два', 'две', 'пару', 'второго'], 2],
@@ -51,7 +52,7 @@ const NUMBER_MATCHERS = [
     [['семьдесят', 'семидесятого'], 70],
     [['восемьдесят', 'восьмидесятого'], 80],
     [['девяносто', 'девяностого'], 90],
-    [['сто', 'сотни', 'сотню', 'сотен'], 100],
+    [['сто', 'сотня', 'сотни', 'сотню', 'сотен'], 100],
     [['двести', 'двести', 'двухсотого'], 200],
     [['триста', 'трехсотого', 'трёхсотого'], 300],
     [['четыреста', 'четырехсотого', 'четырёхсотого'], 400],
@@ -65,6 +66,10 @@ const NUMBER_MATCHERS = [
 
 /** @type {[string[], (date: Date) => any][]} */
 const SPECIAL_MATCHERS = [
+    // [['сейчас'], () => {}],
+    [['сегодня'], () => {}],
+    // [['вчера'], date => date.setUTCDate(date.getUTCDate() - 1)],
+    // [['позавчера'], date => date.setUTCDate(date.getUTCDate() - 2)],
     [['завтра'], date => date.setUTCDate(date.getUTCDate() + 1)],
     [['послезавтра'], date => date.setUTCDate(date.getUTCDate() + 2)],
     [['утром'], date => date.setUTCHours(8, 0, 0, 0)],
@@ -98,9 +103,9 @@ function endsWith(array, item) {
 class RussianDateParser {
     /**
      * @param {string} input
-     * @param {Date} [origin]
+     * @param {{ origin?: Date, futureOnly?: boolean }} [options]
      */
-    parse(input, origin) {
+    parse(input, { origin = null, futureOnly = false } = {}) {
         input = input.toLowerCase();
 
         if (!origin) {
@@ -109,84 +114,20 @@ class RussianDateParser {
         }
 
         return (
-            this.parseRelativeDate(input, origin) ||
-            this.parseAbsoluteTime(input, origin) ||
-            this.parseSpecialDateTime(input, origin) ||
-            this.parseAbsoluteDate(input, origin) ||
-            this.parseDateTime(input, origin) ||
-            this.parseDateWithSpecialTime(input, origin)
+            this.parseRelativeDate(input, { origin }) ||
+            this.parseAbsoluteTime(input, { origin, futureOnly }) ||
+            this.parseSpecialDateTime(input, { origin, futureOnly }) ||
+            this.parseAbsoluteDate(input, { origin, futureOnly }) ||
+            this.parseDateTime(input, { origin, futureOnly }) ||
+            this.parseDateWithSpecialTime(input, { origin, futureOnly })
         );
     }
 
     /**
      * @param {string} input
-     * @param {Date} origin
+     * @param {{ origin: Date }} params
      */
-    parseDateWithSpecialTime(input, origin) {
-        const indexOf = input.lastIndexOf(' ');
-        if (indexOf === -1) return null;
-
-        const [rawDate, rawTime] = [input.slice(0, indexOf), input.slice(indexOf + 1)];
-
-        const date = this.parse(rawDate, origin);
-        if (!date) return null;
-        date.setUTCHours(0);
-        date.setUTCMinutes(0);
-        date.setUTCSeconds(0);
-        date.setUTCMilliseconds(0);
-
-        const time = this.parseSpecial(rawTime, date);
-        return time;
-    }
-
-    /**
-     * @param {string} input
-     * @param {Date} origin
-     */
-    parseDateTime(input, origin) {
-        if (!input.includes(' в ')) return null;
-        const [rawDate, rawTime] = input.split(' в ');
-
-        const date = this.parse(rawDate, origin);
-        const time = this.parse('в ' + rawTime, origin);
-
-        if (date && time) {
-            return this.combineDateTime(date, time);
-        }
-    }
-
-    /**
-     * @param {Date} date
-     * @param {Date} time
-     */
-    combineDateTime(date, time) {
-        return new Date(Date.UTC(
-            date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),
-            time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), time.getUTCMilliseconds()
-        ));
-    }
-
-    /**
-     * @param {string} input
-     * @param {Date} origin
-     */
-    parseSpecialDateTime(input, origin) {
-        const parts = input.split(' ');
-        let specialDate = new Date(origin);
-
-        for (const value of parts) {
-            specialDate = this.parseSpecial(value, specialDate);
-            if (!specialDate) break;
-        }
-
-        return specialDate;
-    }
-
-    /**
-     * @param {string} input
-     * @param {Date} origin
-     */
-    parseRelativeDate(input, origin) {
+    parseRelativeDate(input, { origin }) {
         if (!input.startsWith('через ')) return null;
         input = input.slice('через '.length);
 
@@ -201,21 +142,177 @@ class RussianDateParser {
         }
         
         if (value && unit) {
-            return this.getRelativeDate(value, unit, origin);
+            return this._getRelativeDate({ value, unit, origin });
         }
 
         return null;
     }
 
+    /** @param {{ value: number, unit: string, origin: Date }} params */
+    _getRelativeDate({ value, unit, origin }) {
+        const dateCopy = new Date(origin);
+
+        const hasExtraHalf = Math.trunc(value) !== value;
+        value = Math.trunc(value);
+
+        switch (unit) {
+            case Unit.MINUTE:
+                dateCopy.setUTCMinutes(origin.getUTCMinutes() + value);
+                break;
+            case Unit.HALF_HOUR:
+                dateCopy.setUTCMinutes(origin.getUTCMinutes() + 30);
+                break;
+            case Unit.HOUR:
+                dateCopy.setUTCHours(origin.getUTCHours() + value);
+                break;
+            case Unit.DAY:
+                dateCopy.setUTCDate(origin.getUTCDate() + value);
+                break;
+            case Unit.WEEK:
+                dateCopy.setUTCDate(origin.getUTCDate() + value * 7);
+                break;
+            case Unit.MONTH:
+                dateCopy.setUTCMonth(origin.getUTCMonth() + value);
+                break;
+            case Unit.HALF_YEAR:
+                dateCopy.setUTCMonth(origin.getUTCMonth() + 6);
+                break;
+            case Unit.YEAR:
+                dateCopy.setUTCFullYear(origin.getUTCFullYear() + value);
+                break;
+        }
+
+        if (hasExtraHalf) {
+            switch (unit) {
+                case Unit.MINUTE:
+                    dateCopy.setUTCSeconds(dateCopy.getUTCSeconds() + 30);
+                    break;
+                case Unit.HOUR:
+                    dateCopy.setUTCMinutes(dateCopy.getUTCMinutes() + 30);
+                    break;
+                case Unit.DAY:
+                    dateCopy.setUTCHours(dateCopy.getUTCHours() + 12);
+                    break;
+                case Unit.WEEK:
+                    dateCopy.setUTCDate(dateCopy.getUTCDate() + 3);
+                    break;
+                case Unit.MONTH:
+                    dateCopy.setUTCDate(dateCopy.getUTCDate() + 15);
+                    break;
+                case Unit.YEAR:
+                    dateCopy.setUTCMonth(dateCopy.getUTCMonth() + 6);
+                    break;
+            }
+        }
+
+        return dateCopy;
+    }
+
     /**
      * @param {string} input
-     * @param {Date} origin
+     * @param {{ origin: Date, futureOnly: boolean }} params
      */
-    parseAbsoluteDate(input, origin) {
+    parseAbsoluteTime(input, { origin, futureOnly }) {
+        if (!input.startsWith('в ')) return null;
+        input = input.slice('в '.length);
+
+        const dateCopy = new Date(origin);
+        const parts = input.split(' ');
+
+        for (const part of parts) {
+            const number = this.parseNumber(part);
+
+            if (this.isValidHours(number)) {
+                if (number === 24) {
+                    dateCopy.setUTCHours(0);
+                    dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+                } else {
+                    dateCopy.setUTCHours(number);
+                }
+                dateCopy.setUTCMinutes(0);
+                continue;
+            } 
+
+            if (part.includes(':')) {
+                const [rawHours, rawMinutes] = part.split(':');
+                const hours = Number(rawHours);
+                const minutes = Number(rawMinutes);
+
+                if (this.isValidHours(hours) && this.isValidMinutes(minutes)) {
+                    if (hours === 24) {
+                        dateCopy.setUTCHours(0);
+                        dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+                    } else {
+                        dateCopy.setUTCHours(hours);
+                    }
+                    dateCopy.setUTCMinutes(minutes);
+                    continue;
+                }
+            }
+
+            if (['дня', 'вечера'].includes(part) && dateCopy.getUTCHours() <= 12) {
+                dateCopy.setUTCHours(dateCopy.getUTCHours() + 12);
+                continue;
+            }
+
+            if (part === 'полночь') {
+                dateCopy.setUTCHours(0);
+                dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+                continue;
+            }
+
+            if (part === 'час') {
+                dateCopy.setUTCHours(1);
+                continue;
+            }
+
+            if (['часа', 'часов'].includes(part) || ['утра', 'ночи'].includes(part)) {
+                continue;
+            }
+
+            return null;
+        }
+
+        if (futureOnly && dateCopy <= origin) {
+            dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+        }
+
+        return dateCopy;
+    }
+
+    isValidHours(hours) {
+        return Number.isSafeInteger(hours) && hours >= 0 && hours <= 24;
+    }
+
+    isValidMinutes(minutes) {
+        return Number.isSafeInteger(minutes) && minutes >= 0 && minutes < 60;
+    }
+
+    /**
+     * @param {string} input
+     * @param {{ origin: Date, futureOnly: boolean }} params
+     */
+    parseSpecialDateTime(input, { origin, futureOnly }) {
+        const parts = input.split(' ');
+        let specialDate = new Date(origin);
+
+        for (const value of parts) {
+            specialDate = this.parseSpecial(value, { origin: specialDate, futureOnly, skipDateIfNecessary: true });
+            if (!specialDate) break;
+        }
+
+        return specialDate;
+    }
+
+    /**
+     * @param {string} input
+     * @param {{ origin: Date, futureOnly: boolean }} params
+     */
+    parseAbsoluteDate(input, { origin, futureOnly }) {
         const inputParts = input.split(' ');
 
         let specialPart = null;
-        if (this.parseSpecial(inputParts[0], origin)) {
+        if (this.parseSpecial(inputParts[0], { origin, futureOnly, skipDateIfNecessary: true })) {
             specialPart = inputParts.shift();
         }
 
@@ -247,7 +344,7 @@ class RussianDateParser {
 
             if (monthPart === 'числа') {
                 monthIndex = origin.getUTCMonth();
-                if (dateNumber <= origin.getUTCDate()) {
+                if (futureOnly && dateNumber <= origin.getUTCDate()) {
                     monthIndex++;
                 }
             } else {
@@ -255,8 +352,12 @@ class RussianDateParser {
             }
         }
 
+        let hasYearPart = false;
+        let customYear = false;
+
         if (inputParts.length > 0) {
             if (endsWith(inputParts, 'года')) {
+                hasYearPart = true;
                 inputParts.pop();
             }
 
@@ -264,12 +365,20 @@ class RussianDateParser {
             if (yearNumber === null) {
                 return null;
             }
+
+            customYear = true;
         }
 
         if (monthIndex === -1) return null;
 
         if (yearNumber < 100) {
-            yearNumber += Math.floor(origin.getUTCFullYear() / 1000) * 1000;
+            if (!hasYearPart) return null;
+
+            if (yearNumber >= 70) {
+                yearNumber += 1900;
+            } else {
+                yearNumber += 2000;
+            }
         }
 
         const dateCopy = new Date(origin);
@@ -281,86 +390,28 @@ class RussianDateParser {
             return null;
         }
         
-        if (dateCopy <= origin) {
-            dateCopy.setUTCFullYear(dateCopy.getUTCFullYear() + 1);
+        if (futureOnly && dateCopy <= origin) {
+            if (customYear) {
+                while(dateCopy <= origin) {
+                    dateCopy.setUTCFullYear(dateCopy.getUTCFullYear() + 100);
+                }
+            } else {
+                dateCopy.setUTCFullYear(dateCopy.getUTCFullYear() + 1);
+            }
         }
         
         if (specialPart !== null) {
-            return this.parseSpecial(specialPart, dateCopy, false);
+            return this.parseSpecial(specialPart, { origin: dateCopy, futureOnly, skipDateIfNecessary: false });
         }
 
         return dateCopy;
-    }
-
-    /**
-     * @param {string} input
-     * @param {Date} origin
-     */
-    parseAbsoluteTime(input, origin) {
-        if (!input.startsWith('в ')) return null;
-        input = input.slice('в '.length);
-
-        const dateCopy = new Date(origin);
-        const parts = input.split(' ');
-
-        for (const part of parts) {
-            const number = this.parseNumber(part);
-
-            if (number && this.isValidHours(number)) {
-                dateCopy.setUTCHours(number);
-                continue;
-            } 
-
-            if (part.includes(':')) {
-                const [rawHours, rawMinutes] = part.split(':');
-                const hours = Number(rawHours);
-                const minutes = Number(rawMinutes);
-
-                if (
-                    !Number.isNaN(hours) &&
-                    !Number.isNaN(minutes) &&
-                    this.isValidHours(hours) && 
-                    this.isValidMinutes(minutes)
-                ) {
-                    dateCopy.setUTCHours(hours);
-                    dateCopy.setUTCMinutes(minutes);
-                    continue;
-                }
-            }
-
-            if (part === 'вечера' && dateCopy.getUTCHours() <= 12) {
-                dateCopy.setUTCHours(dateCopy.getUTCHours() + 12);
-                continue;
-            }
-
-            if (['утра', 'дня', 'ночи'].includes(part)) {
-                continue;
-            }
-
-            return null;
-        }
-
-        if (dateCopy <= origin) {
-            dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
-        }
-
-        return dateCopy;
-    }
-
-    isValidHours(hours) {
-        return hours >= 0 && hours <= 24;
-    }
-
-    isValidMinutes(minutes) {
-        return minutes >= 0 && minutes < 60;
     }
 
     /**
      * @param {string} value
-     * @param {Date} date
-     * @param {boolean} skipDateIfNecessary
+     * @param {{ origin: Date, futureOnly: boolean, skipDateIfNecessary: boolean }} params
      */
-    parseSpecial(value, date, skipDateIfNecessary = true) {
+    parseSpecial(value, { origin, futureOnly, skipDateIfNecessary }) {
         if (typeof value !== 'string' || value.length === 0) {
             return null;
         }
@@ -370,76 +421,71 @@ class RussianDateParser {
             return null;
         }
 
-        const dateCopy = new Date(date);
-        match[1](dateCopy);
+        const [_, transformDate] = match;
 
-        if (skipDateIfNecessary && dateCopy <= date) {
-            dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+        const dateCopy = new Date(origin);
+        transformDate(dateCopy);
+
+        if (futureOnly && dateCopy <= origin) {
+            if (skipDateIfNecessary) {
+                dateCopy.setUTCDate(dateCopy.getUTCDate() + 1);
+            }
         }
 
         return dateCopy;
     }
 
     /**
-     * @param {number} value
-     * @param {string} unit
-     * @param {Date} date
+     * @param {string} input
+     * @param {{ origin: Date, futureOnly: boolean }} params
      */
-    getRelativeDate(value, unit, date) {
-        const hasExtraHalf = Math.trunc(value) !== value;
-        value = Math.trunc(value);
-
-        switch (unit) {
-            case Unit.MINUTE:
-                date.setUTCMinutes(date.getUTCMinutes() + value);
-                break;
-            case Unit.HALF_HOUR:
-                date.setUTCMinutes(date.getUTCMinutes() + 30);
-                break;
-            case Unit.HOUR:
-                date.setUTCHours(date.getUTCHours() + value);
-                break;
-            case Unit.DAY:
-                date.setUTCDate(date.getUTCDate() + value);
-                break;
-            case Unit.WEEK:
-                date.setUTCDate(date.getUTCDate() + value * 7);
-                break;
-            case Unit.MONTH:
-                date.setUTCMonth(date.getUTCMonth() + value);
-                break;
-            case Unit.HALF_YEAR:
-                date.setUTCMonth(date.getUTCMonth() + 6);
-                break;
-            case Unit.YEAR:
-                date.setUTCFullYear(date.getUTCFullYear() + value);
-                break;
+    parseDateTime(input, { origin, futureOnly }) {
+        const inputParts = input.split(' в ');
+        if (inputParts.length !== 2) {
+            return null;
         }
 
-        if (hasExtraHalf) {
-            switch (unit) {
-                case Unit.MINUTE:
-                    date.setUTCSeconds(date.getUTCSeconds() + 30);
-                    break;
-                case Unit.HOUR:
-                    date.setUTCMinutes(date.getUTCMinutes() + 30);
-                    break;
-                case Unit.DAY:
-                    date.setUTCHours(date.getUTCHours() + 12);
-                    break;
-                case Unit.WEEK:
-                    date.setUTCDate(date.getUTCDate() + 3);
-                    break;
-                case Unit.MONTH:
-                    date.setUTCDate(date.getUTCDate() + 15);
-                    break;
-                case Unit.YEAR:
-                    date.setUTCMonth(date.getUTCMonth() + 6);
-                    break;
-            }
+        const [rawDate, rawTime] = inputParts;
+        const time = this.parse('в ' + rawTime, { origin, futureOnly });
+        const date = this.parse(rawDate, { origin: time, futureOnly });
+
+        if (date && time) {
+            return this._combineDateAndTime(date, time);
         }
 
-        return date;
+        return null;
+    }
+
+    /**
+     * @param {Date} date
+     * @param {Date} time
+     */
+    _combineDateAndTime(date, time) {
+        return new Date(Date.UTC(
+            date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),
+            time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), time.getUTCMilliseconds()
+        ));
+    }
+
+    /**
+     * @param {string} input
+     * @param {{ origin: Date, futureOnly: boolean }} params
+     */
+    parseDateWithSpecialTime(input, { origin, futureOnly }) {
+        const indexOf = input.lastIndexOf(' ');
+        if (indexOf === -1) return null;
+
+        const [rawDate, rawTime] = [input.slice(0, indexOf), input.slice(indexOf + 1)];
+
+        const date = this.parse(rawDate, { origin, futureOnly });
+        if (!date) return null;
+        date.setUTCHours(0);
+        date.setUTCMinutes(0);
+        date.setUTCSeconds(0);
+        date.setUTCMilliseconds(0);
+
+        const time = this.parseSpecial(rawTime, { origin: date, futureOnly, skipDateIfNecessary: true });
+        return time;
     }
 
     parseUnit(value) {
@@ -465,13 +511,16 @@ class RussianDateParser {
         }
 
         const parts = value.split(' ');
-
-        let result = 0;
-        let multiplier = 0;
-        let reduced = false;
         
-        for (let i = 0; i < parts.length; i++) {
-            const part = parts[parts.length - i - 1];
+        let largestNumber = 0;
+        let result = 0;
+        let glue = false;
+
+        for (const part of parts) {
+            if (part === 'и') {
+                glue = true;
+                continue;
+            }
 
             const match = NUMBER_MATCHERS.find(([values]) => values.includes(part));
             if (!match) {
@@ -480,16 +529,14 @@ class RussianDateParser {
 
             const number = Number(match[1]);
 
-            if (multiplier > number) {
-                if (!reduced) {
-                    result -= multiplier;
-                    reduced = true;
-                }
-                result += number * multiplier;
+            if (number >= largestNumber) {
+                if (glue) return null;
+                if (result === 0) result = 1;
+                
+                result *= number;
+                largestNumber = number;
             } else {
                 result += number;
-                multiplier = number;
-                reduced = false;
             }
         }
 

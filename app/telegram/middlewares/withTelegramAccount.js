@@ -8,7 +8,7 @@ const withTelegramAccount = (storage) => {
             context.state.userId = context.state.telegramAccount.userId;
         }
 
-        return next();
+        next();
     };
 };
 

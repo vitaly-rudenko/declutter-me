@@ -5,6 +5,15 @@ class User {
         this._timezoneOffsetMinutes = timezoneOffsetMinutes;
     }
 
+    clone(attributes = {}) {
+        return new User({
+            id: this._id,
+            language: this._language,
+            timezoneOffsetMinutes: this._timezoneOffsetMinutes,
+            ...attributes
+        });
+    }
+
     get id() {
         return this._id;
     }

@@ -1,5 +1,5 @@
-class Note {
-    constructor({ content, tags = [] }) {
+class Entry {
+    constructor({ content, tags }) {
         this._content = content;
         this._tags = tags;
     }
@@ -13,4 +13,4 @@ class Note {
     }
 }
 
-module.exports = Note;
+module.exports = Entry;
