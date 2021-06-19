@@ -15,7 +15,7 @@ const withUserFactory = (storage) => {
                 return;
             }
         
-            return next();
+            next();
         };
     };
 };

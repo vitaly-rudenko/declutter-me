@@ -4,6 +4,10 @@ class CommonPresets {
     // TODO: rename "value" to "name"
     get({ value, inputType, outputType }) {
         if (inputType && !outputType) {
+            if (fuzzyEquals(inputType, 'word')) {
+                return { value, inputType: 'word', outputType: 'title' };
+            }
+            
             if (fuzzyEquals(inputType, 'select')) {
                 return { value, inputType: 'word', outputType: 'select' };
             }

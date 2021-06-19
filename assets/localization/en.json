@@ -43,5 +43,15 @@
         "template": {
             "skipDatabase": "[skip]"
         }
+    },
+    "help": {
+        "command": {
+            "help": "Get help",
+            "start": "Start the bot",
+            "info": "Get your information",
+            "notion": "Configure Notion integration",
+            "database": "Add a database",
+            "template": "Add a template"
+        }
     }
 }

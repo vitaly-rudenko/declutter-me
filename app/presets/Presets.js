@@ -5,7 +5,6 @@ class Presets {
         }
 
         if (presets) {
-            if (!Array.isArray(presets)) console.log('!!!', presets)
             for (const preset of presets) {
                 const result = preset.get({ value, inputType, outputType });
                 if (result) return result;

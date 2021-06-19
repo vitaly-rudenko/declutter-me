@@ -54,6 +54,16 @@ describe('RussianPresents', () => {
             }
         });
 
+        it('should apply special preset to "word" input type', () => {
+            for (const input of [
+                { value: 'My Custom Field', inputType: 'слово' },
+                { value: 'My Field', inputType: 'Слово' },
+                { value: 'My Field', inputType: 'СлОвО' },
+            ]) {
+                expect(russianPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'word', outputType: 'title' });
+            }
+        });
+
         it('should apply special preset to "select" input type', () => {
             for (const input of [
                 { value: 'My Custom Field', inputType: 'выбор' },

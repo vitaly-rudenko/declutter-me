@@ -58,7 +58,7 @@ class PatternMatcher {
                         }
                     }
 
-                    if (value !== undefined) {
+                    if (value !== undefined && value !== null) {
                         if (outputType === 'multi_select') {
                             fieldMap[name] = new Field({
                                 name,

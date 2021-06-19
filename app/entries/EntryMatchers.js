@@ -1,3 +1,8 @@
+const { URL } = require('url');
+
+const PHONE_REGEX = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
+const EMAIL_REGEX = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
 class EntryMatchers {
     /** @param {{ dateParser: import('../date-parsers/RussianDateParser') }} dependencies */
     constructor({ dateParser }) {
@@ -11,9 +16,10 @@ class EntryMatchers {
         this['date'] = (input) => this._date(input, false);
         this['future_date'] = (input) => this._date(input, true);
 
-        this['url'] = this._word.bind(this); // TODO: parse URLs
-        this['phone'] = this._word.bind(this); // TODO: parse phone numbers
-        this['number'] = this._word.bind(this); // TODO: parse numbers
+        this['url'] = this._url.bind(this);
+        this['email'] = this._email.bind(this);
+        this['phone'] = this._phone.bind(this);
+        this['number'] = this._number.bind(this);
     }
 
     _text(input, { nextTokens: [nextToken, nextToken2] }) {
@@ -76,6 +82,57 @@ class EntryMatchers {
 
     _word(input) {
         return input.split(' ')[0];
+    }
+
+    _email(input) {
+        input = input.split(' ')[0];
+
+        if (EMAIL_REGEX.test(input)) {
+            return input;
+        }
+
+        return null;
+    }
+
+    _phone(input) {
+        input = input.split(' ')[0];
+
+        if (PHONE_REGEX.test(input)) {
+            return input;
+        }
+
+        return null;
+    }
+
+    _url(input) {
+        input = input.split(' ')[0];
+
+        if (this._isValidUrl(input) || this._isValidUrl('http://' + input)) {
+            return input;
+        }
+
+        return null;
+    }
+
+    _isValidUrl(input) {
+        try {
+            new URL(input);
+        } catch (error) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // TODO: add support for natural language numbers
+    _number(input) {
+        input = input.split(' ')[0];
+
+        if (!Number.isNaN(Number(input))) {
+            return input;
+        }
+
+        return null;
     }
 
     _date(input, futureOnly) {

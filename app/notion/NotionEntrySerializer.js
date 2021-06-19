@@ -18,12 +18,23 @@ class NotionEntrySerializer {
         const properties = {};
 
         for (const field of notionEntry.fields) {
+            if (field.inputType === 'database') continue;
             if (field.outputType === 'title') {
                 properties[field.name] = this.serializeTitle(last(field.value));
+            } else if (field.outputType === 'text') {
+                properties[field.name] = this.serializeText(last(field.value));
             } else if (field.outputType === 'select') {
                 properties[field.name] = this.serializeSelect(last(field.value));
             } else if (field.outputType === 'multi_select') {
                 properties[field.name] = this.serializeMultiSelect(field.value);
+            } else if (field.outputType === 'phone') {
+                properties[field.name] = this.serializePhoneNumber(last(field.value));
+            } else if (field.outputType === 'email') {
+                properties[field.name] = this.serializeEmail(last(field.value));
+            } else if (field.outputType === 'url') {
+                properties[field.name] = this.serializeUrl(last(field.value));
+            } else if (field.outputType === 'number') {
+                properties[field.name] = this.serializeNumber(Number(last(field.value)));
             } else if (field.outputType === 'date') {
                 const date = this._dateParser.parse(last(field.value), {
                     futureOnly: field.inputType === 'future_date',
@@ -57,6 +68,39 @@ class NotionEntrySerializer {
         };
     }
 
+    serializeText(value) {
+        return {
+            'type': 'rich_text',
+            'rich_text': [{
+                'type': 'text',
+                'text': {
+                    'content': value,
+                }
+            }]
+        };
+    }
+
+    serializeNumber(value) {
+        return {
+            'type': 'number',
+            'number': value,
+        };
+    }
+
+    serializeEmail(value) {
+        return {
+            'type': 'email',
+            'email': value,
+        };
+    }
+
+    serializeUrl(value) {
+        return {
+            'type': 'url',
+            'url': value,
+        };
+    }
+
     serializeSelect(value) {
         return {
             'type': 'select',
@@ -79,6 +123,13 @@ class NotionEntrySerializer {
         return {
             'type': 'date',
             'date': this.formatUtcDateWithTimezone(value, timezoneOffsetMinutes),
+        };
+    }
+
+    serializePhoneNumber(value) {
+        return {
+            'type': 'phone_number',
+            'phone_number': value
         };
     }
 

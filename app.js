@@ -6,7 +6,6 @@ const PatternBuilder = require('./app/PatternBuilder');
 const PatternMatcher = require('./app/PatternMatcher');
 const RussianDateParser = require('./app/date-parsers/RussianDateParser');
 const InMemoryStorage = require('./app/storage/InMemoryStorage');
-const Reminder = require('./app/reminders/Reminder');
 const Template = require('./app/templates/Template');
 const PatternStringifier = require('./app/PatternStringifier');
 const NotionSessionManager = require('./app/notion/NotionSessionManager');
@@ -16,10 +15,10 @@ const withTelegramAccount = require('./app/telegram/middlewares/withTelegramAcco
 const withPhaseFactory = require('./app/telegram/middlewares/withPhaseFactory');
 const withUserFactory = require('./app/telegram/middlewares/withUserFactory');
 const withNotionFactory = require('./app/telegram/middlewares/withNotionFactory');
+const withLocalization = require('./app/telegram/middlewares/withLocalization');
 
 require('dotenv').config();
 
-const en = require('./assets/localization/en.json');
 const NotionDatabase = require('./app/notion/NotionDatabase');
 const EntryMatchers = require('./app/entries/EntryMatchers');
 const NotionEntrySerializer = require('./app/notion/NotionEntrySerializer');
@@ -28,46 +27,19 @@ const Field = require('./app/fields/Field');
 const CommonPresets = require('./app/presets/CommonPresets');
 const RussianPresets = require('./app/presets/RussianPresets');
 const UkrainianPresets = require('./app/presets/UkrainianPresets');
-
-const localize = (message, replacements = null) => {
-    const path = message.split('.');
-
-    let result = en;
-    while (result && path.length > 0) {
-        result = result[path.shift()];
-    }
-
-    if (!result) {
-        if (replacements) {
-            return `${message}\n${JSON.stringify(replacements, null, 4)}`;
-        } else {
-            return message;
-        }
-    }
-
-    if (Array.isArray(result)) {
-        result = result.join('\n');
-    }
-
-    if (replacements) {
-        for (const [key, value] of Object.entries(replacements)) {
-            result = result.replace(new RegExp('\\{' + key + '\\}', 'g'), value);
-        }
-    }
-
-    return result;
-};
+const localize = require('./app/localize');
+const Language = require('./app/Language');
 
 (async () => {
     const storage = new InMemoryStorage();
-    const user = await storage.createUser({ language: 'russian', timezoneOffsetMinutes: 3 * 60 });
+    const user = await storage.createUser({ language: Language.ENGLISH, timezoneOffsetMinutes: 3 * 60 });
     await storage.createTelegramAccount(user.id, 56681133);
     await storage.createNotionAccount(user.id, 'secret_sUmg2sizdQDYmfGrQ0amjXSuOv4tHTevLn4PVgcopG6');
 
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 1,
-        pattern: new PatternBuilder().build('купить [{Количество} (шт|штук|гр|грамм|кг|килограмм) ]{Товар}'),
+        pattern: new PatternBuilder().build('купить [{Количество:number:number} (шт|штук|гр|грамм|кг|килограмм) ]{Товар:text:title}'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'to_watch' })
         ]
@@ -76,7 +48,7 @@ const localize = (message, replacements = null) => {
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 2,
-        pattern: new PatternBuilder().build('посмотреть {Название}[ #{Тип:tag}]'),
+        pattern: new PatternBuilder().build('посмотреть {Название:text:title}[ #{Тип:word:multi_select}]'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'shows' })
         ]
@@ -85,7 +57,7 @@ const localize = (message, replacements = null) => {
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 3,
-        pattern: new PatternBuilder().build('(сделать|do|todo) {Задача}'),
+        pattern: new PatternBuilder().build('(сделать|задача|do|todo) {Задача:text:title}'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'todo' })
         ]
@@ -94,7 +66,16 @@ const localize = (message, replacements = null) => {
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 4,
-        pattern: new PatternBuilder().build('{Note}'),
+        pattern: new PatternBuilder().build('контакт {Имя:word:title}[ {Телефон:phone:phone}][ {Эл. почта:email:email}][ {Сайт:url:url}][ {Фамилия:word:text}]'),
+        defaultFields: [
+            new Field({ inputType: 'database', value: 'contacts' })
+        ]
+    }));
+
+    await storage.storeTemplate(new Template({
+        userId: user.id,
+        order: 5,
+        pattern: new PatternBuilder().build('[заметка ]{Заметка:text:title}[ #{тег:word:multiselect}][ #{тег:word:multiselect}][ #{тег:word:multiselect}]'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'notes' })
         ]
@@ -102,9 +83,9 @@ const localize = (message, replacements = null) => {
 
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'to_watch', notionDatabaseId: 'ca75e1d762c24d4893e2d682c1823797' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'shows', notionDatabaseId: '3af8dfb79d18428b86419bd7a211084a' }))
-    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'reminders', notionDatabaseId: 'edfe4ac495d24ddd88cbe45e635d0418' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'notes', notionDatabaseId: 'a64b650b4036407385272f3867de44f3' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'todo', notionDatabaseId: '8c83e61c0fb848ef85d6644725296a15' }))
+    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'contacts', notionDatabaseId: 'ce850d3910b24a64b5cf4f6da28738bf' }))
 
     const debugChatId = process.env.DEBUG_CHAT_ID;
 
@@ -130,15 +111,13 @@ const localize = (message, replacements = null) => {
     const userSessionManager = new UserSessionManager();
     const notionSessionManager = new NotionSessionManager({ storage });
 
-    bot.telegram.setMyCommands([
-        { command: '/help', description: 'Get help' },
-        { command: '/start', description: 'Start the bot' },
-        { command: '/info', description: 'Prints your information' },
-        { command: '/notion', description: 'Configure Notion' },
-        { command: '/list', description: 'Add list' },
-        { command: '/database', description: 'Add database' },
-        { command: '/template', description: 'Add template' },
-    ]);
+    bot.telegram.setMyCommands(
+        ['help', 'start', 'info', 'notion', 'database', 'template']
+            .map(command => ({
+                command: `/${command}`,
+                description: localize(`help.command.${command}`, null, Language.ENGLISH)
+            }))
+    );
 
     const withPhase = withPhaseFactory(userSessionManager);
     const withUser = withUserFactory(storage);
@@ -151,10 +130,7 @@ const localize = (message, replacements = null) => {
     });
 
     bot.use(withTelegramAccount(storage));
-    bot.use((ctx, next) => {
-        ctx.state.localize = localize;
-        next();
-    });
+    bot.use(withLocalization())
 
     bot.start(async (ctx) => {
         if (ctx.state.telegramAccount) {
@@ -441,17 +417,6 @@ const localize = (message, replacements = null) => {
         allowedUpdates: ['callback_query', 'message'],
         dropPendingUpdates: true,
     });
-
-    // setInterval(async () => {
-    //     await reminderManager.sendAll();
-    // }, 30_000);
-
-    // setInterval(async () => {
-    //     await reminderManager.syncAll();
-    // }, 15 * 60_000);
-
-    // await reminderManager.syncAll();
-    // await reminderManager.sendAll();
 })()
     .then(() => console.log('Started!'));
 

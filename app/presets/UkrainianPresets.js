@@ -16,6 +16,10 @@ const URL = ['посилання', 'веб_сторінка', 'сторінка'
 class UkrainianPresets {
     get({ value, inputType, outputType }) {
         if (inputType && !outputType) {
+            if (fuzzyEquals(inputType, 'слово')) {
+                return { value, inputType: 'word', outputType: 'title' };
+            }
+
             if (fuzzyEquals(inputType, 'вибір')) {
                 return { value, inputType: 'word', outputType: 'select' };
             }

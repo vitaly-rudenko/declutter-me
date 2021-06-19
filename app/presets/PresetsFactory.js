@@ -1,3 +1,4 @@
+const Language = require('../Language');
 const CommonPresets = require('./CommonPresets');
 const RussianPresets = require('./RussianPresets');
 const UkrainianPresets = require('./UkrainianPresets');
@@ -8,11 +9,11 @@ class PresetsFactory {
         const russianPresets = new RussianPresets();
         const ukrainianPresets = new UkrainianPresets();
 
-        if (language === 'russian') {
+        if (language === Language.RUSSIAN) {
             return [russianPresets, ukrainianPresets, commonPresets];
         }
 
-        if (language === 'ukrainian') {
+        if (language === Language.UKRAINIAN) {
             return [ukrainianPresets, russianPresets, commonPresets];
         }
 

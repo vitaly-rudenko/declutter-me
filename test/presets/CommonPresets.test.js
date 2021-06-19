@@ -52,6 +52,16 @@ describe('EnglishPresents', () => {
             }
         });
 
+        it('should apply special preset to "word" input type', () => {
+            for (const input of [
+                { value: 'My Custom Field', inputType: 'word' },
+                { value: 'My Field', inputType: 'Word' },
+                { value: 'My Field', inputType: 'WoRd' },
+            ]) {
+                expect(commonPresets.get(input)).to.deep.eq({ value: input.value, inputType: 'word', outputType: 'title' });
+            }
+        });
+
         it('should apply special preset to "select" input type', () => {
             for (const input of [
                 { value: 'My Custom Field', inputType: 'select' },

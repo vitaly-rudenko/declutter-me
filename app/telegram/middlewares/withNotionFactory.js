@@ -23,7 +23,7 @@ const withNotionFactory = (notionSessionManager) => {
                 throw error;
             }
 
-            return next();
+            next();
         };
     };
 };
