@@ -1,0 +1,69 @@
+{
+    "language": {
+        "ukrainian": "Українська",
+        "english": "English",
+        "russian": "Русский"
+    },
+    "command": {
+        "start": {
+            "readyToGo": "Всё готово!",
+            "start.useNotionCommand": "Привет! Воспользуйся командой /notion чтобы подключить Notion."
+        },
+        "info": {
+            "response": [
+                "Привет, {name}!",
+                "Твои настройки:",
+                "  - Язык: {language}",
+                "  - Часовой пояс: {timezone}",
+                "  - Токен Notion: {notionToken}",
+                "  - Базы данных: {databases}",
+                "  - Шаблоны: {templates}"
+            ],
+            "database": "    - {alias} ({notionDatabaseId})",
+            "template": "    - {pattern}",
+            "notProvided": "<не настроено>",
+            "none": "<пусто>"
+        },
+        "notion": {
+            "yourToken": "Твой токен интеграции с Notion:",
+            "allSet": [
+                "Понял, это \"{token}\".",
+                "Отлично, ты подключил Notion!",
+                "Добавь базы данных с помощью команды /database."
+            ]
+        },
+        "database": {
+            "link": "Ссылка на базу данных:",
+            "alias": [
+                "Понял, это \"{match}\".",
+                "Название базы данных:"
+            ],
+            "added": "База данных \"{alias}\" была добавлена!"
+        },
+        "template": {
+            "chooseDatabase": "Отлично! Какую базу данных использовать по умолчанию для этого шаблона?",
+            "skipDatabase": "[пропустить]",
+            "databaseChosen": "Понял, база данных: \"{database}\".\nТеперь отправь сам шаблон:",
+            "sendTemplate": "Понял, теперь отправь сам шаблон:",
+            "added": "Шаблон был добавлен!"
+        }
+    },
+    "match": {
+        "noDatabaseSpecified": "Я не знаю в какую базу данных это записать 😔",
+        "databaseNotFound": "Я не нашел эту базу данных: \"{database}\"",
+        "patternMatched": "Хорошо, сохраняю! 🎉\nПоля:\n{fields}",
+        "patternMatchDatabaseFieldName": "База данных",
+        "patternMatchField": "  - {name}: {value}",
+        "noPatternMatched": "Что-то? 🤔"
+    },
+    "help": {
+        "command": {
+            "help": "Помощь",
+            "start": "Запустить бота",
+            "info": "Информация",
+            "notion": "Настроить Notion",
+            "database": "Добавить базу данных",
+            "template": "Добавить шаблон"
+        }
+    }
+}

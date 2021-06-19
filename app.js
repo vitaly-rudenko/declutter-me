@@ -32,7 +32,7 @@ const Language = require('./app/Language');
 
 (async () => {
     const storage = new InMemoryStorage();
-    const user = await storage.createUser({ language: Language.ENGLISH, timezoneOffsetMinutes: 3 * 60 });
+    const user = await storage.createUser({ language: Language.RUSSIAN, timezoneOffsetMinutes: 3 * 60 });
     await storage.createTelegramAccount(user.id, 56681133);
     await storage.createNotionAccount(user.id, 'secret_sUmg2sizdQDYmfGrQ0amjXSuOv4tHTevLn4PVgcopG6');
 
@@ -196,9 +196,9 @@ const Language = require('./app/Language');
             await ctx.reply(
                 ctx.state.localize('command.template.chooseDatabase'),
                 Markup.inlineKeyboard([
-                    Markup.button.callback(ctx.state.localize('command.template.skipDatabase'), 'template:skip-database'),
                     ...databases.map(database => Markup.button.callback(database.alias, 'template:database:' + database.alias)),
-                ])
+                    Markup.button.callback(ctx.state.localize('command.template.skipDatabase'), 'template:skip-database'),
+                ], { columns: 2 })
             );
 
             userSessionManager.setPhase(ctx.state.userId, phases.template.databaseAlias);
@@ -208,18 +208,18 @@ const Language = require('./app/Language');
         }
     });
 
-    bot.action(/template:database:(.+)/, withPhase(phases.template.databaseAlias, async (ctx) => {
+    bot.action(/template:database:(.+)/, withUser(), withPhase(phases.template.databaseAlias, async (ctx) => {
         await ctx.answerCbQuery();
         
         const databaseAlias = ctx.match[1];
         userSessionManager.context(ctx.state.userId)
             .defaultFields.push(new Field({ inputType: 'database', value: databaseAlias }));
 
-        await ctx.reply(`Default database: "${databaseAlias}".\nNow send me the template:`);
+        await ctx.reply(ctx.state.localize('command.template.databaseChosen', { database: databaseAlias }));
         userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
     }));
 
-    bot.action('template:skip-database', withPhase(phases.template.databaseAlias, async (ctx) => {
+    bot.action('template:skip-database', withUser(), withPhase(phases.template.databaseAlias, async (ctx) => {
         await ctx.answerCbQuery();
         await ctx.reply(ctx.state.localize('command.template.sendTemplate'));
         userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);

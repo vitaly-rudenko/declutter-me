@@ -43,12 +43,13 @@
         "template": {
             "chooseDatabase": "Got it! What database would you like to use by default?",
             "skipDatabase": "[skip]",
-            "sendTemplate": "Okay! Now send me the template",
+            "databaseChosen": "Default database: \"{database}\".\nNow send me the template:",
+            "sendTemplate": "Okay! Now send me the template:",
             "added": "Template has been added!"
         }
     },
     "match": {
-        "noDatabaseSpecified": "Please add a default database for this pattern",
+        "noDatabaseSpecified": "I don't know which database to use 😔",
         "databaseNotFound": "Could not find the database: \"{database}\"",
         "patternMatched": "It's a match! 🎉\nFields:\n{fields}",
         "patternMatchDatabaseFieldName": "Database",

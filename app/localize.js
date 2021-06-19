@@ -1,9 +1,20 @@
 const en = require('../assets/localization/en.json');
+const ru = require('../assets/localization/ru.json');
+const uk = require('../assets/localization/uk.json');
+
 const Language = require('./Language');
 
 function getMessages(language) {
     if (language === Language.ENGLISH) {
         return en;
+    }
+
+    if (language === Language.RUSSIAN) {
+        return ru;
+    }
+
+    if (language === Language.UKRAINIAN) {
+        return uk;
     }
 
     throw new Error('Invalid language: ' + language);
