@@ -5,6 +5,7 @@
         "english": "English",
         "russian": "Русский"
     },
+    "notionNotConfigured": "First you need to configure /notion 🙇",
     "command": {
         "help": "Hi! Use /notion to setup Notion integration.",
         "start": {

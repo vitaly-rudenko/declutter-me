@@ -14,7 +14,7 @@ const withNotionFactory = (notionSessionManager) => {
             } catch (error) {
                 if (error instanceof NotionAccountNotFound) {
                     if (required) {
-                        await ctx.reply('Please use `/notion` first 🙇');
+                        await ctx.reply(ctx.state.localize('notionNotConfigured'));
                         return;
                     }
                 }
