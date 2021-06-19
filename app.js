@@ -39,7 +39,7 @@ const Language = require('./app/Language');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 1,
-        pattern: new PatternBuilder().build('купить [{Количество:number:number} (шт|штук|гр|грамм|кг|килограмм) ]{Товар:text:title}'),
+        pattern: new PatternBuilder().build('купить [{Количество:number:number} (шт[ук[и]]|гр[ам[м]]|кг|кило[грам[м]]) ]{Товар:text:title}'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'to_watch' })
         ]
@@ -48,7 +48,7 @@ const Language = require('./app/Language');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 2,
-        pattern: new PatternBuilder().build('посмотреть {Название:text:title}[ #{Тип:word:multi_select}]'),
+        pattern: new PatternBuilder().build('посмотреть {Название:text:title}[ #{Тип:word:select}]'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'shows' })
         ]
@@ -66,7 +66,7 @@ const Language = require('./app/Language');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 4,
-        pattern: new PatternBuilder().build('контакт {Имя:word:title}[ {Телефон:phone:phone}][ {Эл. почта:email:email}][ {Сайт:url:url}][ {Фамилия:word:text}]'),
+        pattern: new PatternBuilder().build('контакт {Имя:word:title}[ {Телефон:phone:phone}][ {Эл. почта:email:email}][ {Сайт:url:url}]'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'contacts' })
         ]
@@ -75,7 +75,16 @@ const Language = require('./app/Language');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 5,
-        pattern: new PatternBuilder().build('[заметка ]{Заметка:text:title}[ #{тег:word:multiselect}][ #{тег:word:multiselect}][ #{тег:word:multiselect}]'),
+        pattern: new PatternBuilder().build('контакт {Имя:word:title} {Фамилия:word:text}[ {Телефон:phone:phone}][ {Эл. почта:email:email}][ {Сайт:url:url}]'),
+        defaultFields: [
+            new Field({ inputType: 'database', value: 'contacts' })
+        ]
+    }));
+
+    await storage.storeTemplate(new Template({
+        userId: user.id,
+        order: 6,
+        pattern: new PatternBuilder().build('[заметка ]{Заметка:text:title}[ #{Теги:word:multi_select}][ #{Теги:word:multi_select}][ #{Теги:word:multi_select}]'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'notes' })
         ]

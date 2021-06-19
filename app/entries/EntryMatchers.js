@@ -107,7 +107,7 @@ class EntryMatchers {
     _url(input) {
         input = input.split(' ')[0];
 
-        if (this._isValidUrl(input) || this._isValidUrl('http://' + input)) {
+        if (this._isValidUrl(input)) {
             return input;
         }
 
@@ -115,6 +115,14 @@ class EntryMatchers {
     }
 
     _isValidUrl(input) {
+        if (!input.includes('.')) {
+            return false;
+        }
+
+        if (!input.startsWith('http://') && !input.startsWith('http://')) {
+            input = 'http://' + input;
+        }
+
         try {
             new URL(input);
         } catch (error) {
