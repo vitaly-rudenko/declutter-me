@@ -29,6 +29,7 @@ const RussianPresets = require('./app/presets/RussianPresets');
 const UkrainianPresets = require('./app/presets/UkrainianPresets');
 const localize = require('./app/localize');
 const Language = require('./app/Language');
+const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
 
 (async () => {
     const storage = new InMemoryStorage();
@@ -140,18 +141,46 @@ const Language = require('./app/Language');
     });
 
     bot.use(withTelegramAccount(storage));
-    bot.use(withLocalization())
+    bot.use(withLocalization());
 
     bot.start(async (ctx) => {
-        if (ctx.state.telegramAccount) {
-            await ctx.reply(ctx.state.localize('command.start.readyToGo'));
-            return;
-        }
+        const languages = Object.values(Language).map(language => [
+            language,
+            localize('chooseLanguage', { language: localize(`language.${language}`, null, language) }, language)
+        ]);
 
-        const user = await storage.createUser();
-        await storage.createTelegramAccount(user.id, ctx.from.id);
+        await ctx.reply('🇺🇸 🇬🇧 🇺🇦 🇷🇺', {
+            reply_markup: Markup.inlineKeyboard(
+                languages.map(([language, label]) => (
+                    Markup.button.callback(label, `language:${language}`)
+                )),
+                { columns: 1 }
+            ).reply_markup
+        });
 
-        await ctx.reply(ctx.state.localize('command.start.useNotionCommand'));
+        userSessionManager.setPhase(ctx.state.userId || ctx.from.id, phases.start.language);
+    });
+
+    bot.action(
+        /language:(.+)/,
+        withPhase(phases.start.language, async (ctx) => {
+            await ctx.answerCbQuery();
+
+            const language = ctx.match[1];
+            console.log(language);
+
+            userSessionManager.context(ctx.state.userId || ctx.from.id).language = language;
+            userSessionManager.setPhase(ctx.state.userId || ctx.from.id, phases.start.timezone);
+
+            await ctx.reply(localize('command.start.timezone', null, language));
+
+            userSessionManager.setPhase(ctx.state.userId || ctx.from.id, phases.start.timezone);
+        }),
+    );
+
+    bot.command('reset', async (ctx) => {
+        await storage.cleanUp();
+        await ctx.reply('🧹');
     });
 
     bot.command('info', withUser({ required: false }), withNotion({ required: false }), async (ctx) => {
@@ -226,6 +255,36 @@ const Language = require('./app/Language');
     }));
 
     bot.on('message',
+        // Start
+        withPhase(phases.start.timezone, async (ctx) => {
+            if (!('text' in ctx.message)) return;
+
+            const { language } = userSessionManager.context(ctx.state.userId || ctx.from.id);
+
+            const timezoneOffsetMinutes = parseTimezoneOffsetMinutes(ctx.message.text);
+            if (timezoneOffsetMinutes === null) {
+                await ctx.reply(localize('command.start.invalidTimezone', null, language));
+                return;
+            }
+
+            if (!ctx.state.telegramAccount) {
+                const user = await storage.createUser({ language, timezoneOffsetMinutes });
+                await storage.createTelegramAccount(user.id, ctx.from.id);
+            } else {
+                await storage.updateUser(ctx.state.userId, { language, timezoneOffsetMinutes });
+            }
+
+            await ctx.reply(localize(
+                'command.start.finished',
+                {
+                    language: localize(`language.${language}`, null, language),
+                    timezone: formatTimezone(timezoneOffsetMinutes),
+                },
+                language
+            ));
+
+            await ctx.reply(localize('command.help', null, language));
+        }),
         withUser(),
         // Notion
         withPhase(phases.notion.token, async (ctx) => {
@@ -424,8 +483,8 @@ const Language = require('./app/Language');
 
         const timezoneHours = Math.trunc(offset / 60);
         const timezoneMinutes = (offset - timezoneHours * 60);
-    
-        return (offset >= 0 ? '+' : '-') + String(timezoneHours).padStart(2, '0') + ':' + String(timezoneMinutes).padStart(2, '0');
+
+        return (timezoneOffsetMinutes >= 0 ? '+' : '-') + String(timezoneHours).padStart(2, '0') + ':' + String(timezoneMinutes).padStart(2, '0');
     }
 
     await bot.launch({

@@ -6,9 +6,18 @@
         "russian": "Русский"
     },
     "command": {
+        "help": "Привіт! Скористайся командою /notion щоб підключити Notion.",
         "start": {
-            "readyToGo": "Все готово!",
-            "start.useNotionCommand": "Привіт! Скористайся командою /notion щоб підключити Notion."
+            "timezone": [
+                "Прийнято! Тепер відправ свій часовий пояс.",
+                "Приклади: +3:00, GMT-3, UTC"
+            ],
+            "finished": [
+                "Чудово! 🚀",
+                "",
+                "Мова: {language}",
+                "Часовий пояс: {timezone}"
+            ]
         },
         "info": {
             "response": [

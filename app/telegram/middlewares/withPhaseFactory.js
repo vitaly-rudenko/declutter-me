@@ -10,7 +10,9 @@ const withPhaseFactory = (userSessionManager) => {
     return (phase, middleware) => {
         /** @param {T} context @param {Function} next */
         return async (context, next) => {
-            if (userSessionManager.getPhase(context.state.userId) === phase) {
+            const userId = context.state.userId ?? context.from.id;
+
+            if (userSessionManager.getPhase(userId) === phase) {
                 await middleware(context, next);
             } else {
                 next();

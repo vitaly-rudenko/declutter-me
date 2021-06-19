@@ -6,9 +6,18 @@
         "russian": "Русский"
     },
     "command": {
+        "help": "Hi! Use /notion to setup Notion integration.",
         "start": {
-            "readyToGo": "You're ready to go!",
-            "start.useNotionCommand": "Hi! Use /notion to setup Notion integration."
+            "timezone": [
+                "Got it! Now send your timezone offset.",
+                "Examples: +3:00, GMT-3, UTC"
+            ],
+            "finished": [
+                "Got it! 🚀",
+                "",
+                "Your language: {language}",
+                "Your timezone: {timezone}"
+            ]
         },
         "info": {
             "response": [

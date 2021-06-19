@@ -29,6 +29,18 @@ class InMemoryStorage {
         return user;
     }
 
+    async updateUser(userId, { language, timezoneOffsetMinutes }) {
+        const index = this._users.findIndex(u => u.id === userId);
+        if (index === -1) {
+            throw new Error(`User "${userId}" not found!`);
+        }
+
+        this._users[index] = this._users[index].clone({
+            language,
+            timezoneOffsetMinutes,
+        });
+    }
+
     async findUserById(id) {
         return this._users.find(u => u.id === id) || null;
     }

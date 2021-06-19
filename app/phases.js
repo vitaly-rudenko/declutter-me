@@ -1,4 +1,8 @@
 module.exports = organizeValues({
+    start: {
+        language: '1',
+        timezone: '1',
+    },
     notion: {
         token: '1',
     },
