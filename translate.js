@@ -33,8 +33,6 @@ async function init() {
 init();
 
 async function translate(text) {
-    console.log(text)
-
     const match = text.match(/\{.+?\}/g);
     const protectedWords = match ? [...match].map(v => v.slice(1, -1)) : [];
 

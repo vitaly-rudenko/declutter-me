@@ -167,7 +167,6 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
             await ctx.answerCbQuery();
 
             const language = ctx.match[1];
-            console.log(language);
 
             userSessionManager.context(ctx.state.userId || ctx.from.id).language = language;
             userSessionManager.setPhase(ctx.state.userId || ctx.from.id, phases.start.timezone);
@@ -198,10 +197,16 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
                     : ctx.state.localize('command.info.notProvided'),
                 notionToken: ctx.state.notionAccount?.token ?? ctx.state.localize('command.info.notProvided'),
                 databases: databases.length > 0
-                    ? '\n' + databases.map(list => ctx.state.localize('command.info.database', { notionDatabaseId: list.notionDatabaseId, alias: list.alias })).join('\n')
+                    ? '\n' + databases.map(list => ctx.state.localize('command.info.database', {
+                        notionDatabaseId: list.notionDatabaseId,
+                        alias: list.alias
+                    })).join('\n')
                     : ctx.state.localize('command.info.none'),
                 templates: templates.length > 0
-                    ? '\n' + templates.map(template => ctx.state.localize('command.info.template', { pattern: new PatternStringifier().stringify(template.pattern) })).join('\n')
+                    ? '\n' + templates.map(template => ctx.state.localize('command.info.template', {
+                        order: template.order,
+                        pattern: new PatternStringifier().stringify(template.pattern)
+                    })).join('\n')
                     : ctx.state.localize('command.info.none'),
             })
         );
@@ -274,6 +279,8 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
                 await storage.updateUser(ctx.state.userId, { language, timezoneOffsetMinutes });
             }
 
+            userSessionManager.reset(ctx.state.userId || ctx.from.id);
+
             await ctx.reply(localize(
                 'command.start.finished',
                 {
@@ -295,7 +302,7 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
             await storage.createNotionAccount(ctx.state.userId, token);
             await ctx.reply(ctx.state.localize('command.notion.allSet', { token }));
 
-            userSessionManager.reset
+            userSessionManager.reset(ctx.state.userId);
         }),
         // Databases
         withPhase(phases.database.link, async (ctx) => {
@@ -423,15 +430,23 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
                     fields,
                 });
                 
-                await notion.pages.create(
-                    new NotionEntrySerializer({
-                        dateParser,
-                    }).serialize(
-                        database.notionDatabaseId,
-                        notionEntry,
-                        user,
-                    )
-                );
+                try {
+                    await notion.pages.create(
+                        new NotionEntrySerializer({
+                            dateParser,
+                        }).serialize(
+                            database.notionDatabaseId,
+                            notionEntry,
+                            user,
+                        )
+                    );
+                } catch (error) {
+                    try {
+                        await ctx.reply(ctx.state.localize('match.failed', { error: error.message }));
+                    } catch (error) {}
+
+                    throw error;
+                }
 
                 await bot.telegram.editMessageText(
                     message.chat.id,

@@ -8,6 +8,7 @@
     "command": {
         "help": "Привіт! Скористайся командою /notion щоб підключити Notion.",
         "start": {
+            "invalidTimezone": "Неправильний часовий пояс! Має виглядати приблизно так: \"GMT+3\"",
             "timezone": [
                 "Прийнято! Тепер відправ свій часовий пояс.",
                 "Приклади: +3:00, GMT-3, UTC"
@@ -23,15 +24,16 @@
             "response": [
                 "Привіт, {name}!",
                 "",
-                "Твої настройки:",
-                "  - Мова: {language}",
-                "  - Часовий пояс: {timezone}",
-                "  - Токен Notion: {notionToken}",
-                "  - Бази даних: {databases}",
-                "  - Шаблони: {templates}"
+                "Мова: {language}",
+                "Часовий пояс: {timezone}",
+                "Токен Notion: {notionToken}",
+                "",
+                "Бази даних: {databases}",
+                "",
+                "Шаблони: {templates}"
             ],
-            "database": "    - {alias} ({notionDatabaseId})",
-            "template": "    - {pattern}",
+            "database": "- {alias} ({notionDatabaseId})",
+            "template": "{order}. {pattern}",
             "notProvided": "<не налаштовано>",
             "none": "<порожньо>"
         },
@@ -69,6 +71,12 @@
         "checking": "Хм, хвилинку... ⏳",
         "noDatabaseSpecified": "Я не знаю в яку базу даних це записати 😔",
         "databaseNotFound": "Я не знайшов цю базу даних: \"{database}\"",
+        "failed": [
+            "❌ Не вдалося зберегти запис!",
+            "Перевір свої шаблони і бази даних, або звернися до адміністратора.",
+            "",
+            "Помилка: {error}"
+        ],
         "patternMatched": [
             "Добре, я зберіг! 🎉",
             "",

@@ -8,6 +8,7 @@
     "command": {
         "help": "Hi! Use /notion to setup Notion integration.",
         "start": {
+            "invalidTimezone": "Invalid timezone! Should look something like \"GMT+3\"",
             "timezone": [
                 "Got it! Now send your timezone offset.",
                 "Examples: +3:00, GMT-3, UTC"
@@ -23,15 +24,16 @@
             "response": [
                 "Hi, {name}!",
                 "",
-                "Your info:",
-                "  - Language: {language}",
-                "  - Timezone: {timezone}",
-                "  - Notion token: {notionToken}",
-                "  - Databases: {databases}",
-                "  - Templates: {templates}"
+                "Language: {language}",
+                "Timezone: {timezone}",
+                "Notion token: {notionToken}",
+                "",
+                "Databases: {databases}",
+                "",
+                "Templates: {templates}"
             ],
-            "database": "    - {alias} ({notionDatabaseId})",
-            "template": "    - {pattern}",
+            "database": "- {alias} ({notionDatabaseId})",
+            "template": "{order}. {pattern}",
             "notProvided": "<not provided>",
             "none": "<none>"
         },
@@ -69,6 +71,12 @@
         "checking": "Hm, wait a minute... ⏳",
         "noDatabaseSpecified": "I don't know which database to use 😔",
         "databaseNotFound": "Could not find the database: \"{database}\"",
+        "failed": [
+            "❌ Could not save the entry!",
+            "Please check your patterns and databases, or contact the administrator.",
+            "",
+            "Error: {error}"
+        ],
         "patternMatched": [
             "Got it, saved! 🎉",
             "",
@@ -76,7 +84,7 @@
             "{fields}"
         ],
         "patternMatchDatabaseFieldName": "Database",
-        "patternMatchField": "  - {name}: {value}",
+        "patternMatchField": "- {name}: {value}",
         "noPatternMatched": "What was it? 🤔"
     },
     "help": {
