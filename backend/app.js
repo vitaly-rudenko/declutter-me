@@ -83,7 +83,7 @@ const NotionField = require('./app/notion/NotionField');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 6,
-        pattern: new PatternBuilder().build('[#{database} ][заметка ]{заметка:text}[ #{теги:word}][ #{теги:word}][ #{теги:word}]'),
+        pattern: new PatternBuilder().build('[#{:database} ][заметка ]{заметка:text}[ #{теги:word}][ #{теги:word}][ #{теги:word}]'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'notes' })
         ]
@@ -478,7 +478,7 @@ const NotionField = require('./app/notion/NotionField');
                                 name: field.inputType === 'database'
                                     ? ctx.state.localize('match.patternMatchDatabaseFieldName')
                                     : field.name,
-                                value: field.value
+                                value: Array.isArray(field.value) ? field.value.join(', '): field.value
                             }
                         )).join('\n')
                     })
