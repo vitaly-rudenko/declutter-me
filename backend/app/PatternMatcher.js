@@ -9,7 +9,6 @@ class PatternMatcher {
      * @returns {{
      *     match: boolean,
      *     fields?: Field[],
-     *     bang?: { [variable: string]: boolean }
      * }}
      */
     match(input, pattern, matchers) {
@@ -21,11 +20,10 @@ class PatternMatcher {
             let match = true;
             /** @type {{ [variable: string]: Field }} */
             const fieldMap = {};
-            const bang = {};
 
             for (const [i, token] of combination.entries()) {
                 let value = token.value;
-                let { value: name, inputType, outputType } = token;
+                let { value: name, inputType, outputType, bang } = token;
 
                 if (token.type === 'variable') {
                     if (!inputType) {
@@ -65,7 +63,8 @@ class PatternMatcher {
                                 outputType,
                                 value: fieldMap[name]
                                     ? [...fieldMap[name].value, value]
-                                    : [value]
+                                    : [value],
+                                bang,
                             })
                         } else {
                             fieldMap[name] = new Field({
@@ -73,13 +72,11 @@ class PatternMatcher {
                                 inputType,
                                 outputType,
                                 value,
+                                bang,
                             });
                         }
-    
-                        bang[name] = token.bang;
                     } else {
                         fieldMap[name] = undefined;
-                        bang[name] = false;
                     }
                 }
 
@@ -92,13 +89,11 @@ class PatternMatcher {
             }
 
             if (match && remainingInput.length === 0) {
-                const filteredBang = Object.entries(bang).filter(([,value]) => value);
                 const fields = Object.values(fieldMap);
 
                 return {
                     match: true,
                     ...fields.length > 0 && { fields },
-                    ...filteredBang.length > 0 && { bang: Object.fromEntries(filteredBang) },
                 };
             }
         }

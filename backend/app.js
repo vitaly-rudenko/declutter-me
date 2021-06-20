@@ -403,8 +403,8 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
 
                 const fields = mergeFields(template.defaultFields, result.fields)
 
-                const databaseAlias = fields.find(field => field.inputType === 'database')?.value;
-                if (!databaseAlias) {
+                const databaseField = fields.find(field => field.inputType === 'database')
+                if (!databaseField) {
                     await bot.telegram.editMessageText(
                         message.chat.id,
                         message.message_id,
@@ -414,9 +414,10 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
                     return;
                 }
 
+                const databaseAlias = databaseField.value;
                 const database = await storage.findDatabaseByAlias(userId, databaseAlias);
                 if (!database) {
-                    if (result.bang?.database) continue;
+                    if (databaseField.bang) continue;
                     await bot.telegram.editMessageText(
                         message.chat.id,
                         message.message_id,

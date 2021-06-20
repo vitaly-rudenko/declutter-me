@@ -5,13 +5,15 @@ class Field {
      *     outputType?: string,
      *     inputType?: string,
      *     value: string | string[],
+     *     bang?: boolean,
      * }} attributes
      */
-    constructor({ name, inputType, outputType, value }) {
+    constructor({ name, inputType, outputType, value, bang = false }) {
         this._name = name;
         this._inputType = inputType;
         this._outputType = outputType;
         this._value = value;
+        this._bang = bang;
     }
 
     get name() {
@@ -28,6 +30,10 @@ class Field {
 
     get value() {
         return this._value;
+    }
+
+    get bang() {
+        return this._bang;
     }
 }
 
