@@ -3,9 +3,17 @@
 }
 
 .template-builder {
-    margin-top: 20px;
+    margin-top: 50px;
 }
 
 .template-builder__form > *:not(:last-child) {
-    margin-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.template-builder__field-name {
+    text-transform: none !important;
+}
+
+.template-builder__template-field textarea {
+    font-family: monospace;
 }
