@@ -1,9 +1,11 @@
 const chai = require('chai');
 const { spy } = require('sinon');
 const Field = require('../../app/fields/Field');
-const NotionEntry = require('../../app/notion/NotionEntry');
+const Entry = require('../../app/entries/Entry');
 const NotionEntrySerializer = require('../../app/notion/NotionEntrySerializer');
 const User = require('../../app/users/User');
+const NotionField = require('../../app/notion/NotionField');
+const NotionFieldType = require('../../app/notion/NotionFieldType');
 
 chai.use(require('sinon-chai'));
 const { expect } = chai;
@@ -23,40 +25,48 @@ describe('NotionEntrySerializer', () => {
         it('should serialize entries properly', () => {
             expect(notionEntrySerializer.serialize(
                 'fake-database-id',
-                new NotionEntry({
+                new Entry({
                     fields: [
                         new Field({
-                            name: '@the Title',
+                            name: '@the title',
                             inputType: 'text',
-                            outputType: 'title',
                             value: 'hey_there',
                         }),
                         new Field({
-                            name: '@the TAG',
+                            name: 'description',
                             inputType: 'word',
-                            outputType: 'select',
+                            value: '!hey there!',
+                        }),
+                        new Field({
+                            name: '@the_tag',
+                            inputType: 'word',
                             value: '!hey_there!',
                         }),
                         new Field({
-                            name: 'My Tags',
+                            name: 'mytags',
                             inputType: 'word',
-                            outputType: 'multi_select',
                             value: ['My Tag 1', 'My Other Tag 2'],
                         }),
                         new Field({
-                            name: 'date',
+                            name: 'DATE',
                             inputType: 'date',
-                            outputType: 'date',
                             value: 'в 8:05',
                         }),
                         new Field({
-                            name: 'Reminder Date',
+                            name: 'reminder-date',
                             inputType: 'future_date',
-                            outputType: 'date',
                             value: 'в 12:00',
                         }),
                     ]
                 }),
+                [
+                    new NotionField({ name: '@The Title', type: NotionFieldType.TITLE }),
+                    new NotionField({ name: 'Description', type: NotionFieldType.RICH_TEXT }),
+                    new NotionField({ name: '@the TAG', type: NotionFieldType.SELECT }),
+                    new NotionField({ name: 'My Tags', type: NotionFieldType.MULTI_SELECT }),
+                    new NotionField({ name: 'date', type: NotionFieldType.DATE }),
+                    new NotionField({ name: 'Reminder Date', type: NotionFieldType.DATE }),
+                ],
                 new User({
                     id: 'fake-user-id',
                     language: 'fake-language',
@@ -67,12 +77,21 @@ describe('NotionEntrySerializer', () => {
                     'database_id': 'fake-database-id',
                 },
                 'properties': {
-                    '@the Title': {
+                    '@The Title': {
                         'type': 'title',
                         'title': [{
                             'type': 'text',
                             'text': {
                                 'content': 'hey_there',
+                            }
+                        }]
+                    },
+                    'Description': {
+                        'type': 'rich_text',
+                        'rich_text': [{
+                            'type': 'text',
+                            'text': {
+                                'content': '!hey there!',
                             }
                         }]
                     },

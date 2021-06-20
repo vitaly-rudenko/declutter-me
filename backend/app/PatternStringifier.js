@@ -2,7 +2,7 @@ class PatternStringifier {
     stringify(pattern) {
         return pattern.map((token) => {
             if (token.type === 'variable') {
-                const value = [token.value, token.inputType, token.outputType].filter(Boolean).join(':');
+                const value = [token.value, token.inputType].filter(Boolean).join(':');
                 if (token.bang) {
                     return `{${value}!}`;
                 } else {

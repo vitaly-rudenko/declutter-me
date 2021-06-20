@@ -23,15 +23,11 @@ class PatternMatcher {
 
             for (const [i, token] of combination.entries()) {
                 let value = token.value;
-                let { value: name, inputType, outputType, bang } = token;
+                let { value: name, inputType, bang } = token;
 
                 if (token.type === 'variable') {
                     if (!inputType) {
                         throw new Error(`No input type provided: ${name}`)
-                    }
-    
-                    if (inputType !== 'database' && !outputType) {
-                        throw new Error(`No output type provided: ${name}`)
                     }
 
                     const matcher = matchers[inputType];
@@ -56,25 +52,14 @@ class PatternMatcher {
                     }
 
                     if (value !== undefined && value !== null) {
-                        if (outputType === 'multi_select') {
-                            fieldMap[name] = new Field({
-                                name,
-                                inputType,
-                                outputType,
-                                value: fieldMap[name]
-                                    ? [...fieldMap[name].value, value]
-                                    : [value],
-                                bang,
-                            })
-                        } else {
-                            fieldMap[name] = new Field({
-                                name,
-                                inputType,
-                                outputType,
-                                value,
-                                bang,
-                            });
-                        }
+                        fieldMap[name] = new Field({
+                            name,
+                            inputType,
+                            value: fieldMap[name]
+                                ? [...fieldMap[name].value, value]
+                                : value,
+                            bang,
+                        })
                     } else {
                         fieldMap[name] = undefined;
                     }

@@ -1,3 +1,6 @@
+const fuzzyEquals = require('../utils/fuzzyEquals');
+const NotionFieldType = require('./NotionFieldType');
+
 function last(arrayOrValue) {
     return Array.isArray(arrayOrValue) ? arrayOrValue[arrayOrValue.length - 1] : arrayOrValue;
 }
@@ -10,39 +13,46 @@ class NotionEntrySerializer {
 
     /**
      * @param {string} notionDatabaseId
-     * @param {import('./NotionEntry')} notionEntry
+     * @param {import('../entries/Entry')} entry
+     * @param {import('./NotionField')[]} notionFields
      * @param {import('../users/User')} user
      * @returns {import('@notionhq/client/build/src/api-endpoints').PagesCreateParameters}
      */
-    serialize(notionDatabaseId, notionEntry, user) {
+    serialize(notionDatabaseId, entry, notionFields, user) {
         const properties = {};
 
-        for (const field of notionEntry.fields) {
+        for (const field of entry.fields) {
             if (field.inputType === 'database') continue;
-            if (field.outputType === 'title') {
-                properties[field.name] = this.serializeTitle(last(field.value));
-            } else if (field.outputType === 'text') {
-                properties[field.name] = this.serializeText(last(field.value));
-            } else if (field.outputType === 'select') {
-                properties[field.name] = this.serializeSelect(last(field.value));
-            } else if (field.outputType === 'multi_select') {
-                properties[field.name] = this.serializeMultiSelect(field.value);
-            } else if (field.outputType === 'phone') {
-                properties[field.name] = this.serializePhoneNumber(last(field.value));
-            } else if (field.outputType === 'email') {
-                properties[field.name] = this.serializeEmail(last(field.value));
-            } else if (field.outputType === 'url') {
-                properties[field.name] = this.serializeUrl(last(field.value));
-            } else if (field.outputType === 'number') {
-                properties[field.name] = this.serializeNumber(Number(last(field.value)));
-            } else if (field.outputType === 'date') {
+
+            const notionField = notionFields.find(f => fuzzyEquals(f.name, field.name));
+            if (!notionField) continue;
+
+            const { name, type } = notionField;
+
+            if (type === NotionFieldType.TITLE) {
+                properties[name] = this.serializeTitle(last(field.value));
+            } else if (type === NotionFieldType.RICH_TEXT) {
+                properties[name] = this.serializeRichText(last(field.value));
+            } else if (type === NotionFieldType.SELECT) {
+                properties[name] = this.serializeSelect(last(field.value));
+            } else if (type === NotionFieldType.MULTI_SELECT) {
+                properties[name] = this.serializeMultiSelect(field.value);
+            } else if (type === NotionFieldType.PHONE) {
+                properties[name] = this.serializePhoneNumber(last(field.value));
+            } else if (type === NotionFieldType.EMAIL) {
+                properties[name] = this.serializeEmail(last(field.value));
+            } else if (type === NotionFieldType.URL) {
+                properties[name] = this.serializeUrl(last(field.value));
+            } else if (type === NotionFieldType.NUMBER) {
+                properties[name] = this.serializeNumber(Number(last(field.value)));
+            } else if (type === NotionFieldType.DATE) {
                 const date = this._dateParser.parse(last(field.value), {
                     futureOnly: field.inputType === 'future_date',
                 });
 
-                properties[field.name] = this.serializeDate(date, user.timezoneOffsetMinutes);
+                properties[name] = this.serializeDate(date, user.timezoneOffsetMinutes);
             } else {
-                throw new Error('Unsupported field output type: ' + field.outputType);
+                throw new Error('Unsupported field type: ' + type);
             }
         }
 
@@ -68,7 +78,7 @@ class NotionEntrySerializer {
         };
     }
 
-    serializeText(value) {
+    serializeRichText(value) {
         return {
             'type': 'rich_text',
             'rich_text': [{

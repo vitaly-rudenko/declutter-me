@@ -2,16 +2,14 @@ class Field {
     /**
      * @param {{
      *     name?: string,
-     *     outputType?: string,
      *     inputType?: string,
      *     value: string | string[],
      *     bang?: boolean,
      * }} attributes
      */
-    constructor({ name, inputType, outputType, value, bang = false }) {
+    constructor({ name, inputType, value, bang = false }) {
         this._name = name;
         this._inputType = inputType;
-        this._outputType = outputType;
         this._value = value;
         this._bang = bang;
     }
@@ -22,10 +20,6 @@ class Field {
 
     get inputType() {
         return this._inputType;
-    }
-
-    get outputType() {
-        return this._outputType;
     }
 
     get value() {

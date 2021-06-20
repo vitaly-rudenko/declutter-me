@@ -1,15 +1,11 @@
 class Entry {
-    constructor({ content, tags }) {
-        this._content = content;
-        this._tags = tags;
+    /** @param {{ fields: import('../fields/Field')[] }} attributes */
+    constructor({ fields }) {
+        this._fields = fields;
     }
 
-    get content() {
-        return this._content;
-    }
-
-    get tags() {
-        return this._tags;
+    get fields() {
+        return this._fields;
     }
 }
 

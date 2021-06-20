@@ -22,7 +22,7 @@ require('dotenv').config();
 const NotionDatabase = require('./app/notion/NotionDatabase');
 const EntryMatchers = require('./app/entries/EntryMatchers');
 const NotionEntrySerializer = require('./app/notion/NotionEntrySerializer');
-const NotionEntry = require('./app/notion/NotionEntry');
+const Entry = require('./app/notion/Entry');
 const Field = require('./app/fields/Field');
 const localize = require('./app/localize');
 const Language = require('./app/Language');
@@ -427,7 +427,7 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
                     return;
                 }
 
-                const notionEntry = new NotionEntry({
+                const entry = new Entry({
                     fields,
                 });
                 
@@ -437,7 +437,7 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
                             dateParser,
                         }).serialize(
                             database.notionDatabaseId,
-                            notionEntry,
+                            entry,
                             user,
                         )
                     );

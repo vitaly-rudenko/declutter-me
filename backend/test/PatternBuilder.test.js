@@ -223,8 +223,8 @@ describe('PatternBuilder', () => {
                 }]);
         });
 
-        it('should parse custom input & output types', () => {
-            expect(patternBuilder.build('#{database!} buy {Note:text}, please[ {when:future_date:date}][ #{My Tag:word:multi_select}]'))
+        it('should parse input types', () => {
+            expect(patternBuilder.build('#{database!} buy {Note:text}, please[ {when:future_date}][ #{My Tag:word}]'))
                 .to.deep.eq([
                     { type: 'text', value: '#' },
                     { type: 'variable', value: 'database', bang: true },
@@ -233,11 +233,11 @@ describe('PatternBuilder', () => {
                     { type: 'text', value: ', please' },
                     { type: 'optional', value: [
                         { type: 'text', value: ' ' },
-                        { type: 'variable', value: 'when', inputType: 'future_date', outputType: 'date' },
+                        { type: 'variable', value: 'when', inputType: 'future_date' },
                     ] },
                     { type: 'optional', value: [
                         { type: 'text', value: ' #' },
-                        { type: 'variable', value: 'My Tag', inputType: 'word', outputType: 'multi_select' },
+                        { type: 'variable', value: 'My Tag', inputType: 'word' },
                     ] },
                 ]);
         });
