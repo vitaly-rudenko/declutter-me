@@ -1,0 +1,11 @@
+.template-builder__multiselect-chip {
+    margin: 3px;
+}
+
+.template-builder {
+    margin-top: 20px;
+}
+
+.template-builder__form > *:not(:last-child) {
+    margin-bottom: 10px;
+}
