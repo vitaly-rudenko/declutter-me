@@ -24,9 +24,6 @@ const EntryMatchers = require('./app/entries/EntryMatchers');
 const NotionEntrySerializer = require('./app/notion/NotionEntrySerializer');
 const NotionEntry = require('./app/notion/NotionEntry');
 const Field = require('./app/fields/Field');
-const CommonPresets = require('./app/presets/CommonPresets');
-const RussianPresets = require('./app/presets/RussianPresets');
-const UkrainianPresets = require('./app/presets/UkrainianPresets');
 const localize = require('./app/localize');
 const Language = require('./app/Language');
 const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
@@ -375,14 +372,7 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
                 const result = patternMatcher.match(
                     ctx.message.text,
                     template.pattern,
-                    {
-                        matchers: entryMatchers,
-                        presets: [
-                            new UkrainianPresets(),
-                            new RussianPresets(),
-                            new CommonPresets(),
-                        ]
-                    }
+                    entryMatchers,
                 );
 
                 if (!result.match) continue;

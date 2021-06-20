@@ -14,7 +14,6 @@ describe('EntryMatchers', () => {
     let matchers;
     /** @type {PatternBuilder} */
     let patternBuilder;
-    let presets = null; // TODO: test presets
 
     beforeEach(() => {
         patternBuilder = new PatternBuilder();
@@ -27,7 +26,7 @@ describe('EntryMatchers', () => {
         it('should match simple pattern', () => {
             const pattern = patternBuilder.build('#{tag:word:select} {note:text:title}');
     
-            expect(patternMatcher.match('#ideas Draw fan-art of Haruhi', pattern, { matchers, presets }))
+            expect(patternMatcher.match('#ideas Draw fan-art of Haruhi', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -36,7 +35,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('#my-ideas Write HTML parser', pattern, { matchers, presets }))
+            expect(patternMatcher.match('#my-ideas Write HTML parser', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -45,17 +44,17 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('Write HTML parser', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Write HTML parser', pattern, matchers))
                 .to.deep.eq({ match: false });
             
-            expect(patternMatcher.match('# Write HTML parser', pattern, { matchers, presets }))
+            expect(patternMatcher.match('# Write HTML parser', pattern, matchers))
                 .to.deep.eq({ match: false });
         });
     
         it('should separate variables properly', () => {
             const pattern = patternBuilder.build('{note:text:title} #{tag:word:select}');
             
-            expect(patternMatcher.match('Draw fan-art of Haruhi #art-ideas', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Draw fan-art of Haruhi #art-ideas', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -64,7 +63,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('Write an app in Go #my #idea', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Write an app in Go #my #idea', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -73,14 +72,14 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('Write an app in Go potatoes #my idea', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Write an app in Go potatoes #my idea', pattern, matchers))
                 .to.deep.eq({ match: false });
         });
     
         it('should separate variables properly in complete sentences', () => {
             const pattern = patternBuilder.build('save {note:text:title} to the {tag:word:select} notes');
     
-            expect(patternMatcher.match('Save Pygmalion effect to the idea notes', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Save Pygmalion effect to the idea notes', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -93,7 +92,7 @@ describe('EntryMatchers', () => {
         it('should override word when repeated (from the start)', () => {
             const pattern = patternBuilder.build('[#{tag:word:select} ][#{tag:word:select} ][#{tag:word:select} ]{note:text:title}');
     
-            expect(patternMatcher.match('my note', pattern, { matchers, presets }))
+            expect(patternMatcher.match('my note', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -101,7 +100,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('#my-tag-1 my note', pattern, { matchers, presets }))
+            expect(patternMatcher.match('#my-tag-1 my note', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -110,7 +109,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('#my-tag-1 #my-tag-2 my note', pattern, { matchers, presets }))
+            expect(patternMatcher.match('#my-tag-1 #my-tag-2 my note', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -119,7 +118,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 my note', pattern, { matchers, presets }))
+            expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 my note', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -128,7 +127,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 my note', pattern, { matchers, presets }))
+            expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 my note', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -137,7 +136,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 #my-tag-5 my note', pattern, { matchers, presets }))
+            expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 #my-tag-5 my note', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -150,7 +149,7 @@ describe('EntryMatchers', () => {
         it('should override word when repeated (from the end)', () => {
             const pattern = patternBuilder.build('save {note:text:title}[ #{tag:word:select}][ #{tag:word:select}][ #{tag:word:select}]');
     
-            expect(patternMatcher.match('Save my note', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Save my note', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -158,7 +157,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('Save my note #my-tag-1', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Save my note #my-tag-1', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -167,7 +166,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -176,7 +175,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -185,7 +184,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -194,7 +193,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 #my-tag-5', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 #my-tag-5', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -207,7 +206,7 @@ describe('EntryMatchers', () => {
         it('should allow matching multiple tags (from the start)', () => {
             const pattern = patternBuilder.build('[#{tag:word:multi_select} ][#{tag:word:multi_select} ][#{tag:word:multi_select} ]{note:text:title}');
     
-            expect(patternMatcher.match('my note', pattern, { matchers, presets }))
+            expect(patternMatcher.match('my note', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -215,7 +214,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('#my-tag-1 my note', pattern, { matchers, presets }))
+            expect(patternMatcher.match('#my-tag-1 my note', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -224,7 +223,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('#my-tag-1 #my-tag-2 my note', pattern, { matchers, presets }))
+            expect(patternMatcher.match('#my-tag-1 #my-tag-2 my note', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -233,7 +232,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 my note', pattern, { matchers, presets }))
+            expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 my note', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -242,7 +241,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 my note', pattern, { matchers, presets }))
+            expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 my note', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -251,7 +250,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 #my-tag-5 my note', pattern, { matchers, presets }))
+            expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 #my-tag-5 my note', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -264,7 +263,7 @@ describe('EntryMatchers', () => {
         it('should allow matching multiple tags (from the end)', () => {
             const pattern = patternBuilder.build('save {note:text:title}[ #{tag:word:multi_select}][ #{tag:word:multi_select}][ #{tag:word:multi_select}]');
     
-            expect(patternMatcher.match('Save my note', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Save my note', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -272,7 +271,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('Save my note #my-tag-1', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Save my note #my-tag-1', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -281,7 +280,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -290,7 +289,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -299,7 +298,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -308,7 +307,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 #my-tag-5', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 #my-tag-5', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -319,10 +318,10 @@ describe('EntryMatchers', () => {
         });
     
         it('should match complex patterns', () => {
-            const pattern = patternBuilder.build('[[#]{database} ](add|save) {note:text:title}[ to[ the] {tag:word:select}[ notes]]');
+            const pattern = patternBuilder.build('[[#]{database:database} ](add|save) {note:text:title}[ to[ the] {tag:word:select}[ notes]]');
     
             for (const input of ['Add my unique idea', 'save my unique idea']) {
-                expect(patternMatcher.match(input, pattern, { matchers, presets }), input)
+                expect(patternMatcher.match(input, pattern, matchers), input)
                     .to.deep.eq({
                         match: true,
                         fields: [
@@ -341,11 +340,11 @@ describe('EntryMatchers', () => {
                 'shopping save my unique idea to the my-ideas',
                 '#shopping Save my unique idea to the my-ideas Notes',
             ]) {
-                expect(patternMatcher.match(input, pattern, { matchers, presets }), input)
+                expect(patternMatcher.match(input, pattern, matchers), input)
                     .to.deep.eq({
                         match: true,
                         fields: [
-                            new Field({ name: 'database', inputType: 'text', outputType: 'title', value: 'shopping' }),
+                            new Field({ name: 'database', inputType: 'database', value: 'shopping' }),
                             new Field({ name: 'note', inputType: 'text', outputType: 'title', value: 'my unique idea' }),
                             new Field({ name: 'tag', inputType: 'word', outputType: 'select', value: 'my-ideas' }),
                         ]
@@ -356,12 +355,12 @@ describe('EntryMatchers', () => {
                 'Insert my unique idea to the my-ideas notes',
                 'Save', 'Add', 'Addmy unique idea'
             ]) {
-                expect(patternMatcher.match(input, pattern, { matchers, presets }), input)
+                expect(patternMatcher.match(input, pattern, matchers), input)
                     .to.deep.eq({ match: false });
             }
     
             // Special case
-            expect(patternMatcher.match('Add my unique idea into the my-ideas notes', pattern, { matchers, presets }))
+            expect(patternMatcher.match('Add my unique idea into the my-ideas notes', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -375,7 +374,7 @@ describe('EntryMatchers', () => {
         it('should match dates properly from the start', () => {
             const pattern = patternBuilder.build('{date:future_date:date} {reminder:text:title}');
     
-            expect(patternMatcher.match('послезавтра купить морковку', pattern, { matchers, presets }))
+            expect(patternMatcher.match('послезавтра купить морковку', pattern, matchers))
                     .to.deep.eq({
                         match: true,
                         fields: [
@@ -384,7 +383,7 @@ describe('EntryMatchers', () => {
                         ]
                     });
     
-            expect(patternMatcher.match('через тридцать дней позвонить', pattern, { matchers, presets }))
+            expect(patternMatcher.match('через тридцать дней позвонить', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -393,7 +392,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('девятого декабря 2025 года пойти к стоматологу', pattern, { matchers, presets }))
+            expect(patternMatcher.match('девятого декабря 2025 года пойти к стоматологу', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -402,7 +401,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('через три недели вечером погулять', pattern, { matchers, presets }))
+            expect(patternMatcher.match('через три недели вечером погулять', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -411,7 +410,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('21 сентября в 21:00 увидеть это напоминание', pattern, { matchers, presets }))
+            expect(patternMatcher.match('21 сентября в 21:00 увидеть это напоминание', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -424,7 +423,7 @@ describe('EntryMatchers', () => {
         it('should match dates properly from the end (unique separator)', () => {
             const pattern = patternBuilder.build('{reminder:text:title}; {date:future_date:date}')
     
-            expect(patternMatcher.match('купить морковку; послезавтра', pattern, { matchers, presets }))
+            expect(patternMatcher.match('купить морковку; послезавтра', pattern, matchers))
                     .to.deep.eq({
                         match: true,
                         fields:  [
@@ -433,7 +432,7 @@ describe('EntryMatchers', () => {
                         ]
                     });
     
-            expect(patternMatcher.match('позвонить; через тридцать дней', pattern, { matchers, presets }))
+            expect(patternMatcher.match('позвонить; через тридцать дней', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -442,7 +441,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('пойти к стоматологу; девятого декабря 2025 года', pattern, { matchers, presets }))
+            expect(patternMatcher.match('пойти к стоматологу; девятого декабря 2025 года', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -455,7 +454,7 @@ describe('EntryMatchers', () => {
         it('should match dates properly from the end (non-unique separator)', () => {
             const pattern = patternBuilder.build('{reminder:text:title}, {date:future_date:date}')
     
-            expect(patternMatcher.match('купить морковку, баклажан и капусту, послезавтра', pattern, { matchers, presets }))
+            expect(patternMatcher.match('купить морковку, баклажан и капусту, послезавтра', pattern, matchers))
                     .to.deep.eq({
                         match: true,
                         fields: [
@@ -464,7 +463,7 @@ describe('EntryMatchers', () => {
                         ]
                     });
     
-            expect(patternMatcher.match('позвонить маме, папе, через тридцать дней', pattern, { matchers, presets }))
+            expect(patternMatcher.match('позвонить маме, папе, через тридцать дней', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -473,7 +472,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('пойти к стоматологу, дантисту, девятого декабря 2025 года', pattern, { matchers, presets }))
+            expect(patternMatcher.match('пойти к стоматологу, дантисту, девятого декабря 2025 года', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -486,7 +485,7 @@ describe('EntryMatchers', () => {
         it('should match dates properly from the end (space separator)', () => {
             const pattern = patternBuilder.build('{reminder:text:title} {date:future_date:date}')
     
-            expect(patternMatcher.match('купить морковку послезавтра', pattern, { matchers, presets }))
+            expect(patternMatcher.match('купить морковку послезавтра', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -495,7 +494,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('позвонить через тридцать дней', pattern, { matchers, presets }))
+            expect(patternMatcher.match('позвонить через тридцать дней', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -504,7 +503,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('пойти к стоматологу девятого декабря 2025 года', pattern, { matchers, presets }))
+            expect(patternMatcher.match('пойти к стоматологу девятого декабря 2025 года', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -513,7 +512,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('пойти погулять через три недели вечером', pattern, { matchers, presets }))
+            expect(patternMatcher.match('пойти погулять через три недели вечером', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -522,7 +521,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('увидеть это напоминание 21 сентября в 21:00', pattern, { matchers, presets }))
+            expect(patternMatcher.match('увидеть это напоминание 21 сентября в 21:00', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -535,7 +534,7 @@ describe('EntryMatchers', () => {
         it('should match complex patterns', () => {
             const pattern = patternBuilder.build('[напомни ]({reminder:text:title} {date:future_date:date}|{date:future_date:date} {reminder:text:title})')
     
-            expect(patternMatcher.match('напомни съесть морковку через минуту', pattern, { matchers, presets }))
+            expect(patternMatcher.match('напомни съесть морковку через минуту', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -544,7 +543,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
             
-            expect(patternMatcher.match('напомни через минуту съесть морковку', pattern, { matchers, presets }))
+            expect(patternMatcher.match('напомни через минуту съесть морковку', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [
@@ -553,7 +552,7 @@ describe('EntryMatchers', () => {
                     ]
                 });
     
-            expect(patternMatcher.match('завтра в 16:00 съесть морковку', pattern, { matchers, presets }))
+            expect(patternMatcher.match('завтра в 16:00 съесть морковку', pattern, matchers))
                 .to.deep.eq({
                     match: true,
                     fields: [

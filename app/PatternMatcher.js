@@ -1,23 +1,18 @@
 const Field = require('./fields/Field');
-const Presets = require('./presets/Presets');
 
 class PatternMatcher {
     /**
      * 
      * @param {string} input
      * @param {any[]} pattern
-     * @param {{
-     *     matchers: import('./entries/EntryMatchers'),
-     *     presets?: import('./presets/CommonPresets')[],
-     * }} params
+     * @param {import('./entries/EntryMatchers')} matchers
      * @returns {{
      *     match: boolean,
      *     fields?: Field[],
      *     bang?: { [variable: string]: boolean }
      * }}
      */
-    match(input, pattern, { matchers, presets: presetList }) {
-        const presets = new Presets();
+    match(input, pattern, matchers) {
         const combinations = this.getPatternCombinations(pattern);
 
         for (const combination of combinations) {
@@ -30,13 +25,17 @@ class PatternMatcher {
 
             for (const [i, token] of combination.entries()) {
                 let value = token.value;
-                let { value: name, inputType, outputType } = presets.get({
-                    value: token.value,
-                    inputType: token.inputType,
-                    outputType: token.outputType,
-                }, presetList);
+                let { value: name, inputType, outputType } = token;
 
                 if (token.type === 'variable') {
+                    if (!inputType) {
+                        throw new Error(`No input type provided: ${name}`)
+                    }
+    
+                    if (inputType !== 'database' && !outputType) {
+                        throw new Error(`No output type provided: ${name}`)
+                    }
+
                     const matcher = matchers[inputType];
                     if (!matcher) {
                         throw new Error(`Unsupported matcher: ${inputType}`);
@@ -46,7 +45,7 @@ class PatternMatcher {
                     value = matcher(remainingInput, { nextTokens });
                     if (Array.isArray(value)) {
                         for (const valueVariation of value) {
-                            const matchResult = this.match(remainingInput.slice(valueVariation.length), nextTokens, { matchers, presets: presetList });
+                            const matchResult = this.match(remainingInput.slice(valueVariation.length), nextTokens, matchers);
                             if (matchResult.match) {
                                 value = valueVariation;
                                 break;
