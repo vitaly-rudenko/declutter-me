@@ -22,11 +22,12 @@ require('dotenv').config();
 const NotionDatabase = require('./app/notion/NotionDatabase');
 const EntryMatchers = require('./app/entries/EntryMatchers');
 const NotionEntrySerializer = require('./app/notion/NotionEntrySerializer');
-const Entry = require('./app/notion/Entry');
+const Entry = require('./app/entries/Entry');
 const Field = require('./app/fields/Field');
 const localize = require('./app/localize');
 const Language = require('./app/Language');
 const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
+const NotionField = require('./app/notion/NotionField');
 
 (async () => {
     const storage = new InMemoryStorage();
@@ -37,16 +38,16 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 1,
-        pattern: new PatternBuilder().build('купить [{Количество:number:number} (шт[ук[и]]|гр[ам[м]]|кг|кило[грам[м]]) ]{Товар:text:title}'),
+        pattern: new PatternBuilder().build('купить [{Количество:number} (шт[ук[и]]|гр[ам[м]]|кг|кило[грам[м]]) ]{товар:text}'),
         defaultFields: [
-            new Field({ inputType: 'database', value: 'to_watch' })
+            new Field({ inputType: 'database', value: 'shopping' })
         ]
     }));
 
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 2,
-        pattern: new PatternBuilder().build('посмотреть {Название:text:title}[ #{Тип:word:select}]'),
+        pattern: new PatternBuilder().build('посмотреть {название:text}[ #{тип:word}]'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'shows' })
         ]
@@ -55,7 +56,7 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 3,
-        pattern: new PatternBuilder().build('(сделать|задача|do|todo) {Задача:text:title}'),
+        pattern: new PatternBuilder().build('(сделать|задача) {задача:text}'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'todo' })
         ]
@@ -64,7 +65,7 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 4,
-        pattern: new PatternBuilder().build('контакт {Имя:word:title}[ {Телефон:phone:phone}][ {Эл. почта:email:email}][ {Сайт:url:url}]'),
+        pattern: new PatternBuilder().build('контакт {имя:word}[ {телефон:phone}][ {эл. почта:email}][ {сайт:url}]'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'contacts' })
         ]
@@ -73,7 +74,7 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 5,
-        pattern: new PatternBuilder().build('контакт {Имя:word:title} {Фамилия:word:text}[ {Телефон:phone:phone}][ {Эл. почта:email:email}][ {Сайт:url:url}]'),
+        pattern: new PatternBuilder().build('контакт {имя:word} {фамилия:word}[ {телефон:phone}][ {эл. почта:email}][ {сайт:url}]'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'contacts' })
         ]
@@ -82,7 +83,7 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 6,
-        pattern: new PatternBuilder().build('[#{database} ][заметка ]{Заметка:text:title}[ #{Теги:word:multi_select}][ #{Теги:word:multi_select}][ #{Теги:word:multi_select}]'),
+        pattern: new PatternBuilder().build('[#{database} ][заметка ]{заметка:text}[ #{теги:word}][ #{теги:word}][ #{теги:word}]'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'notes' })
         ]
@@ -94,6 +95,7 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'backup_notes', notionDatabaseId: '6ea2673f45fe428aa758da2aaf1316d7' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'todo', notionDatabaseId: '8c83e61c0fb848ef85d6644725296a15' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'contacts', notionDatabaseId: 'ce850d3910b24a64b5cf4f6da28738bf' }))
+    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'shopping', notionDatabaseId: 'ca75e1d762c24d4893e2d682c1823797' }))
 
     const debugChatId = process.env.DEBUG_CHAT_ID;
 
@@ -360,7 +362,10 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
             if (!('text' in ctx.message)) return;
             if (ctx.message.text.startsWith('/')) return;
             
-            const { userId, user, notion } = ctx.state;
+            const { userId } = ctx.state;
+
+            /** @type {import('@notionhq/client').Client} */
+            const notion = ctx.state.notion;
     
             const templates = await storage.findTemplatesByUserId(userId);
     
@@ -432,12 +437,20 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
                 });
                 
                 try {
+                    const notionDatabase = await notion.databases.retrieve({ database_id: database.notionDatabaseId });
+                    const notionFields = Object.entries(notionDatabase.properties)
+                        .map(([name, options]) => new NotionField({
+                            name,
+                            type: options.type,
+                        }));
+                    
                     await notion.pages.create(
                         new NotionEntrySerializer({
                             dateParser,
                         }).serialize(
                             database.notionDatabaseId,
                             entry,
+                            notionFields,
                             user,
                         )
                     );
