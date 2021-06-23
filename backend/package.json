@@ -26,22 +26,22 @@
     "url": "https://github.com/vitaly-rudenko/declutter-me/issues"
   },
   "homepage": "https://github.com/vitaly-rudenko/declutter-me#readme",
-  "devDependencies": {
-    "@stryker-mutator/core": "5.0.1",
-    "@stryker-mutator/mocha-runner": "5.0.1",
-    "chai": "4.3.4",
-    "chai-as-promised": "7.1.1",
-    "deep-equal-in-any-order": "1.0.28",
-    "mocha": "8.3.2",
-    "nodemon": "2.0.7",
-    "sinon": "9.2.4",
-    "sinon-chai": "3.5.0"
-  },
   "dependencies": {
-    "@notionhq/client": "0.1.8",
-    "better-sqlite3": "7.4.0",
-    "dotenv": "10.0.0",
-    "log4js": "6.3.0",
-    "telegraf": "4.3.0"
+    "@notionhq/client": "^0.1.9",
+    "better-sqlite3": "^7.4.0",
+    "dotenv": "^10.0.0",
+    "log4js": "^6.3.0",
+    "telegraf": "^4.3.0"
+  },
+  "devDependencies": {
+    "@stryker-mutator/core": "^5.0.1",
+    "@stryker-mutator/mocha-runner": "^5.0.1",
+    "chai": "^4.3.4",
+    "chai-as-promised": "^7.1.1",
+    "deep-equal-in-any-order": "^1.0.28",
+    "mocha": "^8.3.2",
+    "nodemon": "^2.0.7",
+    "sinon": "^9.2.4",
+    "sinon-chai": "^3.5.0"
   }
 }

@@ -4,6 +4,7 @@
 
 .template-builder {
     margin-top: 50px;
+    margin-bottom: 50px;
 }
 
 .template-builder__form > *:not(:last-child) {
@@ -16,4 +17,17 @@
 
 .template-builder__template-field textarea {
     font-family: monospace;
+}
+
+.template-builder__token {
+    border-radius: 0px !important;
+}
+
+.template-builder__token-example--variable {
+    color: #3f51b5;
+}
+
+.template-builder__token-example--invalid {
+    color: #f50057;
+    text-decoration: wavy underline;
 }

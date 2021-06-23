@@ -22,12 +22,12 @@ require('dotenv').config();
 const NotionDatabase = require('./app/notion/NotionDatabase');
 const EntryMatchers = require('./app/entries/EntryMatchers');
 const NotionEntrySerializer = require('./app/notion/NotionEntrySerializer');
-const Entry = require('./app/entries/Entry');
 const Field = require('./app/fields/Field');
 const localize = require('./app/localize');
 const Language = require('./app/Language');
 const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
-const NotionField = require('./app/notion/NotionField');
+const NotionEntry = require('./app/notion/NotionEntry');
+const NotionProperty = require('./app/notion/NotionProperty');
 
 (async () => {
     const storage = new InMemoryStorage();
@@ -38,7 +38,7 @@ const NotionField = require('./app/notion/NotionField');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 1,
-        pattern: new PatternBuilder().build('купить [{Количество:number} (шт[ук[и]]|гр[ам[м]]|кг|кило[грам[м]]) ]{товар:text}'),
+        pattern: new PatternBuilder().build('купить [{количество:number} (шт[ук[и]]|гр[ам[м]]|кг|кило[грам[м]]) ]{товар:text}'),
         defaultFields: [
             new Field({ inputType: 'database', value: 'shopping' })
         ]
@@ -49,7 +49,7 @@ const NotionField = require('./app/notion/NotionField');
         order: 2,
         pattern: new PatternBuilder().build('посмотреть {название:text}[ #{тип:word}]'),
         defaultFields: [
-            new Field({ inputType: 'database', value: 'shows' })
+            new Field({ inputType: 'database', value: 'to_watch' })
         ]
     }));
 
@@ -89,8 +89,7 @@ const NotionField = require('./app/notion/NotionField');
         ]
     }));
 
-    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'to_watch', notionDatabaseId: 'ca75e1d762c24d4893e2d682c1823797' }))
-    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'shows', notionDatabaseId: '3af8dfb79d18428b86419bd7a211084a' }))
+    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'to_watch', notionDatabaseId: '3af8dfb79d18428b86419bd7a211084a' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'notes', notionDatabaseId: 'a64b650b4036407385272f3867de44f3' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'backup_notes', notionDatabaseId: '6ea2673f45fe428aa758da2aaf1316d7' }))
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'todo', notionDatabaseId: '8c83e61c0fb848ef85d6644725296a15' }))
@@ -432,25 +431,23 @@ const NotionField = require('./app/notion/NotionField');
                     return;
                 }
 
-                const entry = new Entry({
-                    fields,
-                });
-                
                 try {
                     const notionDatabase = await notion.databases.retrieve({ database_id: database.notionDatabaseId });
-                    const notionFields = Object.entries(notionDatabase.properties)
-                        .map(([name, options]) => new NotionField({
-                            name,
-                            type: options.type,
-                        }));
+                    const entry = new NotionEntry({
+                        databaseId: database.notionDatabaseId,
+                        fields,
+                        properties: Object.entries(notionDatabase.properties)
+                            .map(([name, options]) => new NotionProperty({
+                                type: options.type,
+                                name,
+                            }))
+                    });
                     
                     await notion.pages.create(
                         new NotionEntrySerializer({
                             dateParser,
                         }).serialize(
-                            database.notionDatabaseId,
                             entry,
-                            notionFields,
                             user,
                         )
                     );

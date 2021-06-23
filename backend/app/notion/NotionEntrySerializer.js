@@ -12,22 +12,20 @@ class NotionEntrySerializer {
     }
 
     /**
-     * @param {string} notionDatabaseId
-     * @param {import('../entries/Entry')} entry
-     * @param {import('./NotionField')[]} notionFields
+     * @param {import('./NotionEntry')} entry
      * @param {import('../users/User')} user
      * @returns {import('@notionhq/client/build/src/api-endpoints').PagesCreateParameters}
      */
-    serialize(notionDatabaseId, entry, notionFields, user) {
+    serialize(entry, user) {
         const properties = {};
 
         for (const field of entry.fields) {
             if (field.inputType === 'database') continue;
 
-            const notionField = notionFields.find(f => fuzzyEquals(f.name, field.name));
-            if (!notionField) continue;
+            const property = entry.getProperty(field);
+            if (!property) continue;
 
-            const { name, type } = notionField;
+            const { name, type } = property;
 
             if (type === NotionFieldType.TITLE) {
                 properties[name] = this.serializeTitle(last(field.value));
@@ -58,7 +56,7 @@ class NotionEntrySerializer {
 
         return {
             'parent': {
-                'database_id': notionDatabaseId
+                'database_id': entry.databaseId,
             },
             'properties': {
                 ...properties,

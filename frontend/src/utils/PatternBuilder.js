@@ -73,11 +73,10 @@ class PatternBuilder {
                         value = value.slice(0, -1);
                     }
 
-                    let inputType, outputType;
-                    [value, inputType, outputType] = value.split(':');
+                    let inputType;
+                    [value, inputType] = value.split(':');
 
                     if (inputType) metadata.inputType = inputType;
-                    if (outputType) metadata.outputType = outputType;
                 }
 
                 result.push({

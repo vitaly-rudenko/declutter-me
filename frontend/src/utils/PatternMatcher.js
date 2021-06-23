@@ -52,12 +52,16 @@ class PatternMatcher {
                     }
 
                     if (value !== undefined && value !== null) {
+                        const existingValue = fieldMap[name]?.value;
+
                         fieldMap[name] = new Field({
                             name,
                             inputType,
-                            value: fieldMap[name]
-                                ? [...fieldMap[name].value, value]
-                                : value,
+                            value: Array.isArray(existingValue)
+                                ? [...existingValue, value]
+                                : existingValue
+                                    ? [existingValue, value]
+                                    : value,
                             bang,
                         })
                     } else {
@@ -102,7 +106,7 @@ class PatternMatcher {
             combinations = updatedCombinations;
         }
 
-        return combinations.sort((a, b) => b.length - a.length);
+        return combinations.sort((a, b) => b.length - a.length).filter(c => c.length > 0);
     }
 
     getTokenCombinations(token) {

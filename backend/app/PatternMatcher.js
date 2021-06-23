@@ -106,7 +106,7 @@ class PatternMatcher {
             combinations = updatedCombinations;
         }
 
-        return combinations.sort((a, b) => b.length - a.length);
+        return combinations.sort((a, b) => b.length - a.length).filter(c => c.length > 0);
     }
 
     getTokenCombinations(token) {
