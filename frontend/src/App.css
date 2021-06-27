@@ -6,4 +6,13 @@ button.switch-theme-button {
     position: fixed;
     top: 20px;
     right: 20px;
+
+    transform: translateY(-100px);
+    animation: slideIn 0.5s ease-out forwards;
+}
+
+@keyframes slideIn {
+    to {
+        transform: none;
+    }
 }
