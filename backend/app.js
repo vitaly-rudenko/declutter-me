@@ -28,6 +28,7 @@ const Language = require('./app/Language');
 const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
 const NotionEntry = require('./app/notion/NotionEntry');
 const NotionProperty = require('./app/notion/NotionProperty');
+const InputType = require('./app/InputType');
 
 (async () => {
     const storage = new InMemoryStorage();
@@ -379,7 +380,7 @@ const NotionProperty = require('./app/notion/NotionProperty');
                     entryMatchers,
                 );
 
-                if (!result.match) continue;
+                if (!result) continue;
                 const message = await ctx.reply(ctx.state.localize('match.checking'));
 
                 /**

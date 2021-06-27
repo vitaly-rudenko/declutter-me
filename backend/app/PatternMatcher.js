@@ -7,10 +7,7 @@ class PatternMatcher {
      * @param {string} input
      * @param {any[]} pattern
      * @param {import('./entries/EntryMatchers')} matchers
-     * @returns {{
-     *     match: boolean,
-     *     fields?: Field[],
-     * }}
+     * @returns {{ fields: Field[] } | null}
      */
     match(input, pattern, matchers) {
         const combinations = this.getPatternCombinations(pattern, matchers);
@@ -41,7 +38,7 @@ class PatternMatcher {
                     if (Array.isArray(value)) {
                         for (const valueVariation of value) {
                             const matchResult = this.match(remainingInput.slice(valueVariation.length), nextTokens, matchers);
-                            if (matchResult.match) {
+                            if (matchResult) {
                                 value = valueVariation;
                                 break;
                             }
@@ -81,14 +78,11 @@ class PatternMatcher {
             if (match && remainingInput.length === 0) {
                 const fields = Object.values(fieldMap);
 
-                return {
-                    match: true,
-                    ...fields.length > 0 && { fields },
-                };
+                return { fields };
             }
         }
 
-        return { match: false };
+        return null;
     }
 
     getPatternCombinations(pattern, matchers) {

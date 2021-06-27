@@ -29,7 +29,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('#ideas Draw fan-art of Haruhi', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'tag', inputType: InputType.WORD, value: 'ideas' }),
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'Draw fan-art of Haruhi' }),
@@ -38,7 +37,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('#my-ideas Write HTML parser', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'tag', inputType: InputType.WORD, value: 'my-ideas' }),
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'Write HTML parser' }),
@@ -46,10 +44,10 @@ describe('EntryMatchers', () => {
                 });
             
             expect(patternMatcher.match('Write HTML parser', pattern, matchers))
-                .to.deep.eq({ match: false });
+                .to.be.null;
             
             expect(patternMatcher.match('# Write HTML parser', pattern, matchers))
-                .to.deep.eq({ match: false });
+                .to.be.null;
         });
     
         it('should separate variables properly', () => {
@@ -57,7 +55,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('Draw fan-art of Haruhi #art-ideas', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'Draw fan-art of Haruhi' }),
                         new Field({ name: 'tag', inputType: InputType.WORD, value: 'art-ideas' }),
@@ -66,7 +63,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('Write an app in Go #my #idea', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'Write an app in Go #my' }),
                         new Field({ name: 'tag', inputType: InputType.WORD, value: 'idea' }),
@@ -74,7 +70,7 @@ describe('EntryMatchers', () => {
                 });
             
             expect(patternMatcher.match('Write an app in Go potatoes #my idea', pattern, matchers))
-                .to.deep.eq({ match: false });
+                .to.be.null;
         });
     
         it('should separate variables properly in complete sentences', () => {
@@ -82,7 +78,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('Save Pygmalion effect to the idea notes', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'Pygmalion effect' }),
                         new Field({ name: 'tag', inputType: InputType.WORD, value: 'idea' }),
@@ -95,7 +90,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('my note', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                     ]
@@ -103,7 +97,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('#my-tag-1 my note', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'tag', inputType: InputType.WORD, value: 'my-tag-1' }),
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
@@ -112,7 +105,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('#my-tag-1 #my-tag-2 my note', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2'] }),
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
@@ -121,7 +113,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 my note', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
@@ -130,7 +121,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 my note', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
                         new Field({ name: 'note', inputType: InputType.TEXT, value: '#my-tag-4 my note' }),
@@ -139,7 +129,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 #my-tag-5 my note', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
                         new Field({ name: 'note', inputType: InputType.TEXT, value: '#my-tag-4 #my-tag-5 my note' }),
@@ -152,7 +141,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('Save my note', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                     ]
@@ -160,7 +148,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('Save my note #my-tag-1', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                         new Field({ name: 'tag', inputType: InputType.WORD, value: 'my-tag-1' }),
@@ -169,7 +156,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2'] }),
@@ -178,7 +164,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
@@ -187,7 +172,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note #my-tag-1' }),
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-2', 'my-tag-3', 'my-tag-4'] }),
@@ -196,7 +180,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 #my-tag-5', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note #my-tag-1 #my-tag-2' }),
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-3', 'my-tag-4', 'my-tag-5'] }),
@@ -209,7 +192,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('my note', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                     ]
@@ -217,7 +199,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('#my-tag-1 my note', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'tag', inputType: InputType.WORD, value: 'my-tag-1' }),
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
@@ -226,7 +207,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('#my-tag-1 #my-tag-2 my note', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2'] }),
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
@@ -235,7 +215,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 my note', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
@@ -244,7 +223,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 my note', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
                         new Field({ name: 'note', inputType: InputType.TEXT, value: '#my-tag-4 my note' }),
@@ -253,7 +231,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('#my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 #my-tag-5 my note', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
                         new Field({ name: 'note', inputType: InputType.TEXT, value: '#my-tag-4 #my-tag-5 my note' }),
@@ -266,7 +243,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('Save my note', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                     ]
@@ -274,7 +250,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('Save my note #my-tag-1', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                         new Field({ name: 'tag', inputType: InputType.WORD, value: 'my-tag-1' }),
@@ -283,7 +258,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2'] }),
@@ -292,7 +266,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
@@ -301,7 +274,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note #my-tag-1' }),
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-2', 'my-tag-3', 'my-tag-4'] }),
@@ -310,7 +282,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2 #my-tag-3 #my-tag-4 #my-tag-5', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note #my-tag-1 #my-tag-2' }),
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-3', 'my-tag-4', 'my-tag-5'] }),
@@ -324,7 +295,6 @@ describe('EntryMatchers', () => {
             for (const input of ['Add my unique idea', 'save my unique idea']) {
                 expect(patternMatcher.match(input, pattern, matchers), input)
                     .to.deep.eq({
-                        match: true,
                         fields: [
                             new Field({ name: 'note', inputType: InputType.TEXT, value: 'my unique idea' }),
                         ]
@@ -343,7 +313,6 @@ describe('EntryMatchers', () => {
             ]) {
                 expect(patternMatcher.match(input, pattern, matchers), input)
                     .to.deep.eq({
-                        match: true,
                         fields: [
                             new Field({ name: 'database', inputType: InputType.DATABASE, value: 'shopping' }),
                             new Field({ name: 'note', inputType: InputType.TEXT, value: 'my unique idea' }),
@@ -357,13 +326,12 @@ describe('EntryMatchers', () => {
                 'Save', 'Add', 'Addmy unique idea'
             ]) {
                 expect(patternMatcher.match(input, pattern, matchers), input)
-                    .to.deep.eq({ match: false });
+                    .to.be.null;
             }
     
             // Special case
             expect(patternMatcher.match('Add my unique idea into the my-ideas notes', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my unique idea into the my-ideas notes' }),
                     ]
@@ -376,7 +344,6 @@ describe('EntryMatchers', () => {
                 patternBuilder.build('{name:word} {surname:word}: {description:text}'),
                 matchers
             )).to.deep.eq({
-                match: true,
                 fields: [
                     new Field({ name: 'name', inputType: InputType.WORD, value: 'Jon' }),
                     new Field({ name: 'surname', inputType: InputType.WORD, value: 'Snow' }),
@@ -389,7 +356,6 @@ describe('EntryMatchers', () => {
                 patternBuilder.build('{greeting:word}! My {variable:word} is {value:word}.'),
                 matchers
             )).to.deep.eq({
-                match: true,
                 fields: [
                     new Field({ name: 'greeting', inputType: InputType.WORD, value: 'Hi' }),
                     new Field({ name: 'variable', inputType: InputType.WORD, value: 'name' }),
@@ -402,7 +368,6 @@ describe('EntryMatchers', () => {
                 patternBuilder.build('{greeting:text}! My {variable:text} is {value:text}.'),
                 matchers
             )).to.deep.eq({
-                match: true,
                 fields: [
                     new Field({ name: 'greeting', inputType: InputType.TEXT, value: 'Hi there' }),
                     new Field({ name: 'variable', inputType: InputType.TEXT, value: 'real name' }),
@@ -419,7 +384,6 @@ describe('EntryMatchers', () => {
                 pattern,
                 matchers
             )).to.deep.eq({
-                match: true,
                 fields: [
                     new Field({ name: 'name', inputType: InputType.WORD, value: 'Jon' }),
                     new Field({ name: 'phone', inputType: InputType.PHONE, value: '+380123456789' }),
@@ -431,7 +395,6 @@ describe('EntryMatchers', () => {
                 pattern,
                 matchers
             )).to.deep.eq({
-                match: true,
                 fields: [
                     new Field({ name: 'name', inputType: InputType.WORD, value: 'Jon' }),
                     new Field({ name: 'email', inputType: InputType.EMAIL, value: 'jon.snow@example.com' }),
@@ -443,7 +406,6 @@ describe('EntryMatchers', () => {
                 pattern,
                 matchers
             )).to.deep.eq({
-                match: true,
                 fields: [
                     new Field({ name: 'name', inputType: InputType.WORD, value: 'Jon' }),
                     new Field({ name: 'phone', inputType: InputType.PHONE, value: '+380123456789' }),
@@ -456,7 +418,6 @@ describe('EntryMatchers', () => {
                 pattern,
                 matchers
             )).to.deep.eq({
-                match: true,
                 fields: [
                     new Field({ name: 'name', inputType: InputType.WORD, value: 'Jon' }),
                     new Field({ name: 'surname', inputType: InputType.WORD, value: 'Snow' }),
@@ -469,7 +430,6 @@ describe('EntryMatchers', () => {
                 pattern,
                 matchers
             )).to.deep.eq({
-                match: true,
                 fields: [
                     new Field({ name: 'name', inputType: InputType.WORD, value: 'Jon' }),
                     new Field({ name: 'surname', inputType: InputType.WORD, value: 'Snow' }),
@@ -483,7 +443,6 @@ describe('EntryMatchers', () => {
                 pattern,
                 matchers
             )).to.deep.eq({
-                match: true,
                 fields: [
                     new Field({ name: 'name', inputType: InputType.WORD, value: 'Jon' }),
                     new Field({ name: 'surname', inputType: InputType.WORD, value: 'Snow' }),
@@ -502,7 +461,6 @@ describe('EntryMatchers', () => {
                 pattern,
                 matchers
             )).to.deep.eq({
-                match: true,
                 fields: [
                     new Field({ name: '2', inputType: InputType.WORD, value: '2' }),
                 ]
@@ -513,7 +471,6 @@ describe('EntryMatchers', () => {
                 pattern,
                 matchers
             )).to.deep.eq({
-                match: true,
                 fields: [
                     new Field({ name: '3', inputType: InputType.WORD, value: '3' }),
                 ]
@@ -524,7 +481,6 @@ describe('EntryMatchers', () => {
                 pattern,
                 matchers
             )).to.deep.eq({
-                match: true,
                 fields: [
                     new Field({ name: '2', inputType: InputType.WORD, value: '2' }),
                     new Field({ name: '3', inputType: InputType.WORD, value: '3' }),
@@ -536,7 +492,6 @@ describe('EntryMatchers', () => {
                 pattern,
                 matchers
             )).to.deep.eq({
-                match: true,
                 fields: [
                     new Field({ name: '2', inputType: InputType.WORD, value: '2' }),
                     new Field({ name: '3', inputType: InputType.WORD, value: '3' }),
@@ -551,7 +506,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('послезавтра купить морковку', pattern, matchers))
                     .to.deep.eq({
-                        match: true,
                         fields: [
                             new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
                             new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'купить морковку' }),
@@ -560,7 +514,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('через тридцать дней позвонить', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'позвонить' }),
@@ -569,7 +522,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('девятого декабря 2025 года пойти к стоматологу', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'пойти к стоматологу' }),
@@ -578,7 +530,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('через три недели вечером погулять', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через три недели вечером' }),
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'погулять' }),
@@ -587,7 +538,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('21 сентября в 21:00 увидеть это напоминание', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: '21 сентября в 21:00' }),
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'увидеть это напоминание' }),
@@ -600,7 +550,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('купить морковку; послезавтра', pattern, matchers))
                     .to.deep.eq({
-                        match: true,
                         fields:  [
                             new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'купить морковку' }),
                             new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
@@ -609,7 +558,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('позвонить; через тридцать дней', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'позвонить' }),
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
@@ -618,7 +566,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('пойти к стоматологу; девятого декабря 2025 года', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'пойти к стоматологу' }),
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
@@ -631,7 +578,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('купить морковку, баклажан и капусту, послезавтра', pattern, matchers))
                     .to.deep.eq({
-                        match: true,
                         fields: [
                             new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'купить морковку, баклажан и капусту' }),
                             new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
@@ -640,7 +586,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('позвонить маме, папе, через тридцать дней', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'позвонить маме, папе' }),
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
@@ -649,7 +594,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('пойти к стоматологу, дантисту, девятого декабря 2025 года', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'пойти к стоматологу, дантисту' }),
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
@@ -662,7 +606,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('купить морковку послезавтра', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'купить морковку' }),
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
@@ -671,7 +614,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('позвонить через тридцать дней', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'позвонить' }),
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
@@ -680,7 +622,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('пойти к стоматологу девятого декабря 2025 года', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'пойти к стоматологу' }),
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
@@ -689,7 +630,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('пойти погулять через три недели вечером', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'пойти погулять' }),
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через три недели вечером' }),
@@ -698,7 +638,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('увидеть это напоминание 21 сентября в 21:00', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'увидеть это напоминание' }),
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: '21 сентября в 21:00' }),
@@ -711,7 +650,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('напомни съесть морковку через минуту', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'съесть морковку' }),
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через минуту' }),
@@ -720,7 +658,6 @@ describe('EntryMatchers', () => {
             
             expect(patternMatcher.match('напомни через минуту съесть морковку', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через минуту' }),
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'съесть морковку' }),
@@ -729,7 +666,6 @@ describe('EntryMatchers', () => {
     
             expect(patternMatcher.match('завтра в 16:00 съесть морковку', pattern, matchers))
                 .to.deep.eq({
-                    match: true,
                     fields: [
                         new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'завтра в 16:00' }),
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'съесть морковку' }),
