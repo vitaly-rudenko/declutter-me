@@ -157,7 +157,7 @@ const Combination = ({ combination }) => {
                     const IconClass = InputTypeIcons[inputType] || HelpOutline;
 
                     const example = getExampleFor(inputType);
-                    const space = ''.padEnd(Math.max(0, token.value.length - example.length + 2), ' ');
+                    const space = ''.padEnd(Math.max(0, token.value.length - example.length + 2), ' ');
 
                     return <span
                         className={'template-builder__token-example ' + (invalid
