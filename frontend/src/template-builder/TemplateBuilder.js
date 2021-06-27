@@ -15,6 +15,8 @@ import './TemplateBuilder.css';
 import EntryMatchers from '../utils/entries/EntryMatchers';
 import RussianDateParser from '../utils/date-parsers/RussianDateParser';
 
+const COLORS = ['orange', 'yellow', 'green', 'blue', 'purple'];
+
 const InputTypeIcons = {
     'text': TextFields,
     'url': LinkIcon,
@@ -61,6 +63,8 @@ export const TemplateBuilder = () => {
     const onTestChange = useCallback((event) => {
         setTest(event.target.value);
     }, [setTest]);
+
+    resetRandom();
 
     return <div className="template-builder">
         <Container maxWidth="lg">
@@ -133,45 +137,37 @@ export const TemplateBuilder = () => {
 };
 
 const Combination = ({ combination }) => {
+    let tokenExampleIndex = 0;
+
     return <ListItem>
         <ListItemText
+            classes={{
+                primary: 'template-builder__combination-list-item--primary'
+            }}
             primary={combination.map((token) => {
                 if (token.type === 'text') {
-                    return <span>{token.value}</span>;
+                    return <span className='template-builder__token-text'>{token.value}</span>;
                 }
 
                 if (token.type === 'variable') {
-                    const invalid = !InputTypeIcons[token.inputType];
-                    return <span
-                        className={
-                            invalid
-                                ? 'template-builder__token-example--invalid'
-                                : 'template-builder__token-example--variable'}
-                    >
-                        {getExampleFor(token.inputType)}
-                    </span>;
-                }
+                    const color = COLORS[tokenExampleIndex % COLORS.length];
+                    const className = `template-builder__token-example--${color}`;
+                    tokenExampleIndex++;
 
-                throw new Error(`Unsupported token type: ${token.type}`);
-            })}
-            secondary={combination.map((token) => {
-                if (token.type === 'text') {
-                    return <Chip classes={{ root: 'template-builder__token' }} size="small" variant="outlined"
-                        label={token.value.replace(/ /g, ' · ')} />;
-                }
-
-                if (token.type === 'variable') {
                     const invalid = !InputTypeIcons[token.inputType];
                     const IconClass = InputTypeIcons[token.inputType] || HelpOutline;
 
-                    return <Chip
-                        classes={{ root: 'template-builder__token' }}
-                        icon={<IconClass/>}
-                        color={invalid ? 'secondary' : 'primary'}
-                        size="small"
-                        variant="outlined"
-                        label={token.value || 'database'}
-                    />;
+                    return <span
+                        className={'template-builder__token-example ' + (invalid
+                            ? 'template-builder__token-example--invalid'
+                            : className)}
+                    >
+                        <span className="template-builder__token-example-label">
+                            <IconClass className="template-builder__token-example-icon"/>
+                            {token.value}
+                        </span>
+                        {getExampleFor(token.inputType)}
+                    </span>;
                 }
 
                 throw new Error(`Unsupported token type: ${token.type}`);
@@ -180,24 +176,25 @@ const Combination = ({ combination }) => {
     </ListItem>;
 };
 
-const adjectives = [
-    'beautiful',
-    'elegant',
-    'amazing',
-    'creative',
-    'squished',
-    'popular'
+const shortNouns = [
+    'cat',
+    'dog',
+    'human',
+    'mouse',
+    'wolf',
+    'whale',
+    'robot'
 ];
 
-const nouns = [
-    'mouse',
-    'cat',
-    'keyboard',
-    'sun',
-    'grass',
-    'human',
-    'tablet',
-    'plane'
+const longNouns = [
+    'transportation',
+    'entertainment',
+    'responsibility',
+    'recommendation',
+    'communication',
+    'administration',
+    'understanding',
+    'establishment'
 ];
 
 const verbs = [
@@ -224,7 +221,7 @@ function getExampleFor(inputType) {
     }
 
     if (inputType === 'word') {
-        return capitalize(getRandom(nouns))
+        return getRandom(longNouns)
     }
 
     if (inputType === 'url') {
@@ -247,21 +244,25 @@ function getExampleFor(inputType) {
 }
 
 function generateText() {
-    return capitalize([
-        getRandom(adjectives),
-        getRandom(nouns),
+    return [
+        getRandom(shortNouns),
         getRandom(verbs),
         getRandom(articles),
-        getRandom(nouns),
-    ].filter(Boolean).join(' '));
+        getRandom(shortNouns),
+    ].filter(Boolean).join(' ');
 }
 
-function capitalize(text) {
-    return text[0].toUpperCase() + text.slice(1);
+const arrayIndexes = new Map();
+
+function resetRandom() {
+    arrayIndexes.clear();
 }
 
 function getRandom(array) {
-    return array[Math.floor(Math.random() * array.length)];
+    let index = arrayIndexes.get(array) ?? 0;
+    arrayIndexes.set(array, (index + 1) % array.length);
+
+    return array[index];
 }
 
 function ellipsis(text, length) {

@@ -23,11 +23,82 @@
     border-radius: 0px !important;
 }
 
-.template-builder__token-example--variable {
-    color: #3f51b5;
+.template-builder__token-example {
+    line-height: 3em;
+    text-decoration: underline;
+}
+
+.template-builder__token-text {
+    text-decoration: underline dotted;
+}
+
+.template-builder__combination-list-item--primary {
+    position: relative;
+    margin-top: 10px !important;
+}
+
+.template-builder__token-example-label {
+    position: absolute;
+    margin-top: -1.3em;
+    user-select: none;
+}
+
+.template-builder__token-example-icon {
+    font-size: 1em !important;
+    margin-right: 0.1em;
+    margin-left: -0.2em;
+    margin-bottom: -0.2em;
 }
 
 .template-builder__token-example--invalid {
     color: #f50057;
     text-decoration: wavy underline;
+}
+
+:root {
+    --orange: rgb(133, 97, 77);
+    --yellow: rgb(145, 140, 97);
+    --green: rgb(95, 138, 102);
+    --blue: rgb(87, 116, 138);
+    --purple: rgb(139, 100, 136);
+}
+
+.template-builder__token-example--orange {
+    text-decoration-color: var(--orange);
+}
+
+.template-builder__token-example--orange .template-builder__token-example-label {
+    color: var(--orange);
+}
+
+.template-builder__token-example--yellow {
+    text-decoration-color: var(--yellow);
+}
+
+.template-builder__token-example--yellow .template-builder__token-example-label {
+    color: var(--yellow);
+}
+
+.template-builder__token-example--green {
+    text-decoration-color: var(--green);
+}
+
+.template-builder__token-example--green .template-builder__token-example-label {
+    color: var(--green);
+}
+
+.template-builder__token-example--blue {
+    text-decoration-color: var(--blue);
+}
+
+.template-builder__token-example--blue .template-builder__token-example-label {
+    color: var(--blue);
+}
+
+.template-builder__token-example--purple {
+    text-decoration-color: var(--purple);
+}
+
+.template-builder__token-example--purple .template-builder__token-example-label {
+    color: var(--purple);
 }
