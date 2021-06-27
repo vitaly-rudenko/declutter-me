@@ -41,14 +41,17 @@ function useMemoUnlessFailed(callback, dependencies) {
 }
 
 export const TemplateBuilder = () => {
-    const [rawPattern, setRawPattern] = useState('{name:text}: {description:text} #{type:word}[ #{tags:word}][ #{tags:word}][ {e-mail:email}][ {url:url}]');
+    resetRandom();
+
+    const [rawPattern, setRawPattern] = useState('(buy|purchase)[ {Amount (kg):number} kg[ of]] {Item:text}[ #{Type:word}]');
     const pattern = useMemoUnlessFailed(() => new PatternBuilder().build(rawPattern), [rawPattern]);
     const combinations = useMemoUnlessFailed(() => new PatternMatcher().getPatternCombinations(pattern), [pattern]);
 
-    const [test, setTest] = useState('Jon Snow: A character in the Game of Thrones #main #man #young jon.snow@example.com https://en.wikipedia.org/wiki/Jon_Snow_(character)');
+    const [test, setTest] = useState('Buy 5 kg of tomatoes #vegetable');
+    const isTesting = useMemo(() => test && rawPattern, [test, rawPattern]);
     const match = useMemoUnlessFailed(
-        () => new PatternMatcher().match(test, pattern, new EntryMatchers({ dateParser: new RussianDateParser() })),
-        [test, pattern]
+        () => isTesting && new PatternMatcher().match(test, pattern, new EntryMatchers({ dateParser: new RussianDateParser() })),
+        [test, pattern, isTesting]
     );
 
     const databaseField = useMemoUnlessFailed(() => match?.fields.find(f => f.inputType === 'database'), [match]);
@@ -62,65 +65,68 @@ export const TemplateBuilder = () => {
         setTest(event.target.value);
     }, [setTest]);
 
-    resetRandom();
-
     return <div className="template-builder">
         <Container maxWidth="lg">
             <form className="template-builder__form" noValidate autoComplete="off">
+                <Typography variant="h4">Template Builder</Typography>
                 <TextField
                     onChange={onPatternChange}
-                    label="Template" size="small" spellCheck={false} classes={{ root: 'template-builder__template-field' }} variant="outlined" fullWidth multiline
+                    label="Your template" size="small" spellCheck={false} classes={{ root: 'template-builder__template-field' }} variant="outlined" fullWidth multiline
                     value={rawPattern}
                 />
+                <Typography variant="h5">Test your template</Typography>
                 <TextField
                     onChange={onTestChange}
-                    label="Test" size="small" spellCheck={false} variant="outlined" fullWidth multiline
-                    error={!match}
+                    label="Telegram message" size="small" spellCheck={false} variant="outlined" fullWidth multiline
+                    error={isTesting && !match}
                     value={test}
                 />
-                {match && <Chip
-                    variant="outlined"
-                    color={databaseField?.value ? 'primary' : 'default'}
-                    label={databaseField?.value ?? 'Default database'}
-                />}
-                {match && <TableContainer component={Paper} variant="outlined">
-                    <Table size="small">
-                        <TableHead>
-                            <TableRow>
-                                {fields.map((field) => {
-                                    const InputTypeIcon = InputTypeIcons[field.inputType];
+                {match && <>
+                    <Chip
+                        variant="outlined"
+                        color={databaseField?.value ? 'primary' : 'default'}
+                        label={databaseField?.value ?? 'Default database'}
+                    />
+                    <TableContainer component={Paper} variant="outlined">
+                        <Table size="small">
+                            <TableHead>
+                                <TableRow>
+                                    {fields.map((field) => {
+                                        const InputTypeIcon = InputTypeIcons[field.inputType];
 
-                                    if (!InputTypeIcon) {
-                                        throw new Error('Invalid input type: ' + field.inputType)
-                                    }
+                                        if (!InputTypeIcon) {
+                                            throw new Error('Invalid input type: ' + field.inputType)
+                                        }
 
-                                    return <TableCell key={field.name}><Button disableRipple
-                                        classes={{
-                                            root: 'template-builder__field-name'
-                                        }}
-                                        startIcon={<InputTypeIcon />}
-                                    >{field.name}</Button></TableCell>
-                                })}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            <TableRow>
-                                {fields.map((field) => {
-                                    return <TableCell key={field.name}>{(
-                                        Array.isArray(field.value)
-                                            ? field.value.map(value => <Chip
-                                                key={field.name + ':' + value} className="template-builder__multiselect-chip" label={value}
-                                                variant="outlined"
-                                            />)
-                                            : field.inputType === 'url'
-                                                ? <Link href={field.value} title={field.value}>{ellipsis(field.value, 35)}</Link>
-                                                : field.value
-                                    )}</TableCell>
-                                })}
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </TableContainer>}
+                                        return <TableCell key={field.name}><Button disableRipple
+                                            classes={{
+                                                root: 'template-builder__field-name'
+                                            }}
+                                            startIcon={<InputTypeIcon />}
+                                        >{field.name}</Button></TableCell>
+                                    })}
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                <TableRow>
+                                    {fields.map((field) => {
+                                        return <TableCell key={field.name}>{(
+                                            Array.isArray(field.value)
+                                                ? field.value.map(value => <Chip
+                                                    key={field.name + ':' + value} className="template-builder__multiselect-chip" label={value}
+                                                    variant="outlined"
+                                                />)
+                                                : field.inputType === 'url'
+                                                    ? <Link href={field.value} title={field.value}>{ellipsis(field.value, 35)}</Link>
+                                                    : field.value
+                                        )}</TableCell>
+                                    })}
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </>}
+                <Typography variant="h5">Examples</Typography>
                 <List component={Paper}>
                     {combinations && combinations.length > 0 && combinations.map((combination, i) => {
                         return <>
@@ -129,6 +135,11 @@ export const TemplateBuilder = () => {
                         </>;
                     })}
                 </List>
+                <Typography variant="caption">
+                    These examples are generated automatically, so not all of them may work as expected.
+                    <br/>
+                    Double check your templates with the tester!
+                </Typography>
             </form>
         </Container>
     </div>
@@ -201,13 +212,13 @@ const longNouns = [
 ];
 
 const verbs = [
-    'ate',
+    'befriended',
     'jumped over',
     'looked at',
-    'attacked',
+    'hugged',
     'protected',
     'greeted',
-    'joined forces with',
+    'played with',
 ];
 
 const articles = ['a', 'the'];
@@ -265,7 +276,6 @@ function resetRandom() {
 
 function getRandomNumber() {
     randomIndex++;
-
     return (123 * randomIndex) % (46 + randomIndex);
 }
 

@@ -27,13 +27,13 @@
     line-height: 3em;
     text-decoration: underline;
     font-family: monospace !important;
-    white-space: pre;
+    white-space: pre-wrap;
 }
 
 .template-builder__token-example-text {
     text-decoration: underline dotted;
     font-family: monospace !important;
-    white-space: pre;
+    white-space: pre-wrap;
 }
 
 .template-builder__combination-list-item--primary {
