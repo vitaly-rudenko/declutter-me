@@ -292,8 +292,6 @@ const nouns = [
     'customer',
 ];
 
-const articles = ['a', 'the'];
-
 const databaseNames = ['shopping', 'notes', 'todo_list', 'reminders', 'recipes'];
 
 function getExampleFor(inputType) {
@@ -330,15 +328,17 @@ function getExampleFor(inputType) {
 
 function generateText() {
     return [
-        getNextItem(articles),
+        (getNextInt() % 3) % 2 === 1 && 'the',
         getNextItem(adjectives),
         getNextItem(nouns),
     ].filter(Boolean).join(' ');
 }
 
-let randomIndex = 0;
+let randomIndex = null;
+resetRandom();
+
 function resetRandom() {
-    randomIndex = 0;
+    randomIndex = new Date().getDate();
 }
 
 function getNextNumber() {

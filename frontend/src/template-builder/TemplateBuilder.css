@@ -3,8 +3,7 @@
 }
 
 .template-builder {
-    margin-top: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 40px;
     padding-top: 20px;
     padding-bottom: 20px;
 
@@ -62,6 +61,22 @@
     text-decoration-color: gray;
     font-family: monospace !important;
     white-space: pre-wrap;
+}
+
+@media only screen and (max-width: 900px) {
+    .template-builder__token-example {
+        font-size: smaller !important;
+    }
+    
+    .template-builder__token-example-text {
+        font-size: smaller !important;
+    }
+}
+
+@media only screen and (min-width: 900px) {
+    .template-builder {
+        margin-top: 20px;
+    }
 }
 
 .template-builder__combination-list-item {
