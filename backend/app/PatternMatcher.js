@@ -13,7 +13,7 @@ class PatternMatcher {
      * }}
      */
     match(input, pattern, matchers) {
-        const combinations = this.getPatternCombinations(pattern);
+        const combinations = this.getPatternCombinations(pattern, matchers);
 
         for (const combination of combinations) {
             let remainingInput = input;
@@ -91,11 +91,11 @@ class PatternMatcher {
         return { match: false };
     }
 
-    getPatternCombinations(pattern) {
+    getPatternCombinations(pattern, matchers) {
         let combinations = [[]];
 
         for (const token of pattern) {
-            const tokenCombinations = this.getTokenCombinations(token);
+            const tokenCombinations = this.getTokenCombinations(token, matchers);
 
             if (tokenCombinations.length > 0) {
                 const updatedCombinations = [];
@@ -110,7 +110,7 @@ class PatternMatcher {
         }
 
         combinations = combinations
-            .sort((a, b) => b.length - a.length)
+            .sort((a, b) => this.scoreCombination(b, matchers) - this.scoreCombination(a, matchers))
             .map(this.simplifyPattern);
 
         const combinationStrings = combinations.map(c => JSON.stringify(c));
@@ -130,7 +130,11 @@ class PatternMatcher {
         return result;
     }
 
-    getTokenCombinations(token) {
+    scoreCombination(combination, matchers) {
+        return combination.reduce((acc, curr) => acc + (matchers?.score?.(curr) ?? 1), 0);
+    }
+
+    getTokenCombinations(token, matchers) {
         const combinations = [];
 
         if (token.type === TokenType.TEXT || token.type === TokenType.VARIABLE) {
@@ -139,12 +143,12 @@ class PatternMatcher {
 
         if (token.type === TokenType.OPTIONAL) {
             combinations.push([]);
-            combinations.push(...this.getPatternCombinations(token.value));
+            combinations.push(...this.getPatternCombinations(token.value, matchers));
         }
 
         if (token.type === TokenType.VARIATIONAL) {
             for (const variation of token.value) {
-                combinations.push(...this.getPatternCombinations(variation));
+                combinations.push(...this.getPatternCombinations(variation, matchers));
             }
         }
 

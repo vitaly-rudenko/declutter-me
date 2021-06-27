@@ -23,7 +23,7 @@ describe('EntryMatchers', () => {
         matchers = new EntryMatchers({ dateParser: russianDateParser });
     });
 
-    describe('[notes]', () => {
+    describe('[entries]', () => {
         it('should match simple pattern', () => {
             const pattern = patternBuilder.build('#{tag:word} {note:text}');
     
@@ -368,6 +368,180 @@ describe('EntryMatchers', () => {
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my unique idea into the my-ideas notes' }),
                     ]
                 });
+        });
+
+        it('should match patterns with special characters', () => {
+            expect(patternMatcher.match(
+                'Jon Snow: A character of Game of Thrones',
+                patternBuilder.build('{name:word} {surname:word}: {description:text}'),
+                matchers
+            )).to.deep.eq({
+                match: true,
+                fields: [
+                    new Field({ name: 'name', inputType: InputType.WORD, value: 'Jon' }),
+                    new Field({ name: 'surname', inputType: InputType.WORD, value: 'Snow' }),
+                    new Field({ name: 'description', inputType: InputType.TEXT, value: 'A character of Game of Thrones' }),
+                ]
+            });
+
+            expect(patternMatcher.match(
+                'Hi! My name is George.',
+                patternBuilder.build('{greeting:word}! My {variable:word} is {value:word}.'),
+                matchers
+            )).to.deep.eq({
+                match: true,
+                fields: [
+                    new Field({ name: 'greeting', inputType: InputType.WORD, value: 'Hi' }),
+                    new Field({ name: 'variable', inputType: InputType.WORD, value: 'name' }),
+                    new Field({ name: 'value', inputType: InputType.WORD, value: 'George' }),
+                ]
+            });
+
+            expect(patternMatcher.match(
+                'Hi there! My real name is Jr. George McDonald.',
+                patternBuilder.build('{greeting:text}! My {variable:text} is {value:text}.'),
+                matchers
+            )).to.deep.eq({
+                match: true,
+                fields: [
+                    new Field({ name: 'greeting', inputType: InputType.TEXT, value: 'Hi there' }),
+                    new Field({ name: 'variable', inputType: InputType.TEXT, value: 'real name' }),
+                    new Field({ name: 'value', inputType: InputType.TEXT, value: 'Jr. George McDonald' }),
+                ]
+            });
+        });
+
+        it('should prioritize special matchers (1)', () => {
+            const pattern = patternBuilder.build('{name:word}[ {surname:word}][ {description:text}][ {phone:phone}][ {email:email}]');
+
+            expect(patternMatcher.match(
+                'Jon +380123456789',
+                pattern,
+                matchers
+            )).to.deep.eq({
+                match: true,
+                fields: [
+                    new Field({ name: 'name', inputType: InputType.WORD, value: 'Jon' }),
+                    new Field({ name: 'phone', inputType: InputType.PHONE, value: '+380123456789' }),
+                ]
+            });
+
+            expect(patternMatcher.match(
+                'Jon jon.snow@example.com',
+                pattern,
+                matchers
+            )).to.deep.eq({
+                match: true,
+                fields: [
+                    new Field({ name: 'name', inputType: InputType.WORD, value: 'Jon' }),
+                    new Field({ name: 'email', inputType: InputType.EMAIL, value: 'jon.snow@example.com' }),
+                ]
+            });
+
+            expect(patternMatcher.match(
+                'Jon +380123456789 jon.snow@example.com',
+                pattern,
+                matchers
+            )).to.deep.eq({
+                match: true,
+                fields: [
+                    new Field({ name: 'name', inputType: InputType.WORD, value: 'Jon' }),
+                    new Field({ name: 'phone', inputType: InputType.PHONE, value: '+380123456789' }),
+                    new Field({ name: 'email', inputType: InputType.EMAIL, value: 'jon.snow@example.com' }),
+                ]
+            });
+
+            expect(patternMatcher.match(
+                'Jon Snow +380123456789',
+                pattern,
+                matchers
+            )).to.deep.eq({
+                match: true,
+                fields: [
+                    new Field({ name: 'name', inputType: InputType.WORD, value: 'Jon' }),
+                    new Field({ name: 'surname', inputType: InputType.WORD, value: 'Snow' }),
+                    new Field({ name: 'phone', inputType: InputType.PHONE, value: '+380123456789' }),
+                ]
+            });
+
+            expect(patternMatcher.match(
+                'Jon Snow A Game of Thrones character jon.snow@example.com',
+                pattern,
+                matchers
+            )).to.deep.eq({
+                match: true,
+                fields: [
+                    new Field({ name: 'name', inputType: InputType.WORD, value: 'Jon' }),
+                    new Field({ name: 'surname', inputType: InputType.WORD, value: 'Snow' }),
+                    new Field({ name: 'description', inputType: InputType.TEXT, value: 'A Game of Thrones character' }),
+                    new Field({ name: 'email', inputType: InputType.EMAIL, value: 'jon.snow@example.com' }),
+                ]
+            });
+
+            expect(patternMatcher.match(
+                'Jon Snow A Game of Thrones character +380123456789 jon.snow@example.com',
+                pattern,
+                matchers
+            )).to.deep.eq({
+                match: true,
+                fields: [
+                    new Field({ name: 'name', inputType: InputType.WORD, value: 'Jon' }),
+                    new Field({ name: 'surname', inputType: InputType.WORD, value: 'Snow' }),
+                    new Field({ name: 'description', inputType: InputType.TEXT, value: 'A Game of Thrones character' }),
+                    new Field({ name: 'phone', inputType: InputType.PHONE, value: '+380123456789' }),
+                    new Field({ name: 'email', inputType: InputType.EMAIL, value: 'jon.snow@example.com' }),
+                ]
+            });
+        });
+
+        it('should preserve order of the pattern', () => {
+            const pattern = patternBuilder.build('[1 ][{2:word}][ {3:word}]');
+
+            expect(patternMatcher.match(
+                '1 2',
+                pattern,
+                matchers
+            )).to.deep.eq({
+                match: true,
+                fields: [
+                    new Field({ name: '2', inputType: InputType.WORD, value: '2' }),
+                ]
+            });
+
+            expect(patternMatcher.match(
+                '1  3',
+                pattern,
+                matchers
+            )).to.deep.eq({
+                match: true,
+                fields: [
+                    new Field({ name: '3', inputType: InputType.WORD, value: '3' }),
+                ]
+            });
+
+            expect(patternMatcher.match(
+                '2 3',
+                pattern,
+                matchers
+            )).to.deep.eq({
+                match: true,
+                fields: [
+                    new Field({ name: '2', inputType: InputType.WORD, value: '2' }),
+                    new Field({ name: '3', inputType: InputType.WORD, value: '3' }),
+                ]
+            });
+
+            expect(patternMatcher.match(
+                '1 2 3',
+                pattern,
+                matchers
+            )).to.deep.eq({
+                match: true,
+                fields: [
+                    new Field({ name: '2', inputType: InputType.WORD, value: '2' }),
+                    new Field({ name: '3', inputType: InputType.WORD, value: '3' }),
+                ]
+            });
         });
     });
 

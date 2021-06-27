@@ -1,8 +1,22 @@
 const InputType = require('../InputType');
 const TokenType = require('../TokenType');
+const split = require('../utils/split');
 
 const PHONE_REGEX = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
 const EMAIL_REGEX = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+const TEXT_SCORE = 2;
+const InputTypeScore = {
+    [InputType.TEXT]: 1,
+    [InputType.WORD]: 2,
+    [InputType.DATABASE]: 2,
+    [InputType.DATE]: 3,
+    [InputType.FUTURE_DATE]: 3,
+    [InputType.URL]: 3,
+    [InputType.EMAIL]: 3,
+    [InputType.PHONE]: 3,
+    [InputType.NUMBER]: 3,
+};
 
 class EntryMatchers {
     /** @param {{ dateParser }} dependencies */
@@ -21,6 +35,18 @@ class EntryMatchers {
         this[InputType.EMAIL] = this._email.bind(this);
         this[InputType.PHONE] = this._phone.bind(this);
         this[InputType.NUMBER] = this._number.bind(this);
+    }
+
+    score(token) {
+        if (token.type === TokenType.TEXT) {
+            return TEXT_SCORE * token.value.length;
+        }
+
+        if (token.type === TokenType.VARIABLE) {
+            return InputTypeScore[token.inputType];
+        }
+
+        throw new Error(`Cannot calculate score for: ${token.type}`);
     }
 
     _text(input, { nextTokens: [nextToken, nextToken2] }) {
@@ -81,12 +107,22 @@ class EntryMatchers {
         return input;
     }
 
-    _word(input) {
-        return input.split(' ')[0];
+    _word(input, { nextTokens: [nextToken] }) {
+        if (nextToken?.type === TokenType.TEXT) {
+            input = split(input, nextToken.value)[0];
+        }
+
+        const result = split(input, ' ')[0];
+
+        if (result.length > 0) {
+            return result;
+        }
+
+        return null;
     }
 
     _email(input) {
-        input = input.split(' ')[0];
+        input = split(input, ' ')[0];
 
         if (EMAIL_REGEX.test(input)) {
             return input;
@@ -96,7 +132,7 @@ class EntryMatchers {
     }
 
     _phone(input) {
-        input = input.split(' ')[0];
+        input = split(input, ' ')[0];
 
         if (PHONE_REGEX.test(input)) {
             return input;
@@ -106,7 +142,7 @@ class EntryMatchers {
     }
 
     _url(input) {
-        input = input.split(' ')[0];
+        input = split(input, ' ')[0];
 
         if (this._isValidUrl(input)) {
             return input;
@@ -135,7 +171,7 @@ class EntryMatchers {
 
     // TODO: add support for natural language numbers
     _number(input) {
-        input = input.split(' ')[0];
+        input = split(input, ' ')[0];
 
         if (!Number.isNaN(Number(input))) {
             return input;
