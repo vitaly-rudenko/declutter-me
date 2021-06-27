@@ -7,7 +7,16 @@
     margin-bottom: 50px;
 }
 
-.template-builder__form > *:not(:last-child) {
+.template-builder > *:not(:last-child) {
+    margin-bottom: 20px;
+}
+
+.template-builder__section {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.template-builder__section > *:not(:last-child) {
     margin-bottom: 20px;
 }
 
@@ -34,6 +43,12 @@
     text-decoration: underline dotted;
     font-family: monospace !important;
     white-space: pre-wrap;
+}
+
+.template-builder__combination-list-item {
+    padding: 0 !important;
+    margin: 0;
+    margin-top: 5px;
 }
 
 .template-builder__combination-list-item--primary {

@@ -43,9 +43,9 @@ function useMemoUnlessFailed(callback, dependencies) {
 export const TemplateBuilder = () => {
     resetRandom();
 
-    const [rawPattern, setRawPattern] = useState('(buy|purchase)[ {Amount (kg):number} kg of] {Item:text}[ #{Type:word}]');
+    const [rawPattern, setRawPattern] = useState('(buy|purchase)[ {Kg:number} kg of] {Item:text}[ #{Type:word}]');
     const pattern = useMemoUnlessFailed(() => new PatternBuilder().build(rawPattern), [rawPattern]);
-    const combinations = useMemoUnlessFailed(() => new PatternMatcher().getPatternCombinations(pattern), [pattern]);
+    const combinations = useMemoUnlessFailed(() => new PatternMatcher().getPatternCombinations(pattern)?.filter(c => c.length > 0), [pattern]);
 
     const [test, setTest] = useState('Buy 5 kg of tomatoes #vegetable');
     const isTesting = useMemo(() => test && rawPattern, [test, rawPattern]);
@@ -65,16 +65,18 @@ export const TemplateBuilder = () => {
         setTest(event.target.value);
     }, [setTest]);
 
-    return <div className="template-builder">
-        <Container maxWidth="lg">
-            <form className="template-builder__form" noValidate autoComplete="off">
-                <Typography variant="h4">Template Builder</Typography>
-                <TextField
-                    onChange={onPatternChange}
-                    label="Your template" size="small" spellCheck={false} classes={{ root: 'template-builder__template-field' }} variant="outlined" fullWidth multiline
-                    value={rawPattern}
-                />
-                <Typography variant="h5">Test your template</Typography>
+    return <Container classes={{ root: 'template-builder' }} maxWidth="lg">
+        <Container classes={{ root: 'template-builder__section' }} component={Paper} elevation={5}>
+            <Typography variant="h5">Template Builder</Typography>
+            <TextField
+                onChange={onPatternChange}
+                label="Your template" size="small" spellCheck={false} classes={{ root: 'template-builder__template-field' }} variant="outlined" fullWidth multiline
+                value={rawPattern}
+            />
+        </Container>
+        {rawPattern && <>
+            <Container classes={{ root: 'template-builder__section' }} component={Paper} elevation={5}>
+                <Typography variant="h5">Template Tester</Typography>
                 <TextField
                     onChange={onTestChange}
                     label="Telegram message" size="small" spellCheck={false} variant="outlined" fullWidth multiline
@@ -82,12 +84,7 @@ export const TemplateBuilder = () => {
                     value={test}
                 />
                 {match && <>
-                    <Chip
-                        variant="outlined"
-                        color={databaseField?.value ? 'primary' : 'default'}
-                        label={databaseField?.value ?? 'Default database'}
-                    />
-                    <TableContainer component={Paper} variant="outlined">
+                    <TableContainer component={Paper} elevation={0}>
                         <Table size="small">
                             <TableHead>
                                 <TableRow>
@@ -125,10 +122,15 @@ export const TemplateBuilder = () => {
                             </TableBody>
                         </Table>
                     </TableContainer>
+                    <Typography variant="caption">Database: {databaseField?.value ?? '<default>'}</Typography>
                 </>}
-                <Typography variant="h5">Examples</Typography>
-                <List component={Paper}>
-                    {combinations && combinations.length > 0 && combinations.map((combination, i) => {
+            </Container>
+        </>}
+        {combinations && combinations.length > 0 && <>
+            <Container classes={{ root: 'template-builder__section' }} component={Paper} elevation={5}>
+                <Typography variant="h5">Message examples</Typography>
+                <List component={Paper} elevation={0}>
+                    {combinations.map((combination, i) => {
                         return <>
                             {i > 0 && <Divider />}
                             <Combination key={i} combination={combination} />
@@ -138,17 +140,17 @@ export const TemplateBuilder = () => {
                 <Typography variant="caption">
                     These examples are generated automatically, so not all of them may work as expected.
                     <br/>
-                    Double check your templates with the tester!
+                    Double check your templates with the <b>Template Tester</b>!
                 </Typography>
-            </form>
-        </Container>
-    </div>
+            </Container>
+        </>}
+    </Container>;
 };
 
 const Combination = ({ combination }) => {
     let tokenExampleIndex = 0;
 
-    return <ListItem>
+    return <ListItem classes={{ root: 'template-builder__combination-list-item' }}>
         <ListItemText
             classes={{
                 primary: 'template-builder__combination-list-item--primary'
