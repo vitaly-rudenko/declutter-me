@@ -3,5 +3,5 @@ module.exports = function fuzzyEquals(actualValue, ...expectedValues) {
 }
 
 function normalize(value) {
-    return value.toLowerCase().replace(/[_\-\.\s]+/g, '');
+    return value.toLowerCase().replace(/[_\-.\s]+/g, '');
 }

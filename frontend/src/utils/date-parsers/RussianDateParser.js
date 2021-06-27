@@ -180,6 +180,8 @@ class RussianDateParser {
             case Unit.YEAR:
                 dateCopy.setUTCFullYear(origin.getUTCFullYear() + value);
                 break;
+            default:
+                break;
         }
 
         if (hasExtraHalf) {
@@ -201,6 +203,8 @@ class RussianDateParser {
                     break;
                 case Unit.YEAR:
                     dateCopy.setUTCMonth(dateCopy.getUTCMonth() + 6);
+                    break;
+                default:
                     break;
             }
         }
@@ -421,7 +425,7 @@ class RussianDateParser {
             return null;
         }
 
-        const [_, transformDate] = match;
+        const [, transformDate] = match;
 
         const dateCopy = new Date(origin);
         transformDate(dateCopy);

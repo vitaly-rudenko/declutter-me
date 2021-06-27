@@ -1,4 +1,4 @@
-import { AppBar, Button, createMuiTheme, CssBaseline, Fab, ThemeProvider, Toolbar } from '@material-ui/core';
+import { createMuiTheme, CssBaseline, Fab, ThemeProvider } from '@material-ui/core';
 import { Brightness4 } from '@material-ui/icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { TemplateBuilder } from './template-builder/TemplateBuilder';

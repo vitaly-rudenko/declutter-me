@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react'
 import {
     Container, TextField, Table, TableContainer, Paper, TableBody, TableHead, TableRow, TableCell, Chip, Link,
-    Card, CardContent, Typography, Button,
+    Typography, Button,
     List, ListItem, Divider, ListItemText
 } from '@material-ui/core'
 import {
@@ -37,7 +37,8 @@ function useMemoUnlessFailed(callback, dependencies) {
         } catch (error) { }
 
         return null;
-    }, dependencies);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [callback, ...dependencies]);
 }
 
 export const TemplateBuilder = () => {
