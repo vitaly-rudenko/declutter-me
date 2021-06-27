@@ -71,8 +71,8 @@ export const TemplateBuilder = () => {
             label="Your template" size="small" spellCheck={false} classes={{ root: 'template-builder__template-field' }} variant="outlined" fullWidth multiline
             value={rawPattern}
         />
-        <Divider/>
         {rawPattern && <>
+            <Divider/>
             <Typography variant="h5">Template tester</Typography>
             <TextField
                 onChange={onTestChange}
@@ -120,9 +120,9 @@ export const TemplateBuilder = () => {
                     </Table>
                 </TableContainer>
             </>}
-            <Divider/>
         </>}
         {combinations && combinations.length > 0 && <>
+            <Divider/>
             <Typography variant="h5">Message examples</Typography>
             <List component={Paper} elevation={0}>
                 {combinations.map((combination, i) => {

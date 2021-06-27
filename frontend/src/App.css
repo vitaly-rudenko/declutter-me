@@ -1,1 +1,9 @@
+#root {
+    position: relative;
+}
 
+button.switch-theme-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+}
