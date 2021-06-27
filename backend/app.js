@@ -148,7 +148,7 @@ const InputType = require('./app/InputType');
             localize('chooseLanguage', { language: localize(`language.${language}`, null, language) }, language)
         ]);
 
-        await ctx.reply('🇺🇸 🇬🇧 🇺🇦 🇷🇺', {
+        await ctx.reply('🇬🇧 🇺🇦 🇷🇺', {
             reply_markup: Markup.inlineKeyboard(
                 languages.map(([language, label]) => (
                     Markup.button.callback(label, `language:${language}`)

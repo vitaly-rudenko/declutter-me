@@ -105,7 +105,13 @@ class PatternMatcher {
 
         combinations = combinations
             .sort((a, b) => this.scoreCombination(b, matchers) - this.scoreCombination(a, matchers))
-            .map(this.simplifyPattern);
+            .map(this.simplifyPattern)
+            .filter((combination) => (
+                !combination.some((_, i) => (
+                    combination[i]?.type === TokenType.VARIABLE &&
+                    combination[i - 1]?.type === TokenType.VARIABLE
+                ))
+            ));
 
         const combinationStrings = combinations.map(c => JSON.stringify(c));
         const result = [];

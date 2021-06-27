@@ -1,4 +1,5 @@
 const chai = require('chai');
+const InputType = require('../../frontend/src/utils/InputType');
 const PatternMatcher = require('../app/PatternMatcher');
 
 const { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } = require('../app/TokenType');
@@ -46,7 +47,40 @@ describe('PatternMatcher', () => {
                 [{ type: TEXT, value: 'a  hello!' }],
                 [{ type: TEXT, value: 'b  hello!' }],
             ]);
-        })
+        });
+
+        it('should exclude combinations with variables next to each other', () => {
+            // [{1:word}][ ][{2:word}][ ][{3:word}]
+            expect(patternMatcher.getPatternCombinations([
+                { type: OPTIONAL, value: [
+                    { type: VARIABLE, value: '1', inputType: InputType.WORD },
+                ] },
+                { type: OPTIONAL, value: [
+                    { type: TEXT, value: ' ' },
+                ] },
+                { type: OPTIONAL, value: [
+                    { type: VARIABLE, value: '2', inputType: InputType.WORD },
+                ] },
+            ])).to.deep.equalInAnyOrder([
+                [
+                    { type: 'variable', value: '1', inputType: 'word' },
+                    { type: 'text', value: ' ' },
+                    { type: 'variable', value: '2', inputType: 'word' }
+                ],
+                [
+                    { type: 'variable', value: '1', inputType: 'word' },
+                    { type: 'text', value: ' ' }
+                ],
+                [
+                    { type: 'text', value: ' ' },
+                    { type: 'variable', value: '2', inputType: 'word' }
+                ],
+                [{ type: 'variable', value: '1', inputType: 'word' }],
+                [{ type: 'text', value: ' ' }],
+                [{ type: 'variable', value: '2', inputType: 'word' }],
+                []
+            ]);
+        });
     });
 
     describe('getTokenCombinations()', () => {
