@@ -187,33 +187,109 @@ const Combination = ({ combination }) => {
 };
 
 const adjectives = [
-    'big',
-    'crazy',
-    'happy',
-    'small',
-    'lovely',
-    'fast'
-]
-
-const shortNouns = [
-    'cat',
-    'dog',
-    'human',
-    'mouse',
-    'wolf',
-    'whale',
-    'robot'
+    'cruel',
+    'spotted',
+    'noxious',
+    'upbeat',
+    'cheerful',
+    'public',
+    'visible',
+    'bustling',
+    'additional',
+    'ambiguous',
+    'burly',
+    'bashful',
+    'overconfident',
+    'colossal',
+    'high-pitched',
+    'available',
+    'ubiquitous',
+    'receptive',
+    'unsuitable',
+    'eatable',
+    'grateful',
+    'assorted',
+    'permissible',
+    'fortunate',
+    'inconclusive',
+    'suitable',
+    'snobbish',
+    'tiny',
+    'straight',
+    'muddled',
+    'eastern',
+    'fallacious',
+    'handsome',
+    'elfin',
+    'scientific',
+    'workable',
+    'electric',
+    'hideous',
+    'rotten',
+    'fretful',
+    'first',
+    'meek',
+    'fierce',
+    'thoughtless',
+    'clear',
+    'lonely',
+    'squalid',
+    'logical',
+    'dull',
+    'picayune',
 ];
 
-const longNouns = [
-    'transportation',
-    'entertainment',
-    'responsibility',
-    'recommendation',
-    'communication',
+const nouns = [
+    'strategy',
     'administration',
-    'understanding',
-    'establishment'
+    'magazine',
+    'establishment',
+    'sympathy',
+    'ability',
+    'highway',
+    'technology',
+    'transportation',
+    'wedding',
+    'contribution',
+    'republic',
+    'introduction',
+    'confusion',
+    'decision',
+    'guidance',
+    'possession',
+    'proposal',
+    'perception',
+    'statement',
+    'direction',
+    'combination',
+    'instance',
+    'weakness',
+    'housing',
+    'temperature',
+    'atmosphere',
+    'literature',
+    'construction',
+    'passenger',
+    'preference',
+    'intention',
+    'failure',
+    'control',
+    'department',
+    'setting',
+    'candidate',
+    'championship',
+    'reception',
+    'boyfriend',
+    'internet',
+    'assignment',
+    'relationship',
+    'version',
+    'audience',
+    'secretary',
+    'impression',
+    'expression',
+    'marriage',
+    'customer',
 ];
 
 const articles = ['a', 'the'];
@@ -230,7 +306,7 @@ function getExampleFor(inputType) {
     }
 
     if (inputType === 'word') {
-        return getNextItem(longNouns);
+        return getNextItem(nouns);
     }
 
     if (inputType === 'url') {
@@ -256,7 +332,7 @@ function generateText() {
     return [
         getNextItem(articles),
         getNextItem(adjectives),
-        getNextItem(shortNouns),
+        getNextItem(nouns),
     ].filter(Boolean).join(' ');
 }
 
@@ -266,11 +342,11 @@ function resetRandom() {
 }
 
 function getNextNumber() {
-    return (getNextInt() * 46) % 64;
+    return Math.floor(getNextInt() * Math.PI ** Math.PI) % 64;
 }
 
 function getNextItem(array) {
-    return array[getNextInt() % array.length];
+    return array[Math.floor(getNextInt() * Math.PI) % array.length];
 }
 
 function getNextInt() {
