@@ -54,8 +54,7 @@ export const TemplateBuilder = () => {
         [test, pattern, isTesting]
     );
 
-    const databaseField = useMemoUnlessFailed(() => match?.fields.find(f => f.inputType === 'database'), [match]);
-    const fields = useMemoUnlessFailed(() => match?.fields.filter(f => f.inputType !== 'database'), [match]);
+    const fields = useMemoUnlessFailed(() => match?.fields, [match]);
 
     const onPatternChange = useCallback((event) => {
         setRawPattern(event.target.value);
@@ -65,84 +64,78 @@ export const TemplateBuilder = () => {
         setTest(event.target.value);
     }, [setTest]);
 
-    return <Container classes={{ root: 'template-builder' }} maxWidth="lg">
-        <Container classes={{ root: 'template-builder__section' }} component={Paper} elevation={5}>
-            <Typography variant="h5">Template Builder</Typography>
-            <TextField
-                onChange={onPatternChange}
-                label="Your template" size="small" spellCheck={false} classes={{ root: 'template-builder__template-field' }} variant="outlined" fullWidth multiline
-                value={rawPattern}
-            />
-        </Container>
+    return <Container classes={{ root: 'template-builder' }} maxWidth="lg" component={Paper} elevation={5}>
+        <Typography variant="h5">Template builder</Typography>
+        <TextField
+            onChange={onPatternChange}
+            label="Your template" size="small" spellCheck={false} classes={{ root: 'template-builder__template-field' }} variant="outlined" fullWidth multiline
+            value={rawPattern}
+        />
+        <Divider/>
         {rawPattern && <>
-            <Container classes={{ root: 'template-builder__section' }} component={Paper} elevation={5}>
-                <Typography variant="h5">Template Tester</Typography>
-                <TextField
-                    onChange={onTestChange}
-                    label="Telegram message" size="small" spellCheck={false} variant="outlined" fullWidth multiline
-                    error={isTesting && !match}
-                    value={test}
-                />
-                {match && <>
-                    <TableContainer component={Paper} elevation={0}>
-                        <Table size="small">
-                            <TableHead>
-                                <TableRow>
-                                    {fields.map((field) => {
-                                        const InputTypeIcon = InputTypeIcons[field.inputType];
+            <Typography variant="h5">Template tester</Typography>
+            <TextField
+                onChange={onTestChange}
+                label="Telegram message" size="small" spellCheck={false} variant="outlined" fullWidth multiline
+                error={isTesting && !match}
+                value={test}
+            />
+            {match && <>
+                <TableContainer component={Paper} variant="outlined">
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                {fields.map((field) => {
+                                    const InputTypeIcon = InputTypeIcons[field.inputType];
 
-                                        if (!InputTypeIcon) {
-                                            throw new Error('Invalid input type: ' + field.inputType)
-                                        }
+                                    if (!InputTypeIcon) {
+                                        throw new Error('Invalid input type: ' + field.inputType)
+                                    }
 
-                                        return <TableCell key={field.name}><Button disableRipple
-                                            classes={{
-                                                root: 'template-builder__field-name'
-                                            }}
-                                            startIcon={<InputTypeIcon />}
-                                        >{field.name}</Button></TableCell>
-                                    })}
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                <TableRow>
-                                    {fields.map((field) => {
-                                        return <TableCell key={field.name}>{(
-                                            Array.isArray(field.value)
-                                                ? field.value.map(value => <Chip
-                                                    key={field.name + ':' + value} className="template-builder__multiselect-chip" label={value}
-                                                    variant="outlined"
-                                                />)
-                                                : field.inputType === 'url'
-                                                    ? <Link href={field.value} title={field.value}>{ellipsis(field.value, 35)}</Link>
-                                                    : field.value
-                                        )}</TableCell>
-                                    })}
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                    <Typography variant="caption">Database: {databaseField?.value ?? '<default>'}</Typography>
-                </>}
-            </Container>
+                                    return <TableCell key={field.name}><Button disableRipple
+                                        classes={{
+                                            root: 'template-builder__field-name'
+                                        }}
+                                        startIcon={<InputTypeIcon />}
+                                    >{field.name || 'Database'}</Button></TableCell>
+                                })}
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            <TableRow>
+                                {fields.map((field) => {
+                                    return <TableCell key={field.name}>{(
+                                        Array.isArray(field.value)
+                                            ? field.value.map(value => <Chip
+                                                key={field.name + ':' + value} className="template-builder__multiselect-chip" label={value}
+                                                variant="outlined"
+                                            />)
+                                            : field.inputType === 'url'
+                                                ? <Link href={field.value} title={field.value}>{ellipsis(field.value, 35)}</Link>
+                                                : field.value
+                                    )}</TableCell>
+                                })}
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </>}
+            <Divider/>
         </>}
         {combinations && combinations.length > 0 && <>
-            <Container classes={{ root: 'template-builder__section' }} component={Paper} elevation={5}>
-                <Typography variant="h5">Message examples</Typography>
-                <List component={Paper} elevation={0}>
-                    {combinations.map((combination, i) => {
-                        return <>
-                            {i > 0 && <Divider />}
-                            <Combination key={i} combination={combination} />
-                        </>;
-                    })}
-                </List>
-                <Typography variant="caption">
-                    These examples are generated automatically, so not all of them may work as expected.
-                    <br/>
-                    Double check your templates with the <b>Template Tester</b>!
-                </Typography>
-            </Container>
+            <Typography variant="h5">Message examples</Typography>
+            <List component={Paper} elevation={0}>
+                {combinations.map((combination, i) => {
+                    return <>
+                        {i > 0 && <Divider />}
+                        <Combination key={i} combination={combination} />
+                    </>;
+                })}
+            </List>
+            <Typography variant="caption">
+                All examples are generated automatically, therefore some of them may not work as expected.
+                Double check your templates with the <b>Template tester</b>!
+            </Typography>
         </>}
     </Container>;
 };

@@ -3,20 +3,13 @@
 }
 
 .template-builder {
-    margin-top: 50px;
-    margin-bottom: 50px;
-}
-
-.template-builder > *:not(:last-child) {
+    margin-top: 20px;
     margin-bottom: 20px;
-}
-
-.template-builder__section {
     padding-top: 20px;
     padding-bottom: 20px;
 }
 
-.template-builder__section > *:not(:last-child) {
+.template-builder > *:not(:last-child) {
     margin-bottom: 20px;
 }
 
@@ -79,11 +72,11 @@
 }
 
 :root {
-    --orange: rgb(133, 97, 77);
-    --yellow: rgb(145, 140, 97);
-    --green: rgb(95, 138, 102);
-    --blue: rgb(87, 116, 138);
-    --purple: rgb(139, 100, 136);
+    --orange: rgb(179, 111, 75);
+    --yellow: rgb(158, 150, 80);
+    --green: rgb(86, 160, 99);
+    --blue: rgb(87, 129, 161);
+    --purple: rgb(163, 97, 158);
 }
 
 .template-builder__token-example--orange {
