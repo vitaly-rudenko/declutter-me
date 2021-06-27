@@ -43,7 +43,7 @@ function useMemoUnlessFailed(callback, dependencies) {
 export const TemplateBuilder = () => {
     resetRandom();
 
-    const [rawPattern, setRawPattern] = useState('(buy|purchase)[ {Amount (kg):number} kg[ of]] {Item:text}[ #{Type:word}]');
+    const [rawPattern, setRawPattern] = useState('(buy|purchase)[ {Amount (kg):number} kg of] {Item:text}[ #{Type:word}]');
     const pattern = useMemoUnlessFailed(() => new PatternBuilder().build(rawPattern), [rawPattern]);
     const combinations = useMemoUnlessFailed(() => new PatternMatcher().getPatternCombinations(pattern), [pattern]);
 
