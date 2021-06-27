@@ -8,7 +8,7 @@
     padding-top: 20px;
     padding-bottom: 20px;
 
-    animation: appear 0.5s forwards;
+    animation: appear ease-out 0.5s forwards;
     transform: translateY(20px);
     opacity: 0;
 }
@@ -25,7 +25,7 @@
 }
 
 .template-builder > * {
-    animation: appear 0.5s forwards;
+    animation: appear ease-out 0.5s forwards;
     animation-delay: 0.3s;
     opacity: 0;
     transform: translateY(20px);
@@ -59,6 +59,7 @@
 
 .template-builder__token-example-text {
     text-decoration: underline dotted;
+    text-decoration-color: gray;
     font-family: monospace !important;
     white-space: pre-wrap;
 }

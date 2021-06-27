@@ -129,7 +129,7 @@ export const TemplateBuilder = () => {
                 {combinations.map((combination, i) => {
                     return <>
                         {i > 0 && <Divider />}
-                        <Combination key={i} combination={combination} />
+                        <Combination combination={combination} />
                     </>;
                 })}
             </List>
@@ -186,6 +186,15 @@ const Combination = ({ combination }) => {
     </ListItem>;
 };
 
+const adjectives = [
+    'big',
+    'crazy',
+    'happy',
+    'small',
+    'lovely',
+    'fast'
+]
+
 const shortNouns = [
     'cat',
     'dog',
@@ -207,23 +216,13 @@ const longNouns = [
     'establishment'
 ];
 
-const verbs = [
-    'befriended',
-    'jumped over',
-    'looked at',
-    'hugged',
-    'protected',
-    'greeted',
-    'played with',
-];
-
 const articles = ['a', 'the'];
 
 const databaseNames = ['shopping', 'notes', 'todo_list', 'reminders', 'recipes'];
 
 function getExampleFor(inputType) {
     if (inputType === 'database') {
-        return getRandom(databaseNames);
+        return getNextItem(databaseNames);
     }
 
     if (inputType === 'text') {
@@ -231,7 +230,7 @@ function getExampleFor(inputType) {
     }
 
     if (inputType === 'word') {
-        return getRandom(longNouns)
+        return getNextItem(longNouns);
     }
 
     if (inputType === 'url') {
@@ -247,7 +246,7 @@ function getExampleFor(inputType) {
     }
 
     if (inputType === 'number') {
-        return String(getRandomNumber());
+        return String(getNextNumber());
     }
 
     return inputType;
@@ -255,31 +254,28 @@ function getExampleFor(inputType) {
 
 function generateText() {
     return [
-        getRandom(shortNouns),
-        getRandom(verbs),
-        getRandom(articles),
-        getRandom(shortNouns),
+        getNextItem(articles),
+        getNextItem(adjectives),
+        getNextItem(shortNouns),
     ].filter(Boolean).join(' ');
 }
 
-const arrayIndexes = new Map();
 let randomIndex = 0;
-
 function resetRandom() {
-    arrayIndexes.clear();
     randomIndex = 0;
 }
 
-function getRandomNumber() {
-    randomIndex++;
-    return (123 * randomIndex) % (46 + randomIndex);
+function getNextNumber() {
+    return (getNextInt() * 46) % 64;
 }
 
-function getRandom(array) {
-    let index = arrayIndexes.get(array) ?? 0;
-    arrayIndexes.set(array, (index + 1) % array.length);
+function getNextItem(array) {
+    return array[getNextInt() % array.length];
+}
 
-    return array[index];
+function getNextInt() {
+    randomIndex++;
+    return randomIndex;
 }
 
 function ellipsis(text, length) {
