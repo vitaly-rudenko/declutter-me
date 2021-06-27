@@ -34,7 +34,7 @@ function useMemoUnlessFailed(callback, dependencies) {
     return useMemo(() => {
         try {
             return callback();
-        } catch (error) {}
+        } catch (error) { }
 
         return null;
     }, dependencies);
@@ -51,10 +51,8 @@ export const TemplateBuilder = () => {
         [test, pattern]
     );
 
-    const databaseField = useMemoUnlessFailed(() => match.fields?.find(f => f.inputType === 'database'), [match]);
-    const fields = useMemoUnlessFailed(() => match.fields?.filter(f => f.inputType !== 'database'), [match]);
-
-    console.log({ rawPattern, pattern, combinations, test, match, databaseField, fields });
+    const databaseField = useMemoUnlessFailed(() => match?.fields.find(f => f.inputType === 'database'), [match]);
+    const fields = useMemoUnlessFailed(() => match?.fields.filter(f => f.inputType !== 'database'), [match]);
 
     const onPatternChange = useCallback((event) => {
         setRawPattern(event.target.value);
@@ -77,15 +75,15 @@ export const TemplateBuilder = () => {
                 <TextField
                     onChange={onTestChange}
                     label="Test" size="small" spellCheck={false} variant="outlined" fullWidth multiline
-                    error={!match?.match}
+                    error={!match}
                     value={test}
                 />
-                {match?.match && <Chip
+                {match && <Chip
                     variant="outlined"
                     color={databaseField?.value ? 'primary' : 'default'}
                     label={databaseField?.value ?? 'Default database'}
                 />}
-                {match?.match && <TableContainer component={Paper} variant="outlined">
+                {match && <TableContainer component={Paper} variant="outlined">
                     <Table size="small">
                         <TableHead>
                             <TableRow>
@@ -100,7 +98,7 @@ export const TemplateBuilder = () => {
                                         classes={{
                                             root: 'template-builder__field-name'
                                         }}
-                                        startIcon={<InputTypeIcon/>}
+                                        startIcon={<InputTypeIcon />}
                                     >{field.name}</Button></TableCell>
                                 })}
                             </TableRow>
@@ -126,7 +124,7 @@ export const TemplateBuilder = () => {
                 <List component={Paper}>
                     {combinations && combinations.length > 0 && combinations.map((combination, i) => {
                         return <>
-                            {i > 0 && <Divider/>}
+                            {i > 0 && <Divider />}
                             <Combination key={i} combination={combination} />
                         </>;
                     })}
@@ -146,7 +144,7 @@ const Combination = ({ combination }) => {
             }}
             primary={combination.map((token) => {
                 if (token.type === 'text') {
-                    return <span className='template-builder__token-text'>{token.value}</span>;
+                    return <span className='template-builder__token-example-text'>{token.value}</span>;
                 }
 
                 if (token.type === 'variable') {
@@ -154,8 +152,12 @@ const Combination = ({ combination }) => {
                     const className = `template-builder__token-example--${color}`;
                     tokenExampleIndex++;
 
-                    const invalid = !InputTypeIcons[token.inputType];
-                    const IconClass = InputTypeIcons[token.inputType] || HelpOutline;
+                    const inputType = token.inputType || '';
+                    const invalid = !InputTypeIcons[inputType];
+                    const IconClass = InputTypeIcons[inputType] || HelpOutline;
+
+                    const example = getExampleFor(inputType);
+                    const space = ''.padEnd(Math.max(0, token.value.length - example.length + 2), ' ');
 
                     return <span
                         className={'template-builder__token-example ' + (invalid
@@ -163,10 +165,11 @@ const Combination = ({ combination }) => {
                             : className)}
                     >
                         <span className="template-builder__token-example-label">
-                            <IconClass className="template-builder__token-example-icon"/>
+                            <IconClass className="template-builder__token-example-icon" />
                             {token.value}
                         </span>
-                        {getExampleFor(token.inputType)}
+                        {example}
+                        {space && <span className='template-builder__token-example-space'>{space}</span>}
                     </span>;
                 }
 
@@ -237,7 +240,7 @@ function getExampleFor(inputType) {
     }
 
     if (inputType === 'number') {
-        return Math.round(46 + Math.random() * (146 - 46));
+        return String(getRandomNumber());
     }
 
     return inputType;
@@ -253,9 +256,17 @@ function generateText() {
 }
 
 const arrayIndexes = new Map();
+let randomIndex = 0;
 
 function resetRandom() {
     arrayIndexes.clear();
+    randomIndex = 0;
+}
+
+function getRandomNumber() {
+    randomIndex++;
+
+    return (123 * randomIndex) % (46 + randomIndex);
 }
 
 function getRandom(array) {

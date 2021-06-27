@@ -1,4 +1,5 @@
 const Field = require('./fields/Field');
+const TokenType = require('./TokenType');
 
 class PatternMatcher {
     /**
@@ -6,13 +7,10 @@ class PatternMatcher {
      * @param {string} input
      * @param {any[]} pattern
      * @param {import('./entries/EntryMatchers')} matchers
-     * @returns {{
-     *     match: boolean,
-     *     fields?: Field[],
-     * }}
+     * @returns {{ fields: Field[] } | null}
      */
     match(input, pattern, matchers) {
-        const combinations = this.getPatternCombinations(pattern);
+        const combinations = this.getPatternCombinations(pattern, matchers);
 
         for (const combination of combinations) {
             let remainingInput = input;
@@ -25,7 +23,7 @@ class PatternMatcher {
                 let value = token.value;
                 let { value: name, inputType, bang } = token;
 
-                if (token.type === 'variable') {
+                if (token.type === TokenType.VARIABLE) {
                     if (!inputType) {
                         throw new Error(`No input type provided: ${name}`)
                     }
@@ -40,7 +38,7 @@ class PatternMatcher {
                     if (Array.isArray(value)) {
                         for (const valueVariation of value) {
                             const matchResult = this.match(remainingInput.slice(valueVariation.length), nextTokens, matchers);
-                            if (matchResult.match) {
+                            if (matchResult) {
                                 value = valueVariation;
                                 break;
                             }
@@ -80,50 +78,71 @@ class PatternMatcher {
             if (match && remainingInput.length === 0) {
                 const fields = Object.values(fieldMap);
 
-                return {
-                    match: true,
-                    ...fields.length > 0 && { fields },
-                };
+                return { fields };
             }
         }
 
-        return { match: false };
+        return null;
     }
 
-    getPatternCombinations(pattern) {
+    getPatternCombinations(pattern, matchers) {
         let combinations = [[]];
 
         for (const token of pattern) {
-            const tokenCombinations = this.getTokenCombinations(token);
+            const tokenCombinations = this.getTokenCombinations(token, matchers);
 
-            const updatedCombinations = [];
-            for (const tokenCombination of tokenCombinations) {
-                updatedCombinations.push(
-                    ...combinations.map(combination => [...combination, ...tokenCombination])
-                );
+            if (tokenCombinations.length > 0) {
+                const updatedCombinations = [];
+                for (const tokenCombination of tokenCombinations) {
+                    updatedCombinations.push(
+                        ...combinations.map(combination => [...combination, ...tokenCombination])
+                    );
+                }
+    
+                combinations = updatedCombinations;
             }
-
-            combinations = updatedCombinations;
         }
 
-        return combinations.sort((a, b) => b.length - a.length).filter(c => c.length > 0);
+        combinations = combinations
+            .sort((a, b) => this.scoreCombination(b, matchers) - this.scoreCombination(a, matchers))
+            .map(this.simplifyPattern);
+
+        const combinationStrings = combinations.map(c => JSON.stringify(c));
+        const result = [];
+        const resultStrings = [];
+
+        for (let i = 0; i < combinationStrings.length; i++) {
+            const combination = combinations[i];
+            const combinationStr = combinationStrings[i];
+
+            if (!resultStrings.includes(combinationStr)) {
+                result.push(combination);
+                resultStrings.push(combinationStr);
+            }
+        }
+
+        return result;
     }
 
-    getTokenCombinations(token) {
+    scoreCombination(combination, matchers) {
+        return combination.reduce((acc, curr) => acc + (matchers?.score?.(curr) ?? 1), 0);
+    }
+
+    getTokenCombinations(token, matchers) {
         const combinations = [];
 
-        if (token.type === 'text' || token.type === 'variable') {
+        if (token.type === TokenType.TEXT || token.type === TokenType.VARIABLE) {
             combinations.push([token]);
         }
 
-        if (token.type === 'optional') {
+        if (token.type === TokenType.OPTIONAL) {
             combinations.push([]);
-            combinations.push(...this.getPatternCombinations(token.value));
+            combinations.push(...this.getPatternCombinations(token.value, matchers));
         }
 
-        if (token.type === 'variational') {
+        if (token.type === TokenType.VARIATIONAL) {
             for (const variation of token.value) {
-                combinations.push(...this.getPatternCombinations(variation));
+                combinations.push(...this.getPatternCombinations(variation, matchers));
             }
         }
 
@@ -132,9 +151,9 @@ class PatternMatcher {
 
     simplifyPattern(pattern) {
         return pattern.reduce((result, token, i) => {
-            const latestToken = i > 0 ? result[result.length - 1]: null;
+            const latestToken = result[result.length - 1];
 
-            if (latestToken && latestToken.type === 'text' && token.type === 'text') {
+            if (latestToken?.type === TokenType.TEXT && token.type === TokenType.TEXT) {
                 latestToken.value += token.value;
             } else {
                 result.push({ ...token });

@@ -1,8 +1,10 @@
+const TokenType = require('./TokenType');
+
 class PatternBuilder {
     build(input) {
         const result = [];
 
-        let currentType = 'text';
+        let currentType = TokenType.TEXT;
         let value = '';
         let nested = 0;
 
@@ -17,7 +19,7 @@ class PatternBuilder {
                 nested++;
                 if (nested === 1) {
                     skip = true;
-                    type = 'variable';
+                    type = TokenType.VARIABLE;
                 }
             }
 
@@ -25,7 +27,7 @@ class PatternBuilder {
                 nested--;
                 if (nested === 0) {
                     skip = true;
-                    type = 'text';
+                    type = TokenType.TEXT;
                 }
             }
 
@@ -33,7 +35,7 @@ class PatternBuilder {
                 nested++;
                 if (nested === 1) {
                     skip = true;
-                    type = 'optional';
+                    type = TokenType.OPTIONAL;
                 }
             }
 
@@ -41,7 +43,7 @@ class PatternBuilder {
                 nested--;
                 if (nested === 0) {
                     skip = true;
-                    type = 'text';
+                    type = TokenType.TEXT;
                 }
             }
 
@@ -49,7 +51,7 @@ class PatternBuilder {
                 nested++;
                 if (nested === 1) {
                     skip = true;
-                    type = 'variational';
+                    type = TokenType.VARIATIONAL;
                 }
             }
 
@@ -57,7 +59,7 @@ class PatternBuilder {
                 nested--;
                 if (nested === 0) {
                     skip = true;
-                    type = 'text';
+                    type = TokenType.TEXT;
                 }
             }
 
@@ -67,7 +69,7 @@ class PatternBuilder {
             ) {
                 const metadata = {};
 
-                if (currentType === 'variable') {
+                if (currentType === TokenType.VARIABLE) {
                     if (value.endsWith('!')) {
                         metadata.bang = true;
                         value = value.slice(0, -1);
@@ -81,11 +83,11 @@ class PatternBuilder {
 
                 result.push({
                     type: currentType,
-                    value: currentType === 'optional'
+                    value: currentType === TokenType.OPTIONAL
                         ? this.build(value)
-                        : currentType === 'variational'
+                        : currentType === TokenType.VARIATIONAL
                             ? value.split('|').map(v => this.build(v))
-                            : currentType === 'variable'
+                            : currentType === TokenType.VARIABLE
                                 ? value
                                 : value.toLowerCase(),
                     ...metadata,

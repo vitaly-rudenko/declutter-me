@@ -26,10 +26,12 @@
 .template-builder__token-example {
     line-height: 3em;
     text-decoration: underline;
+    font-family: monospace !important;
 }
 
-.template-builder__token-text {
+.template-builder__token-example-text {
     text-decoration: underline dotted;
+    font-family: monospace !important;
 }
 
 .template-builder__combination-list-item--primary {
@@ -40,6 +42,10 @@
 .template-builder__token-example-label {
     position: absolute;
     margin-top: -1.3em;
+    user-select: none;
+}
+
+.template-builder__token-example-space {
     user-select: none;
 }
 
