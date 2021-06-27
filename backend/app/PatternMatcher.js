@@ -1,4 +1,5 @@
 const Field = require('./fields/Field');
+const TokenType = require('./TokenType');
 
 class PatternMatcher {
     /**
@@ -25,7 +26,7 @@ class PatternMatcher {
                 let value = token.value;
                 let { value: name, inputType, bang } = token;
 
-                if (token.type === 'variable') {
+                if (token.type === TokenType.VARIABLE) {
                     if (!inputType) {
                         throw new Error(`No input type provided: ${name}`)
                     }
@@ -96,32 +97,52 @@ class PatternMatcher {
         for (const token of pattern) {
             const tokenCombinations = this.getTokenCombinations(token);
 
-            const updatedCombinations = [];
-            for (const tokenCombination of tokenCombinations) {
-                updatedCombinations.push(
-                    ...combinations.map(combination => [...combination, ...tokenCombination])
-                );
+            if (tokenCombinations.length > 0) {
+                const updatedCombinations = [];
+                for (const tokenCombination of tokenCombinations) {
+                    updatedCombinations.push(
+                        ...combinations.map(combination => [...combination, ...tokenCombination])
+                    );
+                }
+    
+                combinations = updatedCombinations;
             }
-
-            combinations = updatedCombinations;
         }
 
-        return combinations.sort((a, b) => b.length - a.length).filter(c => c.length > 0);
+        combinations = combinations
+            .sort((a, b) => b.length - a.length)
+            .map(this.simplifyPattern);
+
+        const combinationStrings = combinations.map(c => JSON.stringify(c));
+        const result = [];
+        const resultStrings = [];
+
+        for (let i = 0; i < combinationStrings.length; i++) {
+            const combination = combinations[i];
+            const combinationStr = combinationStrings[i];
+
+            if (!resultStrings.includes(combinationStr)) {
+                result.push(combination);
+                resultStrings.push(combinationStr);
+            }
+        }
+
+        return result;
     }
 
     getTokenCombinations(token) {
         const combinations = [];
 
-        if (token.type === 'text' || token.type === 'variable') {
+        if (token.type === TokenType.TEXT || token.type === TokenType.VARIABLE) {
             combinations.push([token]);
         }
 
-        if (token.type === 'optional') {
+        if (token.type === TokenType.OPTIONAL) {
             combinations.push([]);
             combinations.push(...this.getPatternCombinations(token.value));
         }
 
-        if (token.type === 'variational') {
+        if (token.type === TokenType.VARIATIONAL) {
             for (const variation of token.value) {
                 combinations.push(...this.getPatternCombinations(variation));
             }
@@ -132,9 +153,9 @@ class PatternMatcher {
 
     simplifyPattern(pattern) {
         return pattern.reduce((result, token, i) => {
-            const latestToken = i > 0 ? result[result.length - 1]: null;
+            const latestToken = result[result.length - 1];
 
-            if (latestToken && latestToken.type === 'text' && token.type === 'text') {
+            if (latestToken?.type === TokenType.TEXT && token.type === TokenType.TEXT) {
                 latestToken.value += token.value;
             } else {
                 result.push({ ...token });

@@ -40,7 +40,7 @@ const NotionProperty = require('./app/notion/NotionProperty');
         order: 1,
         pattern: new PatternBuilder().build('купить [{количество:number} (шт[ук[и]]|гр[ам[м]]|кг|кило[грам[м]]) ]{товар:text}'),
         defaultFields: [
-            new Field({ inputType: 'database', value: 'shopping' })
+            new Field({ inputType: InputType.DATABASE, value: 'shopping' })
         ]
     }));
 
@@ -49,7 +49,7 @@ const NotionProperty = require('./app/notion/NotionProperty');
         order: 2,
         pattern: new PatternBuilder().build('посмотреть {название:text}[ #{тип:word}]'),
         defaultFields: [
-            new Field({ inputType: 'database', value: 'to_watch' })
+            new Field({ inputType: InputType.DATABASE, value: 'to_watch' })
         ]
     }));
 
@@ -58,7 +58,7 @@ const NotionProperty = require('./app/notion/NotionProperty');
         order: 3,
         pattern: new PatternBuilder().build('(сделать|задача) {задача:text}'),
         defaultFields: [
-            new Field({ inputType: 'database', value: 'todo' })
+            new Field({ inputType: InputType.DATABASE, value: 'todo' })
         ]
     }));
 
@@ -67,7 +67,7 @@ const NotionProperty = require('./app/notion/NotionProperty');
         order: 4,
         pattern: new PatternBuilder().build('контакт {имя:word}[ {телефон:phone}][ {эл. почта:email}][ {сайт:url}]'),
         defaultFields: [
-            new Field({ inputType: 'database', value: 'contacts' })
+            new Field({ inputType: InputType.DATABASE, value: 'contacts' })
         ]
     }));
 
@@ -76,7 +76,7 @@ const NotionProperty = require('./app/notion/NotionProperty');
         order: 5,
         pattern: new PatternBuilder().build('контакт {имя:word} {фамилия:word}[ {телефон:phone}][ {эл. почта:email}][ {сайт:url}]'),
         defaultFields: [
-            new Field({ inputType: 'database', value: 'contacts' })
+            new Field({ inputType: InputType.DATABASE, value: 'contacts' })
         ]
     }));
 
@@ -85,7 +85,7 @@ const NotionProperty = require('./app/notion/NotionProperty');
         order: 6,
         pattern: new PatternBuilder().build('[#{:database} ][заметка ]{заметка:text}[ #{теги:word}][ #{теги:word}][ #{теги:word}]'),
         defaultFields: [
-            new Field({ inputType: 'database', value: 'notes' })
+            new Field({ inputType: InputType.DATABASE, value: 'notes' })
         ]
     }));
 
@@ -245,7 +245,7 @@ const NotionProperty = require('./app/notion/NotionProperty');
         
         const databaseAlias = ctx.match[1];
         userSessionManager.context(ctx.state.userId)
-            .defaultFields.push(new Field({ inputType: 'database', value: databaseAlias }));
+            .defaultFields.push(new Field({ inputType: InputType.DATABASE, value: databaseAlias }));
 
         await ctx.reply(ctx.state.localize('command.template.databaseChosen', { database: databaseAlias }));
         userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
@@ -392,7 +392,7 @@ const NotionProperty = require('./app/notion/NotionProperty');
                     for (const field of fields2) {
                         const index = result.findIndex(f => (
                             f.name === field.name ||
-                            (f.inputType === 'database' && field.inputType === 'database')
+                            (f.inputType === InputType.DATABASE && field.inputType === InputType.DATABASE)
                         ));
 
                         if (index !== -1) {
@@ -407,7 +407,7 @@ const NotionProperty = require('./app/notion/NotionProperty');
 
                 const fields = mergeFields(template.defaultFields, result.fields)
 
-                const databaseField = fields.find(field => field.inputType === 'database')
+                const databaseField = fields.find(field => field.inputType === InputType.DATABASE)
                 if (!databaseField) {
                     await bot.telegram.editMessageText(
                         message.chat.id,
@@ -472,7 +472,7 @@ const NotionProperty = require('./app/notion/NotionProperty');
                         fields: fields.map(field => ctx.state.localize(
                             'match.patternMatchField',
                             {
-                                name: field.inputType === 'database'
+                                name: field.inputType === InputType.DATABASE
                                     ? ctx.state.localize('match.patternMatchDatabaseFieldName')
                                     : field.name,
                                 value: Array.isArray(field.value) ? field.value.join(', '): field.value

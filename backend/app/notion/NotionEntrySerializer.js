@@ -1,3 +1,4 @@
+const InputType = require('../InputType');
 const fuzzyEquals = require('../utils/fuzzyEquals');
 const NotionFieldType = require('./NotionFieldType');
 
@@ -20,7 +21,7 @@ class NotionEntrySerializer {
         const properties = {};
 
         for (const field of entry.fields) {
-            if (field.inputType === 'database') continue;
+            if (field.inputType === InputType.DATABASE) continue;
 
             const property = entry.getProperty(field);
             if (!property) continue;
@@ -45,7 +46,7 @@ class NotionEntrySerializer {
                 properties[name] = this.serializeNumber(Number(last(field.value)));
             } else if (type === NotionFieldType.DATE) {
                 const date = this._dateParser.parse(last(field.value), {
-                    futureOnly: field.inputType === 'future_date',
+                    futureOnly: field.inputType === InputType.FUTURE_DATE,
                 });
 
                 properties[name] = this.serializeDate(date, user.timezoneOffsetMinutes);

@@ -4,6 +4,7 @@ const PatternBuilder = require('../../app/PatternBuilder');
 const RussianDateParser = require('../../app/date-parsers/RussianDateParser');
 const EntryMatchers = require('../../app/entries/EntryMatchers');
 const Field = require('../../app/fields/Field');
+const InputType = require('../../app/InputType');
 
 describe('EntryMatchers', () => {
     /** @type {PatternMatcher} */
@@ -30,8 +31,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'tag', inputType: 'word', value: 'ideas' }),
-                        new Field({ name: 'note', inputType: 'text', value: 'Draw fan-art of Haruhi' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: 'ideas' }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'Draw fan-art of Haruhi' }),
                     ]
                 });
             
@@ -39,8 +40,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'tag', inputType: 'word', value: 'my-ideas' }),
-                        new Field({ name: 'note', inputType: 'text', value: 'Write HTML parser' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: 'my-ideas' }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'Write HTML parser' }),
                     ]
                 });
             
@@ -58,8 +59,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'Draw fan-art of Haruhi' }),
-                        new Field({ name: 'tag', inputType: 'word', value: 'art-ideas' }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'Draw fan-art of Haruhi' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: 'art-ideas' }),
                     ]
                 });
     
@@ -67,8 +68,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'Write an app in Go #my' }),
-                        new Field({ name: 'tag', inputType: 'word', value: 'idea' }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'Write an app in Go #my' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: 'idea' }),
                     ]
                 });
             
@@ -83,8 +84,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'Pygmalion effect' }),
-                        new Field({ name: 'tag', inputType: 'word', value: 'idea' }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'Pygmalion effect' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: 'idea' }),
                     ]
                 });
         });
@@ -96,7 +97,7 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                     ]
                 });
     
@@ -104,8 +105,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'tag', inputType: 'word', value: 'my-tag-1' }),
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: 'my-tag-1' }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                     ]
                 });
     
@@ -113,8 +114,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-1', 'my-tag-2'] }),
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                     ]
                 });
             
@@ -122,8 +123,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                     ]
                 });
             
@@ -131,8 +132,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
-                        new Field({ name: 'note', inputType: 'text', value: '#my-tag-4 my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: '#my-tag-4 my note' }),
                     ]
                 });
     
@@ -140,8 +141,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
-                        new Field({ name: 'note', inputType: 'text', value: '#my-tag-4 #my-tag-5 my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: '#my-tag-4 #my-tag-5 my note' }),
                     ]
                 });
         });
@@ -153,7 +154,7 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                     ]
                 });
     
@@ -161,8 +162,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
-                        new Field({ name: 'tag', inputType: 'word', value: 'my-tag-1' }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: 'my-tag-1' }),
                     ]
                 });
             
@@ -170,8 +171,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-1', 'my-tag-2'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2'] }),
                     ]
                 });
     
@@ -179,8 +180,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
                     ]
                 });
             
@@ -188,8 +189,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'my note #my-tag-1' }),
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-2', 'my-tag-3', 'my-tag-4'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note #my-tag-1' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-2', 'my-tag-3', 'my-tag-4'] }),
                     ]
                 });
             
@@ -197,8 +198,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'my note #my-tag-1 #my-tag-2' }),
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-3', 'my-tag-4', 'my-tag-5'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note #my-tag-1 #my-tag-2' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-3', 'my-tag-4', 'my-tag-5'] }),
                     ]
                 });
         });
@@ -210,7 +211,7 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                     ]
                 });
     
@@ -218,8 +219,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'tag', inputType: 'word', value: 'my-tag-1' }),
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: 'my-tag-1' }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                     ]
                 });
     
@@ -227,8 +228,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-1', 'my-tag-2'] }),
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                     ]
                 });
             
@@ -236,8 +237,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                     ]
                 });
             
@@ -245,8 +246,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
-                        new Field({ name: 'note', inputType: 'text', value: '#my-tag-4 my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: '#my-tag-4 my note' }),
                     ]
                 });
     
@@ -254,8 +255,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
-                        new Field({ name: 'note', inputType: 'text', value: '#my-tag-4 #my-tag-5 my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: '#my-tag-4 #my-tag-5 my note' }),
                     ]
                 });
         });
@@ -267,7 +268,7 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
                     ]
                 });
     
@@ -275,8 +276,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
-                        new Field({ name: 'tag', inputType: 'word', value: 'my-tag-1' }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: 'my-tag-1' }),
                     ]
                 });
             
@@ -284,8 +285,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-1', 'my-tag-2'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2'] }),
                     ]
                 });
     
@@ -293,8 +294,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'my note' }),
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2', 'my-tag-3'] }),
                     ]
                 });
             
@@ -302,8 +303,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'my note #my-tag-1' }),
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-2', 'my-tag-3', 'my-tag-4'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note #my-tag-1' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-2', 'my-tag-3', 'my-tag-4'] }),
                     ]
                 });
             
@@ -311,8 +312,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'my note #my-tag-1 #my-tag-2' }),
-                        new Field({ name: 'tag', inputType: 'word', value: ['my-tag-3', 'my-tag-4', 'my-tag-5'] }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note #my-tag-1 #my-tag-2' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-3', 'my-tag-4', 'my-tag-5'] }),
                     ]
                 });
         });
@@ -325,7 +326,7 @@ describe('EntryMatchers', () => {
                     .to.deep.eq({
                         match: true,
                         fields: [
-                            new Field({ name: 'note', inputType: 'text', value: 'my unique idea' }),
+                            new Field({ name: 'note', inputType: InputType.TEXT, value: 'my unique idea' }),
                         ]
                     });
             }
@@ -344,9 +345,9 @@ describe('EntryMatchers', () => {
                     .to.deep.eq({
                         match: true,
                         fields: [
-                            new Field({ name: 'database', inputType: 'database', value: 'shopping' }),
-                            new Field({ name: 'note', inputType: 'text', value: 'my unique idea' }),
-                            new Field({ name: 'tag', inputType: 'word', value: 'my-ideas' }),
+                            new Field({ name: 'database', inputType: InputType.DATABASE, value: 'shopping' }),
+                            new Field({ name: 'note', inputType: InputType.TEXT, value: 'my unique idea' }),
+                            new Field({ name: 'tag', inputType: InputType.WORD, value: 'my-ideas' }),
                         ]
                     });
             }
@@ -364,7 +365,7 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'note', inputType: 'text', value: 'my unique idea into the my-ideas notes' }),
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my unique idea into the my-ideas notes' }),
                     ]
                 });
         });
@@ -378,8 +379,8 @@ describe('EntryMatchers', () => {
                     .to.deep.eq({
                         match: true,
                         fields: [
-                            new Field({ name: 'date', inputType: 'future_date', value: 'послезавтра' }),
-                            new Field({ name: 'reminder', inputType: 'text', value: 'купить морковку' }),
+                            new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
+                            new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'купить морковку' }),
                         ]
                     });
     
@@ -387,8 +388,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'date', inputType: 'future_date', value: 'через тридцать дней' }),
-                        new Field({ name: 'reminder', inputType: 'text', value: 'позвонить' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'позвонить' }),
                     ]
                 });
     
@@ -396,8 +397,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'date', inputType: 'future_date', value: 'девятого декабря 2025 года' }),
-                        new Field({ name: 'reminder', inputType: 'text', value: 'пойти к стоматологу' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'пойти к стоматологу' }),
                     ]
                 });
     
@@ -405,8 +406,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'date', inputType: 'future_date', value: 'через три недели вечером' }),
-                        new Field({ name: 'reminder', inputType: 'text', value: 'погулять' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через три недели вечером' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'погулять' }),
                     ]
                 });
             
@@ -414,8 +415,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'date', inputType: 'future_date', value: '21 сентября в 21:00' }),
-                        new Field({ name: 'reminder', inputType: 'text', value: 'увидеть это напоминание' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: '21 сентября в 21:00' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'увидеть это напоминание' }),
                     ]
                 });
         });
@@ -427,8 +428,8 @@ describe('EntryMatchers', () => {
                     .to.deep.eq({
                         match: true,
                         fields:  [
-                            new Field({ name: 'reminder', inputType: 'text', value: 'купить морковку' }),
-                            new Field({ name: 'date', inputType: 'future_date', value: 'послезавтра' }),
+                            new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'купить морковку' }),
+                            new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
                         ]
                     });
     
@@ -436,8 +437,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'reminder', inputType: 'text', value: 'позвонить' }),
-                        new Field({ name: 'date', inputType: 'future_date', value: 'через тридцать дней' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'позвонить' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
                     ]
                 });
     
@@ -445,8 +446,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'reminder', inputType: 'text', value: 'пойти к стоматологу' }),
-                        new Field({ name: 'date', inputType: 'future_date', value: 'девятого декабря 2025 года' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'пойти к стоматологу' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
                     ]
                 });
         });
@@ -458,8 +459,8 @@ describe('EntryMatchers', () => {
                     .to.deep.eq({
                         match: true,
                         fields: [
-                            new Field({ name: 'reminder', inputType: 'text', value: 'купить морковку, баклажан и капусту' }),
-                            new Field({ name: 'date', inputType: 'future_date', value: 'послезавтра' }),
+                            new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'купить морковку, баклажан и капусту' }),
+                            new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
                         ]
                     });
     
@@ -467,8 +468,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'reminder', inputType: 'text', value: 'позвонить маме, папе' }),
-                        new Field({ name: 'date', inputType: 'future_date', value: 'через тридцать дней' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'позвонить маме, папе' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
                     ]
                 });
     
@@ -476,8 +477,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'reminder', inputType: 'text', value: 'пойти к стоматологу, дантисту' }),
-                        new Field({ name: 'date', inputType: 'future_date', value: 'девятого декабря 2025 года' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'пойти к стоматологу, дантисту' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
                     ]
                 });
         });
@@ -489,8 +490,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'reminder', inputType: 'text', value: 'купить морковку' }),
-                        new Field({ name: 'date', inputType: 'future_date', value: 'послезавтра' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'купить морковку' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
                     ]
                 });
     
@@ -498,8 +499,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'reminder', inputType: 'text', value: 'позвонить' }),
-                        new Field({ name: 'date', inputType: 'future_date', value: 'через тридцать дней' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'позвонить' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
                     ]
                 });
     
@@ -507,8 +508,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'reminder', inputType: 'text', value: 'пойти к стоматологу' }),
-                        new Field({ name: 'date', inputType: 'future_date', value: 'девятого декабря 2025 года' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'пойти к стоматологу' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
                     ]
                 });
             
@@ -516,8 +517,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'reminder', inputType: 'text', value: 'пойти погулять' }),
-                        new Field({ name: 'date', inputType: 'future_date', value: 'через три недели вечером' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'пойти погулять' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через три недели вечером' }),
                     ]
                 });
             
@@ -525,8 +526,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'reminder', inputType: 'text', value: 'увидеть это напоминание' }),
-                        new Field({ name: 'date', inputType: 'future_date', value: '21 сентября в 21:00' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'увидеть это напоминание' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: '21 сентября в 21:00' }),
                     ]
                 });
         });
@@ -538,8 +539,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'reminder', inputType: 'text', value: 'съесть морковку' }),
-                        new Field({ name: 'date', inputType: 'future_date', value: 'через минуту' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'съесть морковку' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через минуту' }),
                     ]
                 });
             
@@ -547,8 +548,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'date', inputType: 'future_date', value: 'через минуту' }),
-                        new Field({ name: 'reminder', inputType: 'text', value: 'съесть морковку' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через минуту' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'съесть морковку' }),
                     ]
                 });
     
@@ -556,8 +557,8 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     match: true,
                     fields: [
-                        new Field({ name: 'date', inputType: 'future_date', value: 'завтра в 16:00' }),
-                        new Field({ name: 'reminder', inputType: 'text', value: 'съесть морковку' }),
+                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'завтра в 16:00' }),
+                        new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'съесть морковку' }),
                     ]
                 });
         }); 

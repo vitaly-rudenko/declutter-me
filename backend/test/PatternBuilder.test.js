@@ -1,5 +1,7 @@
 const { expect } = require('chai');
+const InputType = require('../app/InputType');
 const PatternBuilder = require('../app/PatternBuilder');
+const { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } = require('../app/TokenType');
 
 describe('PatternBuilder', () => {
     /** @type {PatternBuilder} */
@@ -13,79 +15,79 @@ describe('PatternBuilder', () => {
         it('should parse simple text', () => {
             expect(patternBuilder.build('Hello'))
                 .to.deep.eq([
-                    { type: 'text', value: 'hello' },
+                    { type: TEXT, value: 'hello' },
                 ]);
 
             expect(patternBuilder.build('Buy chicken'))
                 .to.deep.eq([
-                    { type: 'text', value: 'buy chicken' },
+                    { type: TEXT, value: 'buy chicken' },
                 ]);
         });
 
         it('should parse variables', () => {
             expect(patternBuilder.build('{note}'))
                 .to.deep.eq([
-                    { type: 'variable', value: 'note' },
+                    { type: VARIABLE, value: 'note' },
                 ]);
 
             expect(patternBuilder.build('{tag}{note}'))
                 .to.deep.eq([
-                    { type: 'variable', value: 'tag' },
-                    { type: 'variable', value: 'note' },
+                    { type: VARIABLE, value: 'tag' },
+                    { type: VARIABLE, value: 'note' },
                 ]);
 
             expect(patternBuilder.build('{tag} {note}'))
                 .to.deep.eq([
-                    { type: 'variable', value: 'tag' },
-                    { type: 'text', value: ' ' },
-                    { type: 'variable', value: 'note' },
+                    { type: VARIABLE, value: 'tag' },
+                    { type: TEXT, value: ' ' },
+                    { type: VARIABLE, value: 'note' },
                 ]);
 
             expect(patternBuilder.build('Buy {note}, please'))
                 .to.deep.eq([
-                    { type: 'text', value: 'buy ' },
-                    { type: 'variable', value: 'note' },
-                    { type: 'text', value: ', please' },
+                    { type: TEXT, value: 'buy ' },
+                    { type: VARIABLE, value: 'note' },
+                    { type: TEXT, value: ', please' },
                 ]);
 
             expect(patternBuilder.build('#{tag} Buy {note}, please'))
                 .to.deep.eq([
-                    { type: 'text', value: '#' },
-                    { type: 'variable', value: 'tag' },
-                    { type: 'text', value: ' buy ' },
-                    { type: 'variable', value: 'note' },
-                    { type: 'text', value: ', please' },
+                    { type: TEXT, value: '#' },
+                    { type: VARIABLE, value: 'tag' },
+                    { type: TEXT, value: ' buy ' },
+                    { type: VARIABLE, value: 'note' },
+                    { type: TEXT, value: ', please' },
                 ]);
         });
 
         it('should parse bang variables', () => {
             expect(patternBuilder.build('#{tag!} Buy {note}, please'))
                 .to.deep.eq([
-                    { type: 'text', value: '#' },
-                    { type: 'variable', value: 'tag', bang: true },
-                    { type: 'text', value: ' buy ' },
-                    { type: 'variable', value: 'note' },
-                    { type: 'text', value: ', please' },
+                    { type: TEXT, value: '#' },
+                    { type: VARIABLE, value: 'tag', bang: true },
+                    { type: TEXT, value: ' buy ' },
+                    { type: VARIABLE, value: 'note' },
+                    { type: TEXT, value: ', please' },
                 ]);
         });
 
         it('should parse optionals', () => {
             expect(patternBuilder.build('[hello]'))
                 .to.deep.eq([
-                    { type: 'optional', value: [{ type: 'text', value: 'hello' }] }
+                    { type: OPTIONAL, value: [{ type: TEXT, value: 'hello' }] }
                 ]);
 
             expect(patternBuilder.build('[hello][world]'))
                 .to.deep.eq([
-                    { type: 'optional', value: [{ type: 'text', value: 'hello' }] },
-                    { type: 'optional', value: [{ type: 'text', value: 'world' }] }
+                    { type: OPTIONAL, value: [{ type: TEXT, value: 'hello' }] },
+                    { type: OPTIONAL, value: [{ type: TEXT, value: 'world' }] }
                 ]);
 
             expect(patternBuilder.build('[hello] [world]'))
                 .to.deep.eq([
-                    { type: 'optional', value: [{ type: 'text', value: 'hello' }] },
-                    { type: 'text', value: ' ' },
-                    { type: 'optional', value: [{ type: 'text', value: 'world' }] }
+                    { type: OPTIONAL, value: [{ type: TEXT, value: 'hello' }] },
+                    { type: TEXT, value: ' ' },
+                    { type: OPTIONAL, value: [{ type: TEXT, value: 'world' }] }
                 ]);
         });
 
@@ -93,9 +95,9 @@ describe('PatternBuilder', () => {
             expect(patternBuilder.build('(hello)'))
                 .to.deep.eq([
                     {
-                        type: 'variational',
+                        type: VARIATIONAL,
                         value: [
-                            [{ type: 'text', value: 'hello' }],
+                            [{ type: TEXT, value: 'hello' }],
                         ]
                     }
                 ]);
@@ -103,10 +105,10 @@ describe('PatternBuilder', () => {
             expect(patternBuilder.build('(hello|hi)'))
                 .to.deep.eq([
                     {
-                        type: 'variational',
+                        type: VARIATIONAL,
                         value: [
-                            [{ type: 'text', value: 'hello' }],
-                            [{ type: 'text', value: 'hi' }],
+                            [{ type: TEXT, value: 'hello' }],
+                            [{ type: TEXT, value: 'hi' }],
                         ]
                     }
                 ]);
@@ -114,17 +116,17 @@ describe('PatternBuilder', () => {
             expect(patternBuilder.build('(hello|hi)(world|there)'))
                 .to.deep.eq([
                     {
-                        type: 'variational',
+                        type: VARIATIONAL,
                         value: [
-                            [{ type: 'text', value: 'hello' }],
-                            [{ type: 'text', value: 'hi' }],
+                            [{ type: TEXT, value: 'hello' }],
+                            [{ type: TEXT, value: 'hi' }],
                         ]
                     },
                     {
-                        type: 'variational',
+                        type: VARIATIONAL,
                         value: [
-                            [{ type: 'text', value: 'world' }],
-                            [{ type: 'text', value: 'there' }],
+                            [{ type: TEXT, value: 'world' }],
+                            [{ type: TEXT, value: 'there' }],
                         ]
                     }
                 ]);
@@ -132,19 +134,19 @@ describe('PatternBuilder', () => {
             expect(patternBuilder.build('(hello|hi|hey) (world|there)'))
                 .to.deep.eq([
                     {
-                        type: 'variational',
+                        type: VARIATIONAL,
                         value: [
-                            [{ type: 'text', value: 'hello' }],
-                            [{ type: 'text', value: 'hi' }],
-                            [{ type: 'text', value: 'hey' }],
+                            [{ type: TEXT, value: 'hello' }],
+                            [{ type: TEXT, value: 'hi' }],
+                            [{ type: TEXT, value: 'hey' }],
                         ]
                     },
-                    { type: 'text', value: ' ' },
+                    { type: TEXT, value: ' ' },
                     {
-                        type: 'variational',
+                        type: VARIATIONAL,
                         value: [
-                            [{ type: 'text', value: 'world' }],
-                            [{ type: 'text', value: 'there' }],
+                            [{ type: TEXT, value: 'world' }],
+                            [{ type: TEXT, value: 'there' }],
                         ]
                     }
                 ]);
@@ -154,33 +156,33 @@ describe('PatternBuilder', () => {
             expect(patternBuilder.build('(Buy|Purchase) {body}[,] please[ #{tag!}][(!|.)]'))
                 .to.deep.eq([
                     {
-                        type: 'variational',
+                        type: VARIATIONAL,
                         value: [
-                            [{ type: 'text', value: 'buy' }],
-                            [{ type: 'text', value: 'purchase' }],
+                            [{ type: TEXT, value: 'buy' }],
+                            [{ type: TEXT, value: 'purchase' }],
                         ]
                     },
-                    { type: 'text', value: ' ' },
-                    { type: 'variable', value: 'body' },
+                    { type: TEXT, value: ' ' },
+                    { type: VARIABLE, value: 'body' },
                     {
-                        type: 'optional',
-                        value: [{ type: 'text', value: ',' }]
+                        type: OPTIONAL,
+                        value: [{ type: TEXT, value: ',' }]
                     },
-                    { type: 'text', value: ' please' },
+                    { type: TEXT, value: ' please' },
                     {
-                        type: 'optional',
+                        type: OPTIONAL,
                         value: [
-                            { type: 'text', value: ' #' },
-                            { type: 'variable', value: 'tag', bang: true }
+                            { type: TEXT, value: ' #' },
+                            { type: VARIABLE, value: 'tag', bang: true }
                         ]
                     },
                     {
-                        type: 'optional',
+                        type: OPTIONAL,
                         value: [{
-                            type: 'variational',
+                            type: VARIATIONAL,
                             value: [
-                                [{ type: 'text', value: '!' }],
-                                [{ type: 'text', value: '.' }]
+                                [{ type: TEXT, value: '!' }],
+                                [{ type: TEXT, value: '.' }]
                             ]
                         }]
                     },
@@ -190,30 +192,30 @@ describe('PatternBuilder', () => {
         it('should parse nested cases', () => {
             expect(patternBuilder.build('[[{tag}]]'))
                 .to.deep.eq([{
-                    "type": "optional",
-                    "value": [{
-                        "type": "optional",
-                        "value": [{
-                            "type": "variable",
-                            "value": "tag"
+                    'type': OPTIONAL,
+                    'value': [{
+                        'type': OPTIONAL,
+                        'value': [{
+                            'type': VARIABLE,
+                            'value': 'tag'
                         }]
                     }]
                 }]);
 
             expect(patternBuilder.build('(([[hello]]))'))
                 .to.deep.eq([{
-                    "type": "variational",
-                    "value": [
+                    'type': VARIATIONAL,
+                    'value': [
                         [{
-                            "type": "variational",
-                            "value": [
+                            'type': VARIATIONAL,
+                            'value': [
                                 [{
-                                    "type": "optional",
-                                    "value": [{
-                                        "type": "optional",
-                                        "value": [{
-                                            "type": "text",
-                                            "value": "hello"
+                                    'type': OPTIONAL,
+                                    'value': [{
+                                        'type': OPTIONAL,
+                                        'value': [{
+                                            'type': TEXT,
+                                            'value': 'hello'
                                         }]
                                     }]
                                 }]
@@ -226,18 +228,18 @@ describe('PatternBuilder', () => {
         it('should parse input types', () => {
             expect(patternBuilder.build('#{database!} buy {Note:text}, please[ {when:future_date}][ #{My Tag:word}]'))
                 .to.deep.eq([
-                    { type: 'text', value: '#' },
-                    { type: 'variable', value: 'database', bang: true },
-                    { type: 'text', value: ' buy ' },
-                    { type: 'variable', value: 'Note', inputType: 'text' },
-                    { type: 'text', value: ', please' },
-                    { type: 'optional', value: [
-                        { type: 'text', value: ' ' },
-                        { type: 'variable', value: 'when', inputType: 'future_date' },
+                    { type: TEXT, value: '#' },
+                    { type: VARIABLE, value: 'database', bang: true },
+                    { type: TEXT, value: ' buy ' },
+                    { type: VARIABLE, value: 'Note', inputType: TEXT },
+                    { type: TEXT, value: ', please' },
+                    { type: OPTIONAL, value: [
+                        { type: TEXT, value: ' ' },
+                        { type: VARIABLE, value: 'when', inputType: InputType.FUTURE_DATE },
                     ] },
-                    { type: 'optional', value: [
-                        { type: 'text', value: ' #' },
-                        { type: 'variable', value: 'My Tag', inputType: 'word' },
+                    { type: OPTIONAL, value: [
+                        { type: TEXT, value: ' #' },
+                        { type: VARIABLE, value: 'My Tag', inputType: InputType.WORD },
                     ] },
                 ]);
         });

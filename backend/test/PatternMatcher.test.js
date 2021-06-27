@@ -1,6 +1,8 @@
 const chai = require('chai');
 const PatternMatcher = require('../app/PatternMatcher');
 
+const { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } = require('../app/TokenType');
+
 const { expect } = chai;
 chai.use(require('deep-equal-in-any-order'));
 
@@ -15,284 +17,311 @@ describe('PatternMatcher', () => {
     describe('match()', () => {
         it('should throw error for non-existing matchers', () => {
             expect(() => patternMatcher.match(
-                'my-name', [{ type: 'variable', value: 'name', inputType: 'text' }], {})
+                'my-name', [{ type: VARIABLE, value: 'name', inputType: TEXT }], {})
             ).to.throw('Unsupported matcher: text');
         });
+    });
+
+    describe('getPatternCombinations()', () => {
+        it('should handle empty optionals and variationals', () => {
+            // (|a|b|) []()(||) hello!
+            expect(patternMatcher.getPatternCombinations([
+                { type: VARIATIONAL, value: [
+                    [{ type: TEXT, value: '' }],
+                    [{ type: TEXT, value: 'a' }],
+                    [{ type: TEXT, value: 'b' }],
+                    [{ type: TEXT, value: '' }],
+                ] },
+                { type: TEXT, value: ' ' },
+                { type: OPTIONAL, value: [] },
+                { type: VARIATIONAL, value: [] },
+                { type: VARIATIONAL, value: [
+                    [{ type: TEXT, value: '' }],
+                    [{ type: TEXT, value: '' }],
+                    [{ type: TEXT, value: '' }],
+                ] },
+                { type: TEXT, value: ' hello!' },
+            ])).to.deep.equalInAnyOrder([
+                [{ type: TEXT, value: '  hello!' }],
+                [{ type: TEXT, value: 'a  hello!' }],
+                [{ type: TEXT, value: 'b  hello!' }],
+            ]);
+        })
     });
 
     describe('getTokenCombinations()', () => {
         it('should create simple combinations', () => {
             // hello world
             expect(patternMatcher.getTokenCombinations({
-                type: 'text',
+                type: TEXT,
                 value: 'hello world'
             })).to.deep.equalInAnyOrder([
-                [{ type: 'text', value: 'hello world' }]
+                [{ type: TEXT, value: 'hello world' }]
             ]);
 
             // [hello world]
             expect(patternMatcher.getTokenCombinations({
-                type: 'optional',
-                value: [{ type: 'text', value: 'hello world' }]
+                type: OPTIONAL,
+                value: [{ type: TEXT, value: 'hello world' }]
             })).to.deep.equalInAnyOrder([
                 [],
-                [{ type: 'text', value: 'hello world' }]
+                [{ type: TEXT, value: 'hello world' }]
             ]);
 
             // (hello world|hello there)
             expect(patternMatcher.getTokenCombinations({
-                type: 'variational',
+                type: VARIATIONAL,
                 value: [
-                    [{ type: 'text', value: 'hello world' }],
-                    [{ type: 'text', value: 'hello there' }],
+                    [{ type: TEXT, value: 'hello world' }],
+                    [{ type: TEXT, value: 'hello there' }],
                 ]
             })).to.deep.equalInAnyOrder([
-                [{ type: 'text', value: 'hello world' }],
-                [{ type: 'text', value: 'hello there' }]
+                [{ type: TEXT, value: 'hello world' }],
+                [{ type: TEXT, value: 'hello there' }]
             ]);
         });
 
         it('should create combinations for nested optionals', () => {
             // [hello[ world]]
             expect(patternMatcher.getTokenCombinations({
-                type: 'optional',
+                type: OPTIONAL,
                 value: [
-                    { type: 'text', value: 'hello' },
-                    { type: 'optional', value: [{ type: 'text', value: ' world' }] }
+                    { type: TEXT, value: 'hello' },
+                    { type: OPTIONAL, value: [{ type: TEXT, value: ' world' }] }
                 ]
             })).to.deep.equalInAnyOrder([
                 [],
-                [{ type: 'text', value: 'hello' }],
-                [{ type: 'text', value: 'hello world' }]
+                [{ type: TEXT, value: 'hello' }],
+                [{ type: TEXT, value: 'hello world' }]
             ]);
 
             // [hello[ world[!]]]
             expect(patternMatcher.getTokenCombinations({
-                type: 'optional',
+                type: OPTIONAL,
                 value: [
-                    { type: 'text', value: 'hello' },
-                    { type: 'optional', value: [
-                        { type: 'text', value: ' world' },
-                        { type: 'optional', value: [{ type: 'text', value: '!' }] }
+                    { type: TEXT, value: 'hello' },
+                    { type: OPTIONAL, value: [
+                        { type: TEXT, value: ' world' },
+                        { type: OPTIONAL, value: [{ type: TEXT, value: '!' }] }
                     ] }
                 ]
             })).to.deep.equalInAnyOrder([
                 [],
-                [{ type: 'text', value: 'hello' }],
-                [{ type: 'text', value: 'hello world' }],
-                [{ type: 'text', value: 'hello world!' }],
+                [{ type: TEXT, value: 'hello' }],
+                [{ type: TEXT, value: 'hello world' }],
+                [{ type: TEXT, value: 'hello world!' }],
             ]);
         });
 
         it('should create combinations for chained optionals', () => {
             // [hello [world][!]]
             expect(patternMatcher.getTokenCombinations({
-                type: 'optional',
+                type: OPTIONAL,
                 value: [
-                    { type: 'text', value: 'hello' },
-                    { type: 'optional', value: [{ type: 'text', value: ' world' }] },
-                    { type: 'optional', value: [{ type: 'text', value: '!' }] },
+                    { type: TEXT, value: 'hello' },
+                    { type: OPTIONAL, value: [{ type: TEXT, value: ' world' }] },
+                    { type: OPTIONAL, value: [{ type: TEXT, value: '!' }] },
                 ]
             })).to.deep.equalInAnyOrder([
                 [],
-                [{ type: 'text', value: 'hello' }],
-                [{ type: 'text', value: 'hello world' }],
-                [{ type: 'text', value: 'hello!' }],
-                [{ type: 'text', value: 'hello world!' }],
+                [{ type: TEXT, value: 'hello' }],
+                [{ type: TEXT, value: 'hello world' }],
+                [{ type: TEXT, value: 'hello!' }],
+                [{ type: TEXT, value: 'hello world!' }],
             ]);
 
             // [hello [world][, my friend][!]]
             expect(patternMatcher.getTokenCombinations({
-                type: 'optional',
+                type: OPTIONAL,
                 value: [
-                    { type: 'text', value: 'hello' },
-                    { type: 'optional', value: [{ type: 'text', value: ' world' }] },
-                    { type: 'optional', value: [{ type: 'text', value: ', my friend' }] },
-                    { type: 'optional', value: [{ type: 'text', value: '!' }] },
+                    { type: TEXT, value: 'hello' },
+                    { type: OPTIONAL, value: [{ type: TEXT, value: ' world' }] },
+                    { type: OPTIONAL, value: [{ type: TEXT, value: ', my friend' }] },
+                    { type: OPTIONAL, value: [{ type: TEXT, value: '!' }] },
                 ]
             })).to.deep.equalInAnyOrder([
                 [],
-                [{ type: 'text', value: 'hello' }],
-                [{ type: 'text', value: 'hello!' }],
-                [{ type: 'text', value: 'hello, my friend' }],
-                [{ type: 'text', value: 'hello, my friend!' }],
-                [{ type: 'text', value: 'hello world' }],
-                [{ type: 'text', value: 'hello world!' }],
-                [{ type: 'text', value: 'hello world, my friend' }],
-                [{ type: 'text', value: 'hello world, my friend!' }],
+                [{ type: TEXT, value: 'hello' }],
+                [{ type: TEXT, value: 'hello!' }],
+                [{ type: TEXT, value: 'hello, my friend' }],
+                [{ type: TEXT, value: 'hello, my friend!' }],
+                [{ type: TEXT, value: 'hello world' }],
+                [{ type: TEXT, value: 'hello world!' }],
+                [{ type: TEXT, value: 'hello world, my friend' }],
+                [{ type: TEXT, value: 'hello world, my friend!' }],
             ]);
         });
 
         it('should create combinations for nested & chained optionals', () => {
             // [he[l]lo[[,] wor[l]d][!]]
             expect(patternMatcher.getTokenCombinations({
-                type: 'optional',
+                type: OPTIONAL,
                 value: [
-                    { type: 'text', value: 'he' },
-                    { type: 'optional', value: [{ type: 'text', value: 'l' }] },
-                    { type: 'text', value: 'lo' },
-                    { type: 'optional', value: [
-                        { type: 'optional', value: [{ type: 'text', value: ',' }] },
-                        { type: 'text', value: ' wor' },
-                        { type: 'optional', value: [{ type: 'text', value: 'l' }] },
-                        { type: 'text', value: 'd' }
+                    { type: TEXT, value: 'he' },
+                    { type: OPTIONAL, value: [{ type: TEXT, value: 'l' }] },
+                    { type: TEXT, value: 'lo' },
+                    { type: OPTIONAL, value: [
+                        { type: OPTIONAL, value: [{ type: TEXT, value: ',' }] },
+                        { type: TEXT, value: ' wor' },
+                        { type: OPTIONAL, value: [{ type: TEXT, value: 'l' }] },
+                        { type: TEXT, value: 'd' }
                     ] },
-                    { type: 'optional', value: [{ type: 'text', value: '!' }] },
+                    { type: OPTIONAL, value: [{ type: TEXT, value: '!' }] },
                 ]
             })).to.deep.equalInAnyOrder([
                 [],
-                [{ type: 'text', value: 'helo' }],
-                [{ type: 'text', value: 'hello' }],
-                [{ type: 'text', value: 'helo word' }],
-                [{ type: 'text', value: 'hello word' }],
-                [{ type: 'text', value: 'helo, word' }],
-                [{ type: 'text', value: 'hello, word' }],
-                [{ type: 'text', value: 'helo world' }],
-                [{ type: 'text', value: 'hello world' }],
-                [{ type: 'text', value: 'helo, world' }],
-                [{ type: 'text', value: 'hello, world' }],
-                [{ type: 'text', value: 'helo!' }],
-                [{ type: 'text', value: 'hello!' }],
-                [{ type: 'text', value: 'helo word!' }],
-                [{ type: 'text', value: 'hello word!' }],
-                [{ type: 'text', value: 'helo, word!' }],
-                [{ type: 'text', value: 'hello, word!' }],
-                [{ type: 'text', value: 'helo world!' }],
-                [{ type: 'text', value: 'hello world!' }],
-                [{ type: 'text', value: 'helo, world!' }],
-                [{ type: 'text', value: 'hello, world!' }],
+                [{ type: TEXT, value: 'helo' }],
+                [{ type: TEXT, value: 'hello' }],
+                [{ type: TEXT, value: 'helo word' }],
+                [{ type: TEXT, value: 'hello word' }],
+                [{ type: TEXT, value: 'helo, word' }],
+                [{ type: TEXT, value: 'hello, word' }],
+                [{ type: TEXT, value: 'helo world' }],
+                [{ type: TEXT, value: 'hello world' }],
+                [{ type: TEXT, value: 'helo, world' }],
+                [{ type: TEXT, value: 'hello, world' }],
+                [{ type: TEXT, value: 'helo!' }],
+                [{ type: TEXT, value: 'hello!' }],
+                [{ type: TEXT, value: 'helo word!' }],
+                [{ type: TEXT, value: 'hello word!' }],
+                [{ type: TEXT, value: 'helo, word!' }],
+                [{ type: TEXT, value: 'hello, word!' }],
+                [{ type: TEXT, value: 'helo world!' }],
+                [{ type: TEXT, value: 'hello world!' }],
+                [{ type: TEXT, value: 'helo, world!' }],
+                [{ type: TEXT, value: 'hello, world!' }],
             ]);
         });
 
         it('should create combinations for nested variations', () => {
             // ((hey|he(l|n|)lo) ((the|my) world|there|everybody!))
             expect(patternMatcher.getTokenCombinations({
-                type: 'variational',
+                type: VARIATIONAL,
                 value: [
                     [
-                        { type: 'variational', value: [
-                            [{ type: 'text', value: 'hey' }],
+                        { type: VARIATIONAL, value: [
+                            [{ type: TEXT, value: 'hey' }],
                             [
-                                { type: 'text', value: 'he' },
-                                { type: 'variational', value: [
-                                    [{ type: 'text', value: 'l' }],
-                                    [{ type: 'text', value: 'n' }],
+                                { type: TEXT, value: 'he' },
+                                { type: VARIATIONAL, value: [
+                                    [{ type: TEXT, value: 'l' }],
+                                    [{ type: TEXT, value: 'n' }],
                                     [],
                                 ] },
-                                { type: 'text', value: 'lo' },
+                                { type: TEXT, value: 'lo' },
                             ],
                         ] },
-                        { type: 'text', value: ' ' },
-                        { type: 'variational', value: [
+                        { type: TEXT, value: ' ' },
+                        { type: VARIATIONAL, value: [
                             [
-                                { type: 'variational', value: [
-                                    [{ type: 'text', value: 'the' }],
-                                    [{ type: 'text', value: 'my' }],
+                                { type: VARIATIONAL, value: [
+                                    [{ type: TEXT, value: 'the' }],
+                                    [{ type: TEXT, value: 'my' }],
                                 ] },
-                                { type: 'text', value: ' world' },
+                                { type: TEXT, value: ' world' },
                             ],
-                            [{ type: 'text', value: 'there' }],
-                            [{ type: 'text', value: 'everybody!' }],
+                            [{ type: TEXT, value: 'there' }],
+                            [{ type: TEXT, value: 'everybody!' }],
                         ] },
                     ],
                 ]
             })).to.deep.equalInAnyOrder([
-                [{ type: 'text', value: 'hey the world' }],
-                [{ type: 'text', value: 'hello the world' }],
-                [{ type: 'text', value: 'henlo the world' }],
-                [{ type: 'text', value: 'helo the world' }],
-                [{ type: 'text', value: 'hey my world' }],
-                [{ type: 'text', value: 'hello my world' }],
-                [{ type: 'text', value: 'henlo my world' }],
-                [{ type: 'text', value: 'helo my world' }],
-                [{ type: 'text', value: 'hey there' }],
-                [{ type: 'text', value: 'hello there' }],
-                [{ type: 'text', value: 'henlo there' }],
-                [{ type: 'text', value: 'helo there' }],
-                [{ type: 'text', value: 'hey everybody!' }],
-                [{ type: 'text', value: 'hello everybody!' }],
-                [{ type: 'text', value: 'henlo everybody!' }],
-                [{ type: 'text', value: 'helo everybody!' }],
+                [{ type: TEXT, value: 'hey the world' }],
+                [{ type: TEXT, value: 'hello the world' }],
+                [{ type: TEXT, value: 'henlo the world' }],
+                [{ type: TEXT, value: 'helo the world' }],
+                [{ type: TEXT, value: 'hey my world' }],
+                [{ type: TEXT, value: 'hello my world' }],
+                [{ type: TEXT, value: 'henlo my world' }],
+                [{ type: TEXT, value: 'helo my world' }],
+                [{ type: TEXT, value: 'hey there' }],
+                [{ type: TEXT, value: 'hello there' }],
+                [{ type: TEXT, value: 'henlo there' }],
+                [{ type: TEXT, value: 'helo there' }],
+                [{ type: TEXT, value: 'hey everybody!' }],
+                [{ type: TEXT, value: 'hello everybody!' }],
+                [{ type: TEXT, value: 'henlo everybody!' }],
+                [{ type: TEXT, value: 'helo everybody!' }],
             ]);
         });
 
         it('should create combinations for chained variations', () => {
             // ((hey|hello) (world|there)|(jon|john) (snow|doe)(!|?))
             expect(patternMatcher.getTokenCombinations({
-                type: 'variational',
+                type: VARIATIONAL,
                 value: [
                     [
-                        { type: 'variational', value: [
-                            [{ type: 'text', value: 'hey' }],
-                            [{ type: 'text', value: 'hello' }],
+                        { type: VARIATIONAL, value: [
+                            [{ type: TEXT, value: 'hey' }],
+                            [{ type: TEXT, value: 'hello' }],
                         ] },
-                        { type: 'text', value: ' ' },
-                        { type: 'variational', value: [
-                            [{ type: 'text', value: 'world' }],
-                            [{ type: 'text', value: 'there' }],
+                        { type: TEXT, value: ' ' },
+                        { type: VARIATIONAL, value: [
+                            [{ type: TEXT, value: 'world' }],
+                            [{ type: TEXT, value: 'there' }],
                         ] }
                     ],
                     [
-                        { type: 'variational', value: [
-                            [{ type: 'text', value: 'jon' }],
-                            [{ type: 'text', value: 'john' }],
+                        { type: VARIATIONAL, value: [
+                            [{ type: TEXT, value: 'jon' }],
+                            [{ type: TEXT, value: 'john' }],
                         ] },
-                        { type: 'text', value: ' ' },
-                        { type: 'variational', value: [
-                            [{ type: 'text', value: 'snow' }],
-                            [{ type: 'text', value: 'doe' }],
+                        { type: TEXT, value: ' ' },
+                        { type: VARIATIONAL, value: [
+                            [{ type: TEXT, value: 'snow' }],
+                            [{ type: TEXT, value: 'doe' }],
                         ] },
-                        { type: 'variational', value: [
-                            [{ type: 'text', value: '!' }],
-                            [{ type: 'text', value: '?' }],
+                        { type: VARIATIONAL, value: [
+                            [{ type: TEXT, value: '!' }],
+                            [{ type: TEXT, value: '?' }],
                         ] }
                     ],
                 ]
             })).to.deep.equalInAnyOrder([
-                [{ type: 'text', value: 'hey world' }],
-                [{ type: 'text', value: 'hey there' }],
-                [{ type: 'text', value: 'hello world' }],
-                [{ type: 'text', value: 'hello there' }],
-                [{ type: 'text', value: 'jon snow!' }],
-                [{ type: 'text', value: 'jon doe!' }],
-                [{ type: 'text', value: 'john snow!' }],
-                [{ type: 'text', value: 'john doe!' }],
-                [{ type: 'text', value: 'jon snow?' }],
-                [{ type: 'text', value: 'jon doe?' }],
-                [{ type: 'text', value: 'john snow?' }],
-                [{ type: 'text', value: 'john doe?' }],
+                [{ type: TEXT, value: 'hey world' }],
+                [{ type: TEXT, value: 'hey there' }],
+                [{ type: TEXT, value: 'hello world' }],
+                [{ type: TEXT, value: 'hello there' }],
+                [{ type: TEXT, value: 'jon snow!' }],
+                [{ type: TEXT, value: 'jon doe!' }],
+                [{ type: TEXT, value: 'john snow!' }],
+                [{ type: TEXT, value: 'john doe!' }],
+                [{ type: TEXT, value: 'jon snow?' }],
+                [{ type: TEXT, value: 'jon doe?' }],
+                [{ type: TEXT, value: 'john snow?' }],
+                [{ type: TEXT, value: 'john doe?' }],
             ]);
         });
 
         it('should create combinations for complex patterns', () => {
             // ((buy|purchase) {item}[, please]|#{list} {item})
             expect(patternMatcher.getTokenCombinations({
-                type: 'variational',
+                type: VARIATIONAL,
                 value: [
                     [
-                        { type: 'variational', value: [
-                            [{ type: 'text', value: 'buy' }],
-                            [{ type: 'text', value: 'purchase' }],
+                        { type: VARIATIONAL, value: [
+                            [{ type: TEXT, value: 'buy' }],
+                            [{ type: TEXT, value: 'purchase' }],
                         ] },
-                        { type: 'text', value: ' ' },
-                        { type: 'variable', value: 'item' },
-                        { type: 'optional', value: [
-                            { type: 'text', value: ', please' },
+                        { type: TEXT, value: ' ' },
+                        { type: VARIABLE, value: 'item' },
+                        { type: OPTIONAL, value: [
+                            { type: TEXT, value: ', please' },
                         ] },
                     ],
                     [
-                        { type: 'text', value: '#' },
-                        { type: 'variable', value: 'list' },
-                        { type: 'text', value: ' ' },
-                        { type: 'variable', value: 'item' },
+                        { type: TEXT, value: '#' },
+                        { type: VARIABLE, value: 'list' },
+                        { type: TEXT, value: ' ' },
+                        { type: VARIABLE, value: 'item' },
                     ],
                 ]
             })).to.deep.equalInAnyOrder([
-                [{ type: 'text', value: 'buy ' }, { type: 'variable', value: 'item' }],
-                [{ type: 'text', value: 'purchase ' }, { type: 'variable', value: 'item' }],
-                [{ type: 'text', value: 'buy ' }, { type: 'variable', value: 'item' }, { type: 'text', value: ', please' }],
-                [{ type: 'text', value: 'purchase ' }, { type: 'variable', value: 'item' }, { type: 'text', value: ', please' }],
-                [{ type: 'text', value: '#' }, { type: 'variable', value: 'list' }, { type: 'text', value: ' ' }, { type: 'variable', value: 'item' }],
+                [{ type: TEXT, value: 'buy ' }, { type: VARIABLE, value: 'item' }],
+                [{ type: TEXT, value: 'purchase ' }, { type: VARIABLE, value: 'item' }],
+                [{ type: TEXT, value: 'buy ' }, { type: VARIABLE, value: 'item' }, { type: TEXT, value: ', please' }],
+                [{ type: TEXT, value: 'purchase ' }, { type: VARIABLE, value: 'item' }, { type: TEXT, value: ', please' }],
+                [{ type: TEXT, value: '#' }, { type: VARIABLE, value: 'list' }, { type: TEXT, value: ' ' }, { type: VARIABLE, value: 'item' }],
             ]);
         });
     });

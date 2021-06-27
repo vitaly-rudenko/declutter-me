@@ -1,11 +1,12 @@
 const chai = require('chai');
 const { spy } = require('sinon');
 const Field = require('../../app/fields/Field');
-const Entry = require('../../app/entries/Entry');
 const NotionEntrySerializer = require('../../app/notion/NotionEntrySerializer');
 const User = require('../../app/users/User');
-const NotionField = require('../../app/notion/NotionField');
 const NotionFieldType = require('../../app/notion/NotionFieldType');
+const NotionEntry = require('../../app/notion/NotionEntry');
+const NotionProperty = require('../../app/notion/NotionProperty');
+const InputType = require('../../app/InputType');
 
 chai.use(require('sinon-chai'));
 const { expect } = chai;
@@ -24,49 +25,49 @@ describe('NotionEntrySerializer', () => {
     describe('serialize()', () => {
         it('should serialize entries properly', () => {
             expect(notionEntrySerializer.serialize(
-                'fake-database-id',
-                new Entry({
+                new NotionEntry({
+                    databaseId: 'fake-database-id',
+                    properties: [
+                        new NotionProperty({ name: '@The Title', type: NotionFieldType.TITLE }),
+                        new NotionProperty({ name: 'Description', type: NotionFieldType.RICH_TEXT }),
+                        new NotionProperty({ name: '@the TAG', type: NotionFieldType.SELECT }),
+                        new NotionProperty({ name: 'My Tags', type: NotionFieldType.MULTI_SELECT }),
+                        new NotionProperty({ name: 'date', type: NotionFieldType.DATE }),
+                        new NotionProperty({ name: 'Reminder Date', type: NotionFieldType.DATE }),
+                    ],
                     fields: [
                         new Field({
                             name: '@the title',
-                            inputType: 'text',
+                            inputType: InputType.TEXT,
                             value: 'hey_there',
                         }),
                         new Field({
                             name: 'description',
-                            inputType: 'word',
+                            inputType: InputType.WORD,
                             value: '!hey there!',
                         }),
                         new Field({
                             name: '@the_tag',
-                            inputType: 'word',
+                            inputType: InputType.WORD,
                             value: '!hey_there!',
                         }),
                         new Field({
                             name: 'mytags',
-                            inputType: 'word',
+                            inputType: InputType.WORD,
                             value: ['My Tag 1', 'My Other Tag 2'],
                         }),
                         new Field({
                             name: 'DATE',
-                            inputType: 'date',
+                            inputType: InputType.DATE,
                             value: 'в 8:05',
                         }),
                         new Field({
                             name: 'reminder-date',
-                            inputType: 'future_date',
+                            inputType: InputType.FUTURE_DATE,
                             value: 'в 12:00',
                         }),
                     ]
                 }),
-                [
-                    new NotionField({ name: '@The Title', type: NotionFieldType.TITLE }),
-                    new NotionField({ name: 'Description', type: NotionFieldType.RICH_TEXT }),
-                    new NotionField({ name: '@the TAG', type: NotionFieldType.SELECT }),
-                    new NotionField({ name: 'My Tags', type: NotionFieldType.MULTI_SELECT }),
-                    new NotionField({ name: 'date', type: NotionFieldType.DATE }),
-                    new NotionField({ name: 'Reminder Date', type: NotionFieldType.DATE }),
-                ],
                 new User({
                     id: 'fake-user-id',
                     language: 'fake-language',
