@@ -66,15 +66,6 @@ const InputType = require('./app/InputType');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 4,
-        pattern: new PatternBuilder().build('контакт {имя:word}[ {телефон:phone}][ {эл. почта:email}][ {сайт:url}]'),
-        defaultFields: [
-            new Field({ inputType: InputType.DATABASE, value: 'contacts' })
-        ]
-    }));
-
-    await storage.storeTemplate(new Template({
-        userId: user.id,
-        order: 5,
         pattern: new PatternBuilder().build('контакт {имя:word} {фамилия:word}[ {телефон:phone}][ {эл. почта:email}][ {сайт:url}]'),
         defaultFields: [
             new Field({ inputType: InputType.DATABASE, value: 'contacts' })
@@ -83,7 +74,7 @@ const InputType = require('./app/InputType');
 
     await storage.storeTemplate(new Template({
         userId: user.id,
-        order: 6,
+        order: 5,
         pattern: new PatternBuilder().build('[#{:database} ][заметка ]{заметка:text}[ #{теги:word}][ #{теги:word}][ #{теги:word}]'),
         defaultFields: [
             new Field({ inputType: InputType.DATABASE, value: 'notes' })
