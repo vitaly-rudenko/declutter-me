@@ -1,34 +1,17 @@
 import React, { useCallback, useMemo, useState } from 'react'
 import {
-    Container, TextField, Table, TableContainer, Paper, TableBody, TableHead, TableRow, TableCell, Chip, Link,
-    Typography, Button,
+    Container, TextField, Paper,
+    Typography,
     List, ListItem, Divider, ListItemText
 } from '@material-ui/core'
-import {
-    TextFields, TextFormat, LooksOne, Link as LinkIcon,
-    Storage, Phone, CalendarToday, AlternateEmail, Schedule,
-    HelpOutline,
-} from '@material-ui/icons'
+import { HelpOutline } from '@material-ui/icons'
 import PatternBuilder from '../utils/PatternBuilder';
 import PatternMatcher from '../utils/PatternMatcher';
 import './TemplateBuilder.css';
-import EntryMatchers from '../utils/entries/EntryMatchers';
-import RussianDateParser from '../utils/date-parsers/RussianDateParser';
+import { TemplateTester } from '../shared/TemplateTester';
+import { InputTypeIcons } from '../shared/InputTypeIcons';
 
 const COLORS = ['orange', 'yellow', 'green', 'blue', 'purple'];
-
-const InputTypeIcons = {
-    'text': TextFields,
-    'url': LinkIcon,
-    'email': AlternateEmail,
-    'phone': Phone,
-    'number': LooksOne,
-    'date': CalendarToday,
-    // ---
-    'database': Storage,
-    'word': TextFormat,
-    'future_date': Schedule,
-}
 
 function useMemoUnlessFailed(callback, dependencies) {
     return useMemo(() => {
@@ -48,24 +31,11 @@ export const TemplateBuilder = () => {
     const pattern = useMemoUnlessFailed(() => new PatternBuilder().build(rawPattern), [rawPattern]);
     const combinations = useMemoUnlessFailed(() => new PatternMatcher().getPatternCombinations(pattern)?.filter(c => c.length > 0), [pattern]);
 
-    const [test, setTest] = useState('Buy 5 kg of tomatoes #vegetable');
-    const isTesting = useMemo(() => test && rawPattern, [test, rawPattern]);
-    const match = useMemoUnlessFailed(
-        () => isTesting && new PatternMatcher().match(test, pattern, new EntryMatchers({ dateParser: new RussianDateParser() })),
-        [test, pattern, isTesting]
-    );
-
-    const fields = useMemoUnlessFailed(() => match?.fields, [match]);
-
     const onPatternChange = useCallback((event) => {
         setRawPattern(event.target.value);
     }, [setRawPattern]);
 
-    const onTestChange = useCallback((event) => {
-        setTest(event.target.value);
-    }, [setTest]);
-
-    return <Container classes={{ root: 'template-builder' }} maxWidth="lg" component={Paper} elevation={5}>
+    return <Container classes={{ root: 'page template-builder' }} maxWidth="lg" component={Paper} elevation={5}>
         <Typography variant="h5">Template builder</Typography>
         <TextField
             onChange={onPatternChange}
@@ -75,52 +45,7 @@ export const TemplateBuilder = () => {
         {rawPattern && <>
             <Divider/>
             <Typography variant="h5">Template tester</Typography>
-            <TextField
-                onChange={onTestChange}
-                label="Telegram message" size="small" spellCheck={false} variant="outlined" fullWidth multiline
-                error={isTesting && !match}
-                value={test}
-            />
-            {match && <>
-                <TableContainer component={Paper} variant="outlined">
-                    <Table size="small">
-                        <TableHead>
-                            <TableRow>
-                                {fields.map((field) => {
-                                    const InputTypeIcon = InputTypeIcons[field.inputType];
-
-                                    if (!InputTypeIcon) {
-                                        throw new Error('Invalid input type: ' + field.inputType)
-                                    }
-
-                                    return <TableCell key={field.name}><Button disableRipple
-                                        classes={{
-                                            root: 'template-builder__field-name'
-                                        }}
-                                        startIcon={<InputTypeIcon />}
-                                    >{field.name || 'Database'}</Button></TableCell>
-                                })}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            <TableRow>
-                                {fields.map((field) => {
-                                    return <TableCell key={field.name}>{(
-                                        Array.isArray(field.value)
-                                            ? field.value.map(value => <Chip
-                                                key={field.name + ':' + value} className="template-builder__multiselect-chip" label={value}
-                                                variant="outlined"
-                                            />)
-                                            : field.inputType === 'url'
-                                                ? <Link href={field.value} title={field.value}>{ellipsis(field.value, 35)}</Link>
-                                                : field.value
-                                    )}</TableCell>
-                                })}
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </>}
+            <TemplateTester defaultTest="Buy 5 kg of tomatoes #vegetable" rawPatterns={[rawPattern].filter(Boolean)}/>
         </>}
         {combinations && combinations.length > 0 && <>
             <Divider/>
@@ -352,12 +277,4 @@ function getNextItem(array) {
 function getNextInt() {
     randomIndex++;
     return randomIndex;
-}
-
-function ellipsis(text, length) {
-    if (text.length <= length + 9) {
-        return text;
-    }
-
-    return text.slice(0, length) + '...' + text.slice(-6);
 }

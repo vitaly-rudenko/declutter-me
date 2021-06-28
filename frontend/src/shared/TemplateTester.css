@@ -1,0 +1,12 @@
+.template-tester__field-name {
+    text-transform: none !important;
+}
+
+.template-tester__multiselect-chip {
+    margin: 3px;
+}
+
+.template-tester__template {
+    padding: 10px;
+    font-family: monospace;
+}

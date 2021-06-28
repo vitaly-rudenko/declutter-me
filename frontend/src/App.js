@@ -1,8 +1,9 @@
 import { createMuiTheme, CssBaseline, Fab, ThemeProvider } from '@material-ui/core';
 import { Brightness4 } from '@material-ui/icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { TemplateBuilder } from './template-builder/TemplateBuilder';
+import { TemplateManager } from './template-manager/TemplateManager';
 import './App.css';
+import { TemplateBuilder } from './template-builder/TemplateBuilder';
 
 export const App = () => {
     const [theme, setTheme] = useState(localStorage.getItem('v1.theme') ?? 'dark');
@@ -29,7 +30,8 @@ export const App = () => {
 
     return <ThemeProvider theme={muiTheme}>
         <CssBaseline />
-        <TemplateBuilder></TemplateBuilder>
+        <TemplateManager />
+        {/* <TemplateBuilder /> */}
         <Fab size="small" classes={{ root: 'switch-theme-button' }} onClick={switchTheme}><Brightness4/></Fab>
     </ThemeProvider>;
 }
