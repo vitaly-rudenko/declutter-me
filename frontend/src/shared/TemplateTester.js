@@ -100,7 +100,9 @@ export const TemplateTester = ({ defaultTest = '', rawPatterns }) => {
                     </TableBody>
                 </Table>
             </TableContainer>
-            {rawPatterns.length > 1 && <Paper classes={{ root: 'template-tester__template' }} variant="outlined">{rawPattern}</Paper>}
+            {rawPatterns.length > 1 && <Paper classes={{ root: 'template-tester__template' }} variant="outlined">
+                {`${rawPatterns.indexOf(rawPattern) + 1}) ${rawPattern}`}
+            </Paper>}
         </>}
     </>
 };
