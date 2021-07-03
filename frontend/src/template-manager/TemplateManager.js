@@ -128,7 +128,7 @@ export const TemplateManager = () => {
             </Droppable>
         </DragDropContext>
         <Typography variant="body1" component="h1">
-            Just paste this into your chat with <b><Link target="_blank" href="https://t.me/declutterme_bot">@declutterme_bot</Link></b> to save:
+            Just paste this into your chat with <b><Link target="_blank" href="https://t.me/declutterme_bot">@declutterme_bot</Link></b>:
         </Typography>
         <TextField
             inputRef={copyFieldRef}
