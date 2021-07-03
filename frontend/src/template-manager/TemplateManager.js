@@ -35,16 +35,9 @@ export const TemplateManager = () => {
     
     const [test, setTest] = useState(defaultTest);
     const [templates, setTemplates] = useState(defaultTemplates);
-    // const [templates, setTemplates] = useState([
-    //     { pattern: 'buy [{quantity:number} (kg|piece[s]) of]{item:text}' },
-    //     { pattern: 'watch {name:text}[ #{type:word}]' },
-    //     { pattern: '[to]do {task:text}' },
-    //     { pattern: 'contact {first name:word}[ {last name:word}][ {phone:phone}][ {e-mail:email}][ {website:url}]' },
-    //     { pattern: '[#{:database} ][note ]{note:text}[ #{tags:word}][ #{tags:word}][ #{tags:word}]' },
-    // ]);
 
     const [isCopied, setIsCopied] = useState(false);
-    const copyValue = useMemo(() => `/reorder-templates${templates.map(t => '\n' + t.pattern).join('')}`, [templates]);
+    const copyValue = useMemo(() => `/reorder_templates${templates.map(t => '\n' + t.pattern).join('')}`, [templates]);
     const [isCopiedTimeoutId, setIsCopiedTimeoutId] = useState(null)
     const copyFieldRef = useRef(null)
     const copy = useCallback(() => {
