@@ -1,37 +1,96 @@
-import { Container, Divider, List, ListItem, ListItemText, Paper, Typography } from '@material-ui/core';
-import React, { useCallback, useState } from 'react';
+import { Button, Container, Divider, Link, List, ListItem, ListItemText, Paper, TextField, Typography } from '@material-ui/core';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import copyToClipboard from 'copy-to-clipboard';
 import { TemplateTester } from '../shared/TemplateTester';
 import './TemplateManager.css';
+import { useHistory, useLocation } from 'react-router-dom';
 
 const reorder = (list, startIndex, endIndex) => {
     const result = Array.from(list);
     const [removed] = result.splice(startIndex, 1);
     result.splice(endIndex, 0, removed);
 
-    return result;
+    return [...result];
 };
 
 export const TemplateManager = () => {
-    const [templates, setTemplates] = useState([
-        { pattern: 'купить [{количество:number} (шт[ук[и]]|гр[ам[м]]|кг|кило[грам[м]]) ]{товар:text}' },
-        { pattern: 'посмотреть {название:text}[ #{тип:word}]' },
-        { pattern: '(сделать|задача) {задача:text}' },
-        { pattern: 'контакт {имя:word} {фамилия:word}[ {телефон:phone}][ {эл. почта:email}][ {сайт:url}]' },
-        { pattern: '[#{:database} ][заметка ]{заметка:text}[ #{теги:word}][ #{теги:word}][ #{теги:word}]' },
-    ]);
+    const { pathname, search } = useLocation();
+    const history = useHistory();
+
+    const defaultTemplates = useMemo(() => {
+        const params = new URLSearchParams(search);
+        const rawTemplates = params.get('templates');
+        try {
+            const result = JSON.parse(rawTemplates);
+            if (!Array.isArray(result)) {
+                return [];
+            }
+            return result;
+        } catch (error) {
+            return [];
+        }
+    }, [search]);
+    const defaultTest = useMemo(() => new URLSearchParams(search).get('test') || '', [search])
+    
+    const [test, setTest] = useState(defaultTest);
+    const [templates, setTemplates] = useState(defaultTemplates);
+    // const [templates, setTemplates] = useState([
+    //     { pattern: 'buy [{quantity:number} (kg|piece[s]) of]{item:text}' },
+    //     { pattern: 'watch {name:text}[ #{type:word}]' },
+    //     { pattern: '[to]do {task:text}' },
+    //     { pattern: 'contact {first name:word}[ {last name:word}][ {phone:phone}][ {e-mail:email}][ {website:url}]' },
+    //     { pattern: '[#{:database} ][note ]{note:text}[ #{tags:word}][ #{tags:word}][ #{tags:word}]' },
+    // ]);
+
+    const [isCopied, setIsCopied] = useState(false);
+    const copyValue = useMemo(() => `/reorder-templates${templates.map(t => '\n' + t.pattern).join('')}`, [templates]);
+    const [isCopiedTimeoutId, setIsCopiedTimeoutId] = useState(null)
+    const copyFieldRef = useRef(null)
+    const copy = useCallback(() => {
+        setIsCopied(true);
+        copyToClipboard(copyValue);
+
+        if (copyFieldRef.current) {
+            const target = copyFieldRef.current;
+            target.setSelectionRange(0, target.value.length);
+            target.focus();
+        }
+
+        clearTimeout(isCopiedTimeoutId);
+        setIsCopiedTimeoutId(setTimeout(() => setIsCopied(false), 5000));
+    }, [copyValue, isCopiedTimeoutId]);
 
     const onDragEnd = useCallback((result) => {
         if (!result.destination) {
-        return;
+            return;
         }
+
+        setIsCopied(false);
 
         setTemplates(reorder(
             templates,
             result.source.index,
             result.destination.index
         ));
-    }, [templates, setTemplates]);
+    }, [templates]);
+
+    useEffect(() => {
+        const params = new URLSearchParams();
+
+        if (templates.length > 0) {
+            params.set('templates', JSON.stringify(templates));
+        }
+
+        if (test) {
+            params.set('test', test);
+        }
+
+        history.push({
+            pathname,
+            search: params.toString(),
+        });
+    }, [history, pathname, test, templates]);
 
     return <Container classes={{ root: 'page template-manager' }} maxWidth="lg" component={Paper} elevation={5}>
         <Typography variant="h5">Template manager</Typography>
@@ -68,8 +127,18 @@ export const TemplateManager = () => {
                 )}
             </Droppable>
         </DragDropContext>
+        <Typography variant="body1" component="h1">
+            Just paste this into your chat with <b><Link target="_blank" href="https://t.me/declutterme_bot">@declutterme_bot</Link></b> to save:
+        </Typography>
+        <TextField
+            inputRef={copyFieldRef}
+            spellCheck={false} autoCapitalize="off" autoComplete="off" autoCorrect="off"
+            value={copyValue} variant="outlined"
+            multiline fullWidth
+        />
+        <Button variant="contained" color="primary" onClick={copy}>{isCopied ? 'Copied!' : 'Copy'}</Button>
         <Divider />
         <Typography variant="h5">Template tester</Typography>
-        <TemplateTester rawPatterns={templates.map(t => t.pattern)} />
+        <TemplateTester test={test} setTest={setTest} rawPatterns={templates.map(t => t.pattern)} />
     </Container>;
 };

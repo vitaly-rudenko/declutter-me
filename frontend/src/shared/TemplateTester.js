@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Button, Chip, Link, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@material-ui/core';
 import { InputTypeIcons } from './InputTypeIcons';
 import RussianDateParser from '../utils/date-parsers/RussianDateParser';
@@ -18,9 +18,7 @@ function useMemoUnlessFailed(callback, dependencies) {
     }, [callback, ...dependencies]);
 }
 
-export const TemplateTester = ({ defaultTest = '', rawPatterns }) => {
-    const [test, setTest] = useState(defaultTest);
-    
+export const TemplateTester = ({ test, setTest, rawPatterns }) => {
     const isTesting = useMemo(() => test && rawPatterns?.length > 0, [test, rawPatterns]);
 
     const [rawPattern, match] = useMemoUnlessFailed(
@@ -56,8 +54,9 @@ export const TemplateTester = ({ defaultTest = '', rawPatterns }) => {
 
     return <>
         <TextField
+            spellCheck={false} autoCapitalize="off" autoComplete="off" autoCorrect="off"
             onChange={onTestChange}
-            label="Telegram message" size="small" spellCheck={false} variant="outlined" fullWidth multiline
+            label="Telegram message" size="small" variant="outlined" fullWidth multiline
             error={Boolean(isTesting && !match)}
             value={test}
         />
@@ -73,7 +72,7 @@ export const TemplateTester = ({ defaultTest = '', rawPatterns }) => {
                                     throw new Error('Invalid input type: ' + field.inputType)
                                 }
 
-                                return <TableCell key={field.name}><Button disableRipple
+                                return <TableCell key={'tester:name:' + field.name}><Button disableRipple
                                     classes={{
                                         root: 'template-tester__field-name'
                                     }}
@@ -85,10 +84,10 @@ export const TemplateTester = ({ defaultTest = '', rawPatterns }) => {
                     <TableBody>
                         <TableRow>
                             {fields.map((field) => {
-                                return <TableCell key={field.name}>{(
+                                return <TableCell key={'tester:value:' + field.name}>{(
                                     Array.isArray(field.value)
                                         ? field.value.map(value => <Chip
-                                            key={field.name + ':' + value} className="template-tester__multiselect-chip" label={value}
+                                            key={'tester:value:' + field.name + ':' + value} className="template-tester__multiselect-chip" label={value}
                                             variant="outlined"
                                         />)
                                         : field.inputType === 'url'

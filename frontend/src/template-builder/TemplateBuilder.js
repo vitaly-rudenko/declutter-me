@@ -1,17 +1,22 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
     Container, TextField, Paper,
     Typography,
-    List, ListItem, Divider, ListItemText
+    List, ListItem, Divider, ListItemText, Button
 } from '@material-ui/core'
 import { HelpOutline } from '@material-ui/icons'
 import PatternBuilder from '../utils/PatternBuilder';
 import PatternMatcher from '../utils/PatternMatcher';
-import './TemplateBuilder.css';
+import copyToClipboard from 'copy-to-clipboard';
 import { TemplateTester } from '../shared/TemplateTester';
 import { InputTypeIcons } from '../shared/InputTypeIcons';
+import './TemplateBuilder.css';
+import { useHistory, useLocation } from 'react-router-dom';
 
 const COLORS = ['orange', 'yellow', 'green', 'blue', 'purple'];
+
+const EXAMPLE_RAW_PATTERN = '(buy|purchase)[ {Kg:number} kg of] {Item:text}[ #{Type:word}]'
+const EXAMPLE_TEST = 'Buy 5 kg of tomatoes #vegetable'
 
 function useMemoUnlessFailed(callback, dependencies) {
     return useMemo(() => {
@@ -27,35 +32,85 @@ function useMemoUnlessFailed(callback, dependencies) {
 export const TemplateBuilder = () => {
     resetRandom();
 
-    const [rawPattern, setRawPattern] = useState('(buy|purchase)[ {Kg:number} kg of] {Item:text}[ #{Type:word}]');
+    const { pathname, search } = useLocation();
+    const history = useHistory();
+
+    const defaultRawPattern = useMemo(() => new URLSearchParams(search).get('pattern') || '', [search])
+    const defaultTest = useMemo(() => new URLSearchParams(search).get('test') || '', [search])
+
+    const [test, setTest] = useState(defaultTest);
+    const [rawPattern, setRawPattern] = useState(defaultRawPattern);
     const pattern = useMemoUnlessFailed(() => new PatternBuilder().build(rawPattern), [rawPattern]);
     const combinations = useMemoUnlessFailed(() => new PatternMatcher().getPatternCombinations(pattern)?.filter(c => c.length > 0), [pattern]);
 
+    const [isCopied, setIsCopied] = useState(false);
+    const [isCopiedTimeoutId, setIsCopiedTimeoutId] = useState(null)
+    const patternFieldRef = useRef(null)
+    const copy = useCallback(() => {
+        setIsCopied(true);
+        copyToClipboard(rawPattern);
+
+        if (patternFieldRef.current) {
+            const target = patternFieldRef.current;
+            target.setSelectionRange(0, target.value.length);
+            target.focus();
+        }
+
+        clearTimeout(isCopiedTimeoutId);
+        setIsCopiedTimeoutId(setTimeout(() => setIsCopied(false), 5000));
+    }, [rawPattern, isCopiedTimeoutId]);
+
+    const useExample = useCallback(() => {
+        setRawPattern(EXAMPLE_RAW_PATTERN);
+        setTest(EXAMPLE_TEST);
+    }, []);
+
     const onPatternChange = useCallback((event) => {
         setRawPattern(event.target.value);
-    }, [setRawPattern]);
+    }, []);
+
+    useEffect(() => {
+        const params = new URLSearchParams();
+        
+        if (rawPattern) {
+            params.set('pattern', rawPattern);
+        }
+
+        if (test) {
+            params.set('test', test);
+        }
+
+        history.push({
+            pathname,
+            search: params.toString(),
+        });
+    }, [history, pathname, test, rawPattern]);
 
     return <Container classes={{ root: 'page template-builder' }} maxWidth="lg" component={Paper} elevation={5}>
         <Typography variant="h5">Template builder</Typography>
         <TextField
             onChange={onPatternChange}
-            label="Your template" size="small" spellCheck={false} classes={{ root: 'template-builder__template-field' }} variant="outlined" fullWidth multiline
+            inputRef={patternFieldRef}
+            spellCheck={false} autoCapitalize="off" autoComplete="off" autoCorrect="off"
+            label="Your template" size="small" classes={{ root: 'template-builder__template-field' }} variant="outlined" fullWidth multiline
             value={rawPattern}
         />
+        {rawPattern && <Button variant="contained" color="primary" onClick={copy} tabIndex={-1}>{isCopied ? 'Copied!' : 'Copy'}</Button>}
+        {!rawPattern && <Button variant="contained" color="default" onClick={useExample}>Load example</Button>}
         {rawPattern && <>
             <Divider/>
             <Typography variant="h5">Template tester</Typography>
-            <TemplateTester defaultTest="Buy 5 kg of tomatoes #vegetable" rawPatterns={[rawPattern].filter(Boolean)}/>
+            <TemplateTester test={test} setTest={setTest} rawPatterns={[rawPattern].filter(Boolean)}/>
         </>}
         {combinations && combinations.length > 0 && <>
             <Divider/>
             <Typography variant="h5">Message examples</Typography>
             <List component={Paper} elevation={0}>
                 {combinations.map((combination, i) => {
-                    return <>
+                    return <Fragment key={JSON.stringify(combination) + ':' + i}>
                         {i > 0 && <Divider />}
                         <Combination combination={combination} />
-                    </>;
+                    </Fragment>;
                 })}
             </List>
             <Typography variant="caption">
@@ -67,6 +122,7 @@ export const TemplateBuilder = () => {
 };
 
 const Combination = ({ combination }) => {
+    const tokenKey = JSON.stringify(combination) + ':token:';
     let tokenExampleIndex = 0;
 
     return <ListItem classes={{ root: 'template-builder__combination-list-item' }}>
@@ -106,7 +162,7 @@ const Combination = ({ combination }) => {
                 }
 
                 throw new Error(`Unsupported token type: ${token.type}`);
-            })}
+            }).map((token, i) => <Fragment key={tokenKey + i}>{token}</Fragment>)}
         />
     </ListItem>;
 };
