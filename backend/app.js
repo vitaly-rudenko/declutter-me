@@ -167,6 +167,26 @@ const InputType = require('./app/InputType');
         }),
     );
 
+    // TODO: uncomment when Notion supports deletion
+    // bot.action(
+    //     /undo:notion:(.+)/,
+    //     withUser(),
+    //     withPhase(null, async (ctx) => {
+    //         await ctx.answerCbQuery();
+
+    //         /** @type {import('@notionhq/client').Client} */
+    //         const notion = ctx.state.notion;
+    //         const pageId = ctx.match[1];
+
+    //         notion.pages.delete(pageId)
+
+    //         await ctx.editMessageText(
+    //             ctx.callbackQuery.message.text
+    //                 + '\n' + ctx.state.localize('match.undoSuccessful'),
+    //         );
+    //     }),
+    // )
+
     bot.command('reset', async (ctx) => {
         await storage.cleanUp();
         await ctx.reply('🧹');
@@ -423,6 +443,7 @@ const InputType = require('./app/InputType');
                     return;
                 }
 
+                let pageId;
                 try {
                     const notionDatabase = await notion.databases.retrieve({ database_id: database.notionDatabaseId });
                     const entry = new NotionEntry({
@@ -435,7 +456,7 @@ const InputType = require('./app/InputType');
                             }))
                     });
                     
-                    await notion.pages.create(
+                    const page = await notion.pages.create(
                         new NotionEntrySerializer({
                             dateParser,
                         }).serialize(
@@ -443,6 +464,8 @@ const InputType = require('./app/InputType');
                             user,
                         )
                     );
+
+                    pageId = page.id;
                 } catch (error) {
                     try {
                         await bot.telegram.editMessageText(
@@ -470,7 +493,11 @@ const InputType = require('./app/InputType');
                                 value: Array.isArray(field.value) ? field.value.join(', '): field.value
                             }
                         )).join('\n')
-                    })
+                    }),
+                    // TODO: uncomment when Notion supports deletion
+                    // Markup.inlineKeyboard([
+                    //     Markup.button.callback(ctx.state.localize('match.undo'), `undo:notion:${pageId}`)
+                    // ]),
                 );
                 return;
             }

@@ -89,6 +89,11 @@
         ],
         "patternMatchDatabaseFieldName": "База даних",
         "patternMatchField": "- {name}: {value}",
+        "undo": "Видалити",
+        "undoSuccessful": [
+            "",
+            "❌ Запис було видалено"
+        ],
         "noPatternMatched": "Що-що? 🤔"
     },
     "help": {

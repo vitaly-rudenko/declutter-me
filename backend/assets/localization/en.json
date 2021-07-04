@@ -89,6 +89,11 @@
         ],
         "patternMatchDatabaseFieldName": "Database",
         "patternMatchField": "- {name}: {value}",
+        "undo": "Undo",
+        "undoSuccessful": [
+            "",
+            "❌ Entry has been removed"
+        ],
         "noPatternMatched": "What was it? 🤔"
     },
     "help": {
