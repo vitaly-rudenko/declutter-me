@@ -6,13 +6,15 @@ module.exports = organizeValues({
     notion: {
         token: '1',
     },
-    database: {
+    addDatabase: {
         link: '1',
         alias: '2',
     },
+    deleteDatabase: {
+        choose: '1'
+    },
     template: {
-        databaseAlias: '1',
-        pattern: '2',
+        pattern: '1',
     }
 });
 

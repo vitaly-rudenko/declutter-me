@@ -316,8 +316,52 @@ function encodeTemplates(templates) {
             ctx.reply(ctx.state.localize('command.databases.add.link'))
         ]);
 
-        userSessionManager.setPhase(ctx.state.userId, phases.database.link);
+        userSessionManager.setPhase(ctx.state.userId, phases.addDatabase.link);
     });
+
+    bot.action('databases:delete', withUser(), withNotion(), async (ctx) => {
+        await ctx.answerCbQuery();
+
+        const databases = await storage.findDatabasesByUserId(ctx.state.userId);
+
+        await Promise.all([
+            ctx.deleteMessage(),
+            ctx.reply(
+                ctx.state.localize('command.databases.delete.chooseDatabase'),
+                Markup.inlineKeyboard([
+                    ...databases.map(database => Markup.button.callback(
+                        database.alias,
+                        `databases:delete:database-alias:${database.alias}`
+                    )),
+                    Markup.button.callback(
+                        ctx.state.localize('command.databases.delete.cancel'),
+                        'databases:delete:cancel'
+                    ),
+                ], { columns: 2 })
+            )
+        ]);
+    });
+
+    bot.action('databases:delete:cancel', withUser(), withNotion(), async (ctx) => {
+        await ctx.answerCbQuery();
+
+        await Promise.all([
+            ctx.deleteMessage(),
+            ctx.reply(ctx.state.localize('command.databases.delete.cancelled'))
+        ]);
+    });
+
+    bot.action(/databases:delete:database-alias:(.+)/, withUser(), withPhase(null, async (ctx) => {
+        await ctx.answerCbQuery();
+        
+        const databaseAlias = ctx.match[1];
+        await storage.deleteDatabaseByAlias(databaseAlias);
+
+        await Promise.all([
+            ctx.deleteMessage(),
+            ctx.reply(ctx.state.localize('command.databases.delete.deleted', { database: databaseAlias })),
+        ]);
+    }));
 
     bot.action('templates:add', withUser(), withNotion(), async (ctx) => {
         await ctx.answerCbQuery();
@@ -330,12 +374,10 @@ function encodeTemplates(templates) {
             await ctx.reply(
                 ctx.state.localize('command.templates.add.chooseDatabase'),
                 Markup.inlineKeyboard([
-                    ...databases.map(database => Markup.button.callback(database.alias, 'template:database:' + database.alias)),
-                    Markup.button.callback(ctx.state.localize('command.templates.add.skipDatabase'), 'template:skip-database'),
+                    ...databases.map(database => Markup.button.callback(database.alias, 'template:add:database-alias:' + database.alias)),
+                    Markup.button.callback(ctx.state.localize('command.templates.add.skipDatabase'), 'template:add:skip-database'),
                 ], { columns: 2 })
             );
-
-            userSessionManager.setPhase(ctx.state.userId, phases.template.databaseAlias);
         } else {
             await ctx.reply(ctx.state.localize('command.templates.add.sendTemplate'));
             userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
@@ -367,7 +409,7 @@ function encodeTemplates(templates) {
         ]);
     });
 
-    bot.action(/template:database:(.+)/, withUser(), withPhase(phases.template.databaseAlias, async (ctx) => {
+    bot.action(/template:add:database-alias:(.+)/, withUser(), withPhase(null, async (ctx) => {
         await ctx.answerCbQuery();
         
         const databaseAlias = ctx.match[1];
@@ -378,8 +420,9 @@ function encodeTemplates(templates) {
         userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
     }));
 
-    bot.action('template:skip-database', withUser(), withPhase(phases.template.databaseAlias, async (ctx) => {
+    bot.action('template:add:skip-database', withUser(), withPhase(null, async (ctx) => {
         await ctx.answerCbQuery();
+
         await ctx.reply(ctx.state.localize('command.templates.add.sendTemplate'));
         userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
     }));
@@ -430,7 +473,7 @@ function encodeTemplates(templates) {
             userSessionManager.reset(ctx.state.userId);
         }),
         // Databases
-        withPhase(phases.database.link, async (ctx) => {
+        withPhase(phases.addDatabase.link, async (ctx) => {
             if (!('text' in ctx.message)) return;
 
             const notionDatabaseId = notionDatabaseIdFromUrl(ctx.message.text);
@@ -440,10 +483,10 @@ function encodeTemplates(templates) {
             }
 
             userSessionManager.context(ctx.state.userId).notionDatabaseId = notionDatabaseId;
-            userSessionManager.setPhase(ctx.state.userId, phases.database.alias);
+            userSessionManager.setPhase(ctx.state.userId, phases.addDatabase.alias);
             await ctx.reply(ctx.state.localize('command.databases.add.alias', { match: notionDatabaseId }));
         }),
-        withPhase(phases.database.alias, async (ctx) => {
+        withPhase(phases.addDatabase.alias, async (ctx) => {
             if (!('text' in ctx.message)) return;
 
             const alias = databaseAlias(ctx.message.text);

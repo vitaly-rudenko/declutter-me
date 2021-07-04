@@ -64,12 +64,19 @@
             },
             "add": {
                 "link": "Paste the link to the database:",
+                "invalidLink": "❗️ Something is wrong with this link. Try again.",
                 "alias": [
                     "It's \"{match}\".",
                     "",
                     "Alias for the database:"
                 ],
                 "added": "Database \"{alias}\" has been added!"
+            },
+            "delete": {
+                "chooseDatabase": "Got it, select a database to delete:",
+                "cancel": "[cancel]",
+                "cancelled": "Okay, leaving your databases untouched 😌",
+                "deleted": "🗑 Databases \"{database}\" has been deleted."
             }
         },
         "templates": {

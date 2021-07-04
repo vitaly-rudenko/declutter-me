@@ -85,6 +85,13 @@ class InMemoryStorage {
         return database;
     }
 
+    async deleteDatabaseByAlias(alias) {
+        const index = this._databases.findIndex(d => d.alias === alias);
+        if (index === -1) return;
+
+        this._databases.splice(index, 1);
+    }
+
     async findDatabasesByUserId(userId) {
         return this._databases.filter(d => d.userId === userId);
     }
