@@ -13,7 +13,11 @@
         }
     },
     "command": {
-        "help": "Hi! Use /notion to setup Notion integration.",
+        "help": [
+            "Hi! Use /notion to setup Notion integration.",
+            "",
+            "📚 It is recommended to read [Complete guide]({guideLink})."
+        ],
         "start": {
             "invalidTimezone": "Invalid timezone! Should look something like \"GMT+3\"",
             "timezone": [
@@ -21,7 +25,7 @@
                 "Examples: +3:00, GMT-3, UTC",
                 "",
                 "If confused, try this:",
-                "https://my-timezone.narcissemaximil.repl.co/"
+                "{timezoneCheckerLink}"
             ],
             "finished": [
                 "Thanks! 🚀",
@@ -91,11 +95,17 @@
                 "chooseDatabase": "Great! What database would you like to use by default?",
                 "skipDatabase": "[skip]",
                 "databaseChosen": [
-                    "Default database: \"{database}\".",
+                    "Okay, default database is \"{database}\".",
                     "",
-                    "Now send me the template:"
+                    "Now send the template.",
+                    "",
+                    "📚 Need help? Check out [Template builder]({templateBuilderLink}) and [Complete guide]({guideLink})."
                 ],
-                "sendTemplate": "Okay! Now send me the template:",
+                "sendTemplate": [
+                    "Okay, now send the template.",
+                    "",
+                    "📚 Need help? Check out [Template builder]({templateBuilderLink}) and [Complete guide]({guideLink})."
+                ],
                 "added": "Template has been added!"
             },
             "reorder": {
@@ -149,7 +159,8 @@
             "info": "Get your information",
             "notion": "Configure Notion integration",
             "databases": "Manage your databases",
-            "templates": "Manage your templates"
+            "templates": "Manage your templates",
+            "help": "Help"
         }
     }
 }

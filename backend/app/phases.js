@@ -14,7 +14,8 @@ module.exports = organizeValues({
         choose: '1'
     },
     template: {
-        pattern: '1',
+        database: '1',
+        pattern: '2',
     }
 });
 

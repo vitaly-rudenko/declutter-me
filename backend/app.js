@@ -4,8 +4,6 @@ const { Telegraf, Markup } = require('telegraf');
 const { URL } = require('url');
 const pako = require('pako');
 const base64url = require('base64url');
-const MarkdownIt = require('markdown-it');
-const md = new MarkdownIt();
 
 const phases = require('./app/phases');
 const PatternBuilder = require('./app/PatternBuilder');
@@ -46,6 +44,47 @@ function encodeTemplates(templates) {
 }
 
 (async () => {
+    const { markdownEscapes } = await import('markdown-escapes');
+
+    function escapeMd(string) {
+        for (const escape of markdownEscapes) {
+            string = string.replace(new RegExp(`(\\${escape})`, 'g'), `\\$1`);
+        }
+        return string;
+    }
+
+    const linkLanguageMap = {
+        [Language.ENGLISH]: 'en',
+        [Language.RUSSIAN]: 'ru',
+        [Language.UKRAINIAN]: 'uk',
+    };
+
+    function createTemplateManagerLink({ templates, language }) {
+        const linkLanguage = linkLanguageMap[language] ?? 'en';
+
+        const link = new URL(`${FRONTEND_DOMAIN}/${linkLanguage}/manager`);
+        link.searchParams.set('templates', encodeTemplates(templates.map(t => ({ pattern: t.pattern }))));
+        
+        return link.toString();
+    }
+
+    function createTemplateBuilderLink({ pattern = null, test = null, language }) {
+        const linkLanguage = linkLanguageMap[language] ?? 'en';
+
+        const link = new URL(`${FRONTEND_DOMAIN}/${linkLanguage}/builder`);
+        if (pattern) link.searchParams.set('pattern', pattern);
+        if (test) link.searchParams.set('test', test);
+        
+        return link.toString();
+    }
+
+    function getGuideLink({ language }) {
+        if (language === Language.ENGLISH) return process.env.GUIDE_LINK_EN;
+        if (language === Language.RUSSIAN) return process.env.GUIDE_LINK_RU;
+        if (language === Language.UKRAINIAN) return process.env.GUIDE_LINK_UK;
+        throw new Error(`Invalid language: ${language}`)
+    }
+
     const storage = new InMemoryStorage();
     const user = await storage.createUser({ language: Language.RUSSIAN, timezoneOffsetMinutes: 3 * 60 });
     await storage.createTelegramAccount(user.id, 56681133);
@@ -128,7 +167,7 @@ function encodeTemplates(templates) {
     const notionSessionManager = new NotionSessionManager({ storage });
 
     bot.telegram.setMyCommands(
-        ['start', 'info', 'notion', 'databases', 'templates']
+        ['databases', 'templates', 'info', 'notion', 'help', 'start']
             .map(command => ({
                 command: `/${command}`,
                 description: localize(`help.command.${command}`, null, Language.ENGLISH)
@@ -176,7 +215,12 @@ function encodeTemplates(templates) {
             userSessionManager.context(ctx.state.userId || ctx.from.id).language = language;
             userSessionManager.setPhase(ctx.state.userId || ctx.from.id, phases.start.timezone);
 
-            await ctx.reply(localize('command.start.timezone', null, language));
+            await ctx.reply(
+                localize('command.start.timezone', {
+                    timezoneCheckerLink: process.env.TIMEZONE_CHECKER_LINK,
+                }, language),
+                { disable_web_page_preview: true }
+            );
 
             userSessionManager.setPhase(ctx.state.userId || ctx.from.id, phases.start.timezone);
         }),
@@ -229,6 +273,15 @@ function encodeTemplates(templates) {
                     : ctx.state.localize('command.info.none'),
                 templates: formatTemplates(templates, ctx.state.localize),
             })
+        );
+    });
+
+    bot.command('help', withUser(), async (ctx) => {
+        await ctx.reply(
+            ctx.state.localize('command.help', {
+                guideLink: getGuideLink({ language: ctx.state.user?.language })
+            }),
+            { parse_mode: 'Markdown', disable_web_page_preview: true }
         );
     });
 
@@ -378,6 +431,7 @@ function encodeTemplates(templates) {
                     Markup.button.callback(ctx.state.localize('command.templates.add.skipDatabase'), 'template:add:skip-database'),
                 ], { columns: 2 })
             );
+            userSessionManager.setPhase(ctx.state.userId, phases.template.database);
         } else {
             await ctx.reply(ctx.state.localize('command.templates.add.sendTemplate'));
             userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
@@ -388,42 +442,60 @@ function encodeTemplates(templates) {
         await ctx.answerCbQuery();
 
         const templates = await storage.findTemplatesByUserId(ctx.state.userId);
-
-        const languageMap = {
-            [Language.ENGLISH]: 'en',
-            [Language.RUSSIAN]: 'ru',
-            [Language.UKRAINIAN]: 'uk',
-        };
-
-        const language = languageMap[ctx.state.user.language] ?? 'en';
-
-        const link = new URL(`${FRONTEND_DOMAIN}/${language}/manager`);
-        link.searchParams.set('templates', encodeTemplates(templates.map(t => ({ pattern: t.pattern }))));
+        const link = createTemplateManagerLink({ templates, language: ctx.state.user?.language });
 
         await Promise.all([
             ctx.deleteMessage(),
             ctx.reply(
-                ctx.state.localize('command.templates.reorder.link', { link: link.toString() }),
-                { parse_mode: 'Markdown' }
+                ctx.state.localize('command.templates.reorder.link', {
+                    link,
+                    linkLabel: escapeMd(link),
+                }),
+                { parse_mode: 'Markdown', disable_web_page_preview: true }
             )
         ]);
     });
 
-    bot.action(/template:add:database-alias:(.+)/, withUser(), withPhase(null, async (ctx) => {
+    bot.action(/template:add:database-alias:(.+)/, withUser(), withPhase(phases.template.database, async (ctx) => {
         await ctx.answerCbQuery();
         
         const databaseAlias = ctx.match[1];
         userSessionManager.context(ctx.state.userId)
             .defaultFields.push(new Field({ inputType: InputType.DATABASE, value: databaseAlias }));
 
-        await ctx.reply(ctx.state.localize('command.templates.add.databaseChosen', { database: databaseAlias }));
+        const templateBuilderLink = createTemplateBuilderLink({ language: ctx.state.user?.language });
+        
+        await Promise.all([
+            ctx.deleteMessage(),
+            ctx.reply(
+                ctx.state.localize('command.templates.add.databaseChosen', {
+                    database: escapeMd(databaseAlias),
+                    templateBuilderLink,
+                    guideLink: getGuideLink({ language: ctx.state.user?.language }),
+                }),
+                { parse_mode: 'Markdown', disable_web_page_preview: true }
+            ),
+        ]);
+
         userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
     }));
 
-    bot.action('template:add:skip-database', withUser(), withPhase(null, async (ctx) => {
+    bot.action('template:add:skip-database', withUser(), withPhase(phases.template.database, async (ctx) => {
         await ctx.answerCbQuery();
 
-        await ctx.reply(ctx.state.localize('command.templates.add.sendTemplate'));
+        const templateBuilderLink = createTemplateBuilderLink({ language: ctx.state.user?.language });
+
+        await Promise.all([
+            ctx.deleteMessage(),
+            ctx.reply(
+                ctx.state.localize('command.templates.add.sendTemplate', {
+                    templateBuilderLink,
+                    guideLink: getGuideLink({ language: ctx.state.user?.language }),
+                }),
+                { parse_mode: 'Markdown', disable_web_page_preview: true }
+            )
+        ]);
+
         userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
     }));
 
@@ -458,7 +530,12 @@ function encodeTemplates(templates) {
                 language
             ));
 
-            await ctx.reply(localize('command.help', null, language));
+            await ctx.reply(
+                localize('command.help', {
+                    guideLink: getGuideLink({ language })
+                }, language),
+                { parse_mode: 'Markdown', disable_web_page_preview: true }
+            );
         }),
         withUser(),
         // Notion
