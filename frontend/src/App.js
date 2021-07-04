@@ -37,6 +37,6 @@ export const App = () => {
                 <Route path='/:language/manager' component={TemplateManager} />
             </Switch>
         </BrowserRouter>
-        <Fab size="small" classes={{ root: 'switch-theme-button' }} onClick={switchTheme}><Brightness4/></Fab>
+        <Fab size="small" color="primary" classes={{ root: 'switch-theme-button' }} onClick={switchTheme}><Brightness4/></Fab>
     </ThemeProvider>;
 }
