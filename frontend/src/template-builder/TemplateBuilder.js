@@ -10,13 +10,11 @@ import PatternMatcher from '../utils/PatternMatcher';
 import copyToClipboard from 'copy-to-clipboard';
 import { TemplateTester } from '../shared/TemplateTester';
 import { InputTypeIcons } from '../shared/InputTypeIcons';
-import './TemplateBuilder.css';
 import { useHistory, useLocation } from 'react-router-dom';
+import { useLocalize } from '../useLocalize';
+import './TemplateBuilder.css';
 
 const COLORS = ['orange', 'yellow', 'green', 'blue', 'purple'];
-
-const EXAMPLE_RAW_PATTERN = '(buy|purchase)[ {Kg:number} kg of] {Item:text}[ #{Type:word}]'
-const EXAMPLE_TEST = 'Buy 5 kg of tomatoes #vegetable'
 
 function useMemoUnlessFailed(callback, dependencies) {
     return useMemo(() => {
@@ -33,6 +31,8 @@ export const TemplateBuilder = () => {
     resetRandom();
 
     const { pathname, search } = useLocation();
+    const { localize } = useLocalize();
+
     const history = useHistory();
 
     const defaultRawPattern = useMemo(() => new URLSearchParams(search).get('pattern') || '', [search])
@@ -61,12 +61,13 @@ export const TemplateBuilder = () => {
     }, [rawPattern, isCopiedTimeoutId]);
 
     const useExample = useCallback(() => {
-        setRawPattern(EXAMPLE_RAW_PATTERN);
-        setTest(EXAMPLE_TEST);
-    }, []);
+        setRawPattern(localize('builder.rawPattern'));
+        setTest(localize('builder.test'));
+    }, [localize]);
 
     const onPatternChange = useCallback((event) => {
         setRawPattern(event.target.value);
+        setIsCopied(false);
     }, []);
 
     useEffect(() => {
@@ -87,24 +88,24 @@ export const TemplateBuilder = () => {
     }, [history, pathname, test, rawPattern]);
 
     return <Container classes={{ root: 'page template-builder' }} maxWidth="lg" component={Paper} elevation={5}>
-        <Typography variant="h5">Template builder</Typography>
+        <Typography variant="h5">{localize('builder.builderTitle')}</Typography>
         <TextField
             onChange={onPatternChange}
             inputRef={patternFieldRef}
             spellCheck={false} autoCapitalize="off" autoComplete="off" autoCorrect="off"
-            label="Your template" size="small" classes={{ root: 'template-builder__template-field' }} variant="outlined" fullWidth multiline
+            label={localize('builder.builderPlaceholder')} size="small" classes={{ root: 'template-builder__template-field' }} variant="outlined" fullWidth multiline
             value={rawPattern}
         />
-        {rawPattern && <Button variant="contained" color="primary" onClick={copy} tabIndex={-1}>{isCopied ? 'Copied!' : 'Copy'}</Button>}
-        {!rawPattern && <Button variant="contained" color="default" onClick={useExample}>Load example</Button>}
+        {rawPattern && <Button variant="contained" color="primary" onClick={copy} tabIndex={-1}>{isCopied ? localize('builder.copied') : localize('builder.copy')}</Button>}
+        {!rawPattern && <Button variant="contained" color="default" onClick={useExample}>{localize('builder.loadExample')}</Button>}
         {rawPattern && <>
             <Divider/>
-            <Typography variant="h5">Template tester</Typography>
+            <Typography variant="h5">{localize('builder.testerTitle')}</Typography>
             <TemplateTester test={test} setTest={setTest} rawPatterns={[rawPattern].filter(Boolean)}/>
         </>}
         {combinations && combinations.length > 0 && <>
             <Divider/>
-            <Typography variant="h5">Message examples</Typography>
+            <Typography variant="h5">{localize('builder.examplesTitle')}</Typography>
             <List component={Paper} elevation={0}>
                 {combinations.map((combination, i) => {
                     return <Fragment key={JSON.stringify(combination) + ':' + i}>
@@ -113,15 +114,16 @@ export const TemplateBuilder = () => {
                     </Fragment>;
                 })}
             </List>
-            <Typography variant="caption">
-                All examples are generated automatically, therefore some of them may not work as expected.
-                Double check your templates with the <b>Template tester</b>!
-            </Typography>
+            <Typography variant="caption" dangerouslySetInnerHTML={{
+                __html: localize('builder.examplesCaptionHtml')
+            }}></Typography>
         </>}
     </Container>;
 };
 
 const Combination = ({ combination }) => {
+    const { get } = useLocalize();
+
     const tokenKey = JSON.stringify(combination) + ':token:';
     let tokenExampleIndex = 0;
 
@@ -144,7 +146,7 @@ const Combination = ({ combination }) => {
                     const invalid = !InputTypeIcons[inputType];
                     const IconClass = InputTypeIcons[inputType] || HelpOutline;
 
-                    const example = getExampleFor(inputType);
+                    const example = getExampleFor(inputType, get);
                     const space = ''.padEnd(Math.max(0, token.value.length - example.length + 2), ' ');
 
                     return <span
@@ -167,125 +169,17 @@ const Combination = ({ combination }) => {
     </ListItem>;
 };
 
-const adjectives = [
-    'cruel',
-    'spotted',
-    'noxious',
-    'upbeat',
-    'cheerful',
-    'public',
-    'visible',
-    'bustling',
-    'additional',
-    'ambiguous',
-    'burly',
-    'bashful',
-    'overconfident',
-    'colossal',
-    'high-pitched',
-    'available',
-    'ubiquitous',
-    'receptive',
-    'unsuitable',
-    'eatable',
-    'grateful',
-    'assorted',
-    'permissible',
-    'fortunate',
-    'inconclusive',
-    'suitable',
-    'snobbish',
-    'tiny',
-    'straight',
-    'muddled',
-    'eastern',
-    'fallacious',
-    'handsome',
-    'elfin',
-    'scientific',
-    'workable',
-    'electric',
-    'hideous',
-    'rotten',
-    'fretful',
-    'first',
-    'meek',
-    'fierce',
-    'thoughtless',
-    'clear',
-    'lonely',
-    'squalid',
-    'logical',
-    'dull',
-    'picayune',
-];
-
-const nouns = [
-    'strategy',
-    'administration',
-    'magazine',
-    'establishment',
-    'sympathy',
-    'ability',
-    'highway',
-    'technology',
-    'transportation',
-    'wedding',
-    'contribution',
-    'republic',
-    'introduction',
-    'confusion',
-    'decision',
-    'guidance',
-    'possession',
-    'proposal',
-    'perception',
-    'statement',
-    'direction',
-    'combination',
-    'instance',
-    'weakness',
-    'housing',
-    'temperature',
-    'atmosphere',
-    'literature',
-    'construction',
-    'passenger',
-    'preference',
-    'intention',
-    'failure',
-    'control',
-    'department',
-    'setting',
-    'candidate',
-    'championship',
-    'reception',
-    'boyfriend',
-    'internet',
-    'assignment',
-    'relationship',
-    'version',
-    'audience',
-    'secretary',
-    'impression',
-    'expression',
-    'marriage',
-    'customer',
-];
-
-const databaseNames = ['shopping', 'notes', 'todo_list', 'reminders', 'recipes'];
-
-function getExampleFor(inputType) {
+function getExampleFor(inputType, get) {
     if (inputType === 'database') {
-        return getNextItem(databaseNames);
+        return getNextItem(get('builder.databaseNames'));
     }
 
     if (inputType === 'text') {
-        return generateText();
+        return generateText(get);
     }
 
     if (inputType === 'word') {
-        return getNextItem(nouns);
+        return getNextItem(get('builder.nouns'));
     }
 
     if (inputType === 'url') {
@@ -307,11 +201,11 @@ function getExampleFor(inputType) {
     return inputType;
 }
 
-function generateText() {
+function generateText(get) {
     return [
-        (getNextInt() % 3) % 2 === 1 && 'the',
-        getNextItem(adjectives),
-        getNextItem(nouns),
+        (getNextInt() % 3) % 2 === 1 && get('builder.article'),
+        getNextItem(get('builder.adjectives')),
+        getNextItem(get('builder.nouns')),
     ].filter(Boolean).join(' ');
 }
 

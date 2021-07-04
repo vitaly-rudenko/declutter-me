@@ -3,8 +3,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import copyToClipboard from 'copy-to-clipboard';
 import { TemplateTester } from '../shared/TemplateTester';
-import './TemplateManager.css';
 import { useHistory, useLocation } from 'react-router-dom';
+import { useLocalize } from '../useLocalize';
+import './TemplateManager.css';
 
 const reorder = (list, startIndex, endIndex) => {
     const result = Array.from(list);
@@ -15,6 +16,7 @@ const reorder = (list, startIndex, endIndex) => {
 };
 
 export const TemplateManager = () => {
+    const { localize } = useLocalize();
     const { pathname, search } = useLocation();
     const history = useHistory();
 
@@ -86,13 +88,10 @@ export const TemplateManager = () => {
     }, [history, pathname, test, templates]);
 
     return <Container classes={{ root: 'page template-manager' }} maxWidth="lg" component={Paper} elevation={5}>
-        <Typography variant="h5">Template manager</Typography>
-        <Typography variant="caption">
-            Drag templates to change their order.
-            Templates on the top of the list have higher priority.
-            <br/>
-            Use the <b>Template tester</b> to check that proper template is used for the provided message.
-        </Typography>
+        <Typography variant="h5">{localize('manager.managerTitle')}</Typography>
+        <Typography variant="caption" dangerouslySetInnerHTML={{
+            __html: localize('manager.managerCaptionHtml')
+        }}></Typography>
         <DragDropContext onDragEnd={onDragEnd}>
             <Droppable droppableId="droppable">
                 {(provided) => (
@@ -121,7 +120,9 @@ export const TemplateManager = () => {
             </Droppable>
         </DragDropContext>
         <Typography variant="body1" component="h1">
-            Just paste this into your chat with <b><Link target="_blank" href="https://t.me/declutterme_bot">@declutterme_bot</Link></b>:
+            <span dangerouslySetInnerHTML={{
+                __html: localize('manager.copyResultHtml')
+            }}></span> <b><Link target="_blank" href="https://t.me/declutterme_bot">@declutterme_bot</Link></b>:
         </Typography>
         <TextField
             inputRef={copyFieldRef}
@@ -129,9 +130,9 @@ export const TemplateManager = () => {
             value={copyValue} variant="outlined"
             multiline fullWidth
         />
-        <Button variant="contained" color="primary" onClick={copy}>{isCopied ? 'Copied!' : 'Copy'}</Button>
+        <Button variant="contained" color="primary" onClick={copy}>{isCopied ? localize('manager.copied') : localize('manager.copy')}</Button>
         <Divider />
-        <Typography variant="h5">Template tester</Typography>
+        <Typography variant="h5">{localize('manager.testerTitle')}</Typography>
         <TemplateTester test={test} setTest={setTest} rawPatterns={templates.map(t => t.pattern)} />
     </Container>;
 };

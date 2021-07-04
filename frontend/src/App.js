@@ -33,8 +33,8 @@ export const App = () => {
         <CssBaseline />
         <BrowserRouter>
             <Switch>
-                <Route path='/builder' component={TemplateBuilder} />
-                <Route path='/manager' component={TemplateManager} />
+                <Route path='/:language/builder' component={TemplateBuilder} />
+                <Route path='/:language/manager' component={TemplateManager} />
             </Switch>
         </BrowserRouter>
         <Fab size="small" classes={{ root: 'switch-theme-button' }} onClick={switchTheme}><Brightness4/></Fab>

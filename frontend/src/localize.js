@@ -1,0 +1,51 @@
+const en = require('./localization/en.json');
+const ru = require('./localization/ru.json');
+const uk = require('./localization/uk.json');
+
+const Language = require('./Language');
+
+function getMessages(language) {
+    if (language === Language.ENGLISH) {
+        return en;
+    }
+
+    if (language === Language.RUSSIAN) {
+        return ru;
+    }
+
+    if (language === Language.UKRAINIAN) {
+        return uk;
+    }
+
+    throw new Error('Invalid language: ' + language);
+}
+
+const get = (messageKey, language) => {
+    const path = messageKey.split('.');
+
+    let result = getMessages(language);
+    while (result && path.length > 0) {
+        result = result[path.shift()];
+    }
+
+    return result ?? messageKey;
+};
+
+const localize = (messageKey, replacements = null, language) => {
+    let result = get(messageKey, language);
+
+    if (Array.isArray(result)) {
+        result = result.join('\n');
+    }
+
+    if (replacements) {
+        for (const [key, value] of Object.entries(replacements)) {
+            result = result.replace(new RegExp('\\{' + key + '\\}', 'g'), value);
+        }
+    }
+
+    return result;
+};
+
+module.exports = { localize, get };
+

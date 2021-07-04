@@ -5,6 +5,7 @@ import RussianDateParser from '../utils/date-parsers/RussianDateParser';
 import EntryMatchers from '../utils/entries/EntryMatchers';
 import PatternMatcher from '../utils/PatternMatcher';
 import PatternBuilder from '../utils/PatternBuilder';
+import { useLocalize } from '../useLocalize';
 import './TemplateTester.css';
 
 function useMemoUnlessFailed(callback, dependencies) {
@@ -19,6 +20,7 @@ function useMemoUnlessFailed(callback, dependencies) {
 }
 
 export const TemplateTester = ({ test, setTest, rawPatterns }) => {
+    const { localize } = useLocalize();
     const isTesting = useMemo(() => test && rawPatterns?.length > 0, [test, rawPatterns]);
 
     const [rawPattern, match] = useMemoUnlessFailed(
@@ -56,7 +58,7 @@ export const TemplateTester = ({ test, setTest, rawPatterns }) => {
         <TextField
             spellCheck={false} autoCapitalize="off" autoComplete="off" autoCorrect="off"
             onChange={onTestChange}
-            label="Telegram message" size="small" variant="outlined" fullWidth multiline
+            label={localize('tester.messagePlaceholder')} size="small" variant="outlined" fullWidth multiline
             error={Boolean(isTesting && !match)}
             value={test}
         />
@@ -77,7 +79,7 @@ export const TemplateTester = ({ test, setTest, rawPatterns }) => {
                                         root: 'template-tester__field-name'
                                     }}
                                     startIcon={<InputTypeIcon />}
-                                >{field.name || 'Database'}</Button></TableCell>
+                                >{field.name || localize('tester.database')}</Button></TableCell>
                             })}
                         </TableRow>
                     </TableHead>
