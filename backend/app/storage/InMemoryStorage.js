@@ -95,6 +95,11 @@ class InMemoryStorage {
 
     /** @param {import('../templates/Template')} template */
     async storeTemplate(template) {
+        const existingTemplateIndex = this._templates.findIndex(t => t.pattern === template.pattern);
+        if (existingTemplateIndex !== -1) {
+            this._templates.splice(existingTemplateIndex, 1);
+        }
+
         if (!template.order) {
             const templates = this._templates.filter(t => t.userId === template.userId);
             template = template.clone({

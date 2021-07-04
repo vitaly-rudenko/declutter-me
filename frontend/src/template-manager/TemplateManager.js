@@ -5,6 +5,8 @@ import copyToClipboard from 'copy-to-clipboard';
 import { TemplateTester } from '../shared/TemplateTester';
 import { useHistory, useLocation } from 'react-router-dom';
 import { useLocalize } from '../useLocalize';
+import pako from 'pako';
+import base64url from 'base64url';
 import './TemplateManager.css';
 
 const reorder = (list, startIndex, endIndex) => {
@@ -15,6 +17,20 @@ const reorder = (list, startIndex, endIndex) => {
     return [...result];
 };
 
+function encodeTemplates(templates) {
+    return base64url.fromBase64(
+        Buffer.from(
+            pako.deflate(
+                JSON.stringify(templates)
+            )
+        ).toString('base64')
+    );
+}
+
+function decodeTemplates(templates) {
+    return JSON.parse(pako.inflate(base64url.toBuffer(templates), { to: 'string' }));
+}
+
 export const TemplateManager = () => {
     const { localize } = useLocalize();
     const { pathname, search } = useLocation();
@@ -24,7 +40,8 @@ export const TemplateManager = () => {
         const params = new URLSearchParams(search);
         const rawTemplates = params.get('templates');
         try {
-            const result = JSON.parse(rawTemplates);
+            const result = decodeTemplates(rawTemplates);
+            console.log(result)
             if (!Array.isArray(result)) {
                 return [];
             }
@@ -39,7 +56,7 @@ export const TemplateManager = () => {
     const [templates, setTemplates] = useState(defaultTemplates);
 
     const [isCopied, setIsCopied] = useState(false);
-    const copyValue = useMemo(() => `/reorder_templates${templates.map(t => '\n' + t.pattern).join('')}`, [templates]);
+    const copyValue = useMemo(() => `/templates reorder${templates.map(t => '\n' + t.pattern).join('')}`, [templates]);
     const [isCopiedTimeoutId, setIsCopiedTimeoutId] = useState(null)
     const copyFieldRef = useRef(null)
     const copy = useCallback(() => {
@@ -74,7 +91,7 @@ export const TemplateManager = () => {
         const params = new URLSearchParams();
 
         if (templates.length > 0) {
-            params.set('templates', JSON.stringify(templates));
+            params.set('templates', encodeTemplates(templates))
         }
 
         if (test) {

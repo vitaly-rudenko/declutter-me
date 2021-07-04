@@ -1,5 +1,11 @@
+require('dotenv').config();
+
 const { Telegraf, Markup } = require('telegraf');
 const { URL } = require('url');
+const pako = require('pako');
+const base64url = require('base64url');
+const MarkdownIt = require('markdown-it');
+const md = new MarkdownIt();
 
 const phases = require('./app/phases');
 const PatternBuilder = require('./app/PatternBuilder');
@@ -7,7 +13,6 @@ const PatternMatcher = require('./app/PatternMatcher');
 const RussianDateParser = require('./app/date-parsers/RussianDateParser');
 const InMemoryStorage = require('./app/storage/InMemoryStorage');
 const Template = require('./app/templates/Template');
-const PatternStringifier = require('./app/PatternStringifier');
 const NotionSessionManager = require('./app/notion/NotionSessionManager');
 const UserSessionManager = require('./app/users/UserSessionManager');
 
@@ -16,8 +21,6 @@ const withPhaseFactory = require('./app/telegram/middlewares/withPhaseFactory');
 const withUserFactory = require('./app/telegram/middlewares/withUserFactory');
 const withNotionFactory = require('./app/telegram/middlewares/withNotionFactory');
 const withLocalization = require('./app/telegram/middlewares/withLocalization');
-
-require('dotenv').config();
 
 const NotionDatabase = require('./app/notion/NotionDatabase');
 const EntryMatchers = require('./app/entries/EntryMatchers');
@@ -30,6 +33,18 @@ const NotionEntry = require('./app/notion/NotionEntry');
 const NotionProperty = require('./app/notion/NotionProperty');
 const InputType = require('./app/InputType');
 
+const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
+
+function encodeTemplates(templates) {
+    return base64url.fromBase64(
+        Buffer.from(
+            pako.deflate(
+                JSON.stringify(templates)
+            )
+        ).toString('base64')
+    );
+}
+
 (async () => {
     const storage = new InMemoryStorage();
     const user = await storage.createUser({ language: Language.RUSSIAN, timezoneOffsetMinutes: 3 * 60 });
@@ -39,7 +54,7 @@ const InputType = require('./app/InputType');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 1,
-        pattern: new PatternBuilder().build('купить [{количество:number} (шт[ук[и]]|гр[ам[м]]|кг|кило[грам[м]]) ]{товар:text}'),
+        pattern: 'купить [{количество:number} (шт[ук[и]]|гр[ам[м]]|кг|кило[грам[м]]) ]{товар:text}',
         defaultFields: [
             new Field({ inputType: InputType.DATABASE, value: 'shopping' })
         ]
@@ -48,7 +63,7 @@ const InputType = require('./app/InputType');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 2,
-        pattern: new PatternBuilder().build('посмотреть {название:text}[ #{тип:word}]'),
+        pattern: 'посмотреть {название:text}[ #{тип:word}]',
         defaultFields: [
             new Field({ inputType: InputType.DATABASE, value: 'to_watch' })
         ]
@@ -57,7 +72,7 @@ const InputType = require('./app/InputType');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 3,
-        pattern: new PatternBuilder().build('(сделать|задача) {задача:text}'),
+        pattern: '(сделать|задача) {задача:text}',
         defaultFields: [
             new Field({ inputType: InputType.DATABASE, value: 'todo' })
         ]
@@ -66,7 +81,7 @@ const InputType = require('./app/InputType');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 4,
-        pattern: new PatternBuilder().build('контакт {имя:word} {фамилия:word}[ {телефон:phone}][ {эл. почта:email}][ {сайт:url}]'),
+        pattern: 'контакт {имя:word} {фамилия:word}[ {телефон:phone}][ {эл. почта:email}][ {сайт:url}]',
         defaultFields: [
             new Field({ inputType: InputType.DATABASE, value: 'contacts' })
         ]
@@ -75,7 +90,7 @@ const InputType = require('./app/InputType');
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 5,
-        pattern: new PatternBuilder().build('[#{:database} ][заметка ]{заметка:text}[ #{теги:word}][ #{теги:word}][ #{теги:word}]'),
+        pattern: '[#{:database} ][заметка ]{заметка:text}[ #{теги:word}][ #{теги:word}][ #{теги:word}]',
         defaultFields: [
             new Field({ inputType: InputType.DATABASE, value: 'notes' })
         ]
@@ -113,7 +128,7 @@ const InputType = require('./app/InputType');
     const notionSessionManager = new NotionSessionManager({ storage });
 
     bot.telegram.setMyCommands(
-        ['start', 'info', 'notion', 'database', 'template']
+        ['start', 'info', 'notion', 'databases', 'templates']
             .map(command => ({
                 command: `/${command}`,
                 description: localize(`help.command.${command}`, null, Language.ENGLISH)
@@ -212,12 +227,7 @@ const InputType = require('./app/InputType');
                         alias: list.alias
                     })).join('\n')
                     : ctx.state.localize('command.info.none'),
-                templates: templates.length > 0
-                    ? '\n' + templates.map(template => ctx.state.localize('command.info.template', {
-                        order: template.order,
-                        pattern: new PatternStringifier().stringify(template.pattern)
-                    })).join('\n')
-                    : ctx.state.localize('command.info.none'),
+                templates: formatTemplates(templates, ctx.state.localize),
             })
         );
     });
@@ -227,29 +237,134 @@ const InputType = require('./app/InputType');
         userSessionManager.setPhase(ctx.state.userId, phases.notion.token);
     });
 
-    bot.command('database', withUser(), withNotion(), async (ctx) => {
-        await ctx.reply(ctx.state.localize('command.database.link'));
+    bot.command('databases', withUser(), withNotion(), async (ctx) => {
+        await ctx.reply(
+            ctx.state.localize('command.databases.chooseAction'),
+            Markup.inlineKeyboard([
+                Markup.button.callback(ctx.state.localize('command.databases.actions.add'), 'databases:add'),
+                // Markup.button.callback(ctx.state.localize('command.databases.actions.edit'), 'databases:edit'),
+                Markup.button.callback(ctx.state.localize('command.databases.actions.delete'), 'databases:delete'),
+            ], { columns: 1 })
+        );
+    });
+
+    bot.command('templates', withUser(), withNotion(), async (ctx) => {
+        const TEMPLATES_REORDER_REGEX = /\/templates reorder\n(.+)/s;
+
+        if (TEMPLATES_REORDER_REGEX.test(ctx.message.text)) {
+            const [_, match] = ctx.message.text.match(TEMPLATES_REORDER_REGEX);
+
+            const patterns = match.split('\n').filter(Boolean);
+            const templates = await storage.findTemplatesByUserId(ctx.state.userId);
+
+            let partialSuccess = false;
+            let order = 0;
+            for (const pattern of patterns) {
+                const existingTemplate = templates.find(t => t.pattern === pattern);
+                if (!existingTemplate) {
+                    partialSuccess = true;
+                    continue;
+                }
+
+                order++;
+                await storage.storeTemplate(existingTemplate.clone({ order }))
+            }
+
+            for (const template of templates) {
+                if (patterns.includes(template.pattern)) continue;
+                partialSuccess = true;
+
+                order++;
+                await storage.storeTemplate(template.clone({ order }))
+            }
+
+            const updatedTemplates = await storage.findTemplatesByUserId(ctx.state.userId);
+
+            if (partialSuccess) {
+                await ctx.reply(
+                    ctx.state.localize('command.templates.reorder.partialSuccess', {
+                        templates: formatTemplates(updatedTemplates, ctx.state.localize)
+                    })
+                );
+            } else {
+                await ctx.reply(
+                    ctx.state.localize('command.templates.reorder.success', {
+                        templates: formatTemplates(updatedTemplates, ctx.state.localize)
+                    })
+                );
+            }
+
+            return;
+        }
+
+        await ctx.reply(
+            ctx.state.localize('command.templates.chooseAction'),
+            Markup.inlineKeyboard([
+                Markup.button.callback(ctx.state.localize('command.templates.actions.add'), 'templates:add'),
+                Markup.button.callback(ctx.state.localize('command.templates.actions.reorder'), 'templates:reorder'),
+                // Markup.button.callback(ctx.state.localize('command.templates.actions.edit'), 'templates:edit'),
+                Markup.button.callback(ctx.state.localize('command.templates.actions.delete'), 'templates:delete'),
+            ], { columns: 1 })
+        );
+    });
+
+    bot.action('databases:add', withUser(), withNotion(), async (ctx) => {
+        await ctx.answerCbQuery();
+
+        await Promise.all([
+            ctx.deleteMessage(),
+            ctx.reply(ctx.state.localize('command.databases.add.link'))
+        ]);
+
         userSessionManager.setPhase(ctx.state.userId, phases.database.link);
     });
 
-    bot.command('template', withUser(), withNotion(), async (ctx) => {
+    bot.action('templates:add', withUser(), withNotion(), async (ctx) => {
+        await ctx.answerCbQuery();
+        await ctx.deleteMessage();
+
         userSessionManager.context(ctx.state.userId).defaultFields = [];
         
         const databases = await storage.findDatabasesByUserId(ctx.state.userId);
         if (databases.length > 0) {
             await ctx.reply(
-                ctx.state.localize('command.template.chooseDatabase'),
+                ctx.state.localize('command.templates.add.chooseDatabase'),
                 Markup.inlineKeyboard([
                     ...databases.map(database => Markup.button.callback(database.alias, 'template:database:' + database.alias)),
-                    Markup.button.callback(ctx.state.localize('command.template.skipDatabase'), 'template:skip-database'),
+                    Markup.button.callback(ctx.state.localize('command.templates.add.skipDatabase'), 'template:skip-database'),
                 ], { columns: 2 })
             );
 
             userSessionManager.setPhase(ctx.state.userId, phases.template.databaseAlias);
         } else {
-            await ctx.reply(ctx.state.localize('command.template.sendTemplate'));
+            await ctx.reply(ctx.state.localize('command.templates.add.sendTemplate'));
             userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
         }
+    });
+
+    bot.action('templates:reorder', withUser(), withNotion(), async (ctx) => {
+        await ctx.answerCbQuery();
+
+        const templates = await storage.findTemplatesByUserId(ctx.state.userId);
+
+        const languageMap = {
+            [Language.ENGLISH]: 'en',
+            [Language.RUSSIAN]: 'ru',
+            [Language.UKRAINIAN]: 'uk',
+        };
+
+        const language = languageMap[ctx.state.user.language] ?? 'en';
+
+        const link = new URL(`${FRONTEND_DOMAIN}/${language}/manager`);
+        link.searchParams.set('templates', encodeTemplates(templates.map(t => ({ pattern: t.pattern }))));
+
+        await Promise.all([
+            ctx.deleteMessage(),
+            ctx.reply(
+                ctx.state.localize('command.templates.reorder.link', { link: link.toString() }),
+                { parse_mode: 'Markdown' }
+            )
+        ]);
     });
 
     bot.action(/template:database:(.+)/, withUser(), withPhase(phases.template.databaseAlias, async (ctx) => {
@@ -259,13 +374,13 @@ const InputType = require('./app/InputType');
         userSessionManager.context(ctx.state.userId)
             .defaultFields.push(new Field({ inputType: InputType.DATABASE, value: databaseAlias }));
 
-        await ctx.reply(ctx.state.localize('command.template.databaseChosen', { database: databaseAlias }));
+        await ctx.reply(ctx.state.localize('command.templates.add.databaseChosen', { database: databaseAlias }));
         userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
     }));
 
     bot.action('template:skip-database', withUser(), withPhase(phases.template.databaseAlias, async (ctx) => {
         await ctx.answerCbQuery();
-        await ctx.reply(ctx.state.localize('command.template.sendTemplate'));
+        await ctx.reply(ctx.state.localize('command.templates.add.sendTemplate'));
         userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
     }));
 
@@ -320,20 +435,20 @@ const InputType = require('./app/InputType');
 
             const notionDatabaseId = notionDatabaseIdFromUrl(ctx.message.text);
             if (!notionDatabaseId) {
-                await ctx.reply(ctx.state.localize('command.database.invalidLink'));
+                await ctx.reply(ctx.state.localize('command.databases.add.invalidLink'));
                 return;
             }
 
             userSessionManager.context(ctx.state.userId).notionDatabaseId = notionDatabaseId;
             userSessionManager.setPhase(ctx.state.userId, phases.database.alias);
-            await ctx.reply(ctx.state.localize('command.database.alias', { match: notionDatabaseId }));
+            await ctx.reply(ctx.state.localize('command.databases.add.alias', { match: notionDatabaseId }));
         }),
         withPhase(phases.database.alias, async (ctx) => {
             if (!('text' in ctx.message)) return;
 
             const alias = databaseAlias(ctx.message.text);
             if (!alias) {
-                await ctx.reply(ctx.state.localize('command.database.invalidAlias'));
+                await ctx.reply(ctx.state.localize('command.databases.add.invalidAlias'));
                 return;
             }
 
@@ -347,7 +462,7 @@ const InputType = require('./app/InputType');
             );
 
             userSessionManager.reset(ctx.state.userId);
-            await ctx.reply(ctx.state.localize('command.database.added', { alias }));
+            await ctx.reply(ctx.state.localize('command.databases.add.added', { alias }));
         }),
         // Patterns
         withPhase(phases.template.pattern, async (ctx) => {
@@ -365,14 +480,14 @@ const InputType = require('./app/InputType');
             );
 
             userSessionManager.reset(ctx.state.userId);
-            await ctx.reply(ctx.state.localize('command.template.added'));
+            await ctx.reply(ctx.state.localize('command.templates.add.added'));
         }),
         // Handle message
         withNotion(),
         withPhase(null, async (ctx) => {
             if (!('text' in ctx.message)) return;
             if (ctx.message.text.startsWith('/')) return;
-            
+
             const { userId } = ctx.state;
 
             /** @type {import('@notionhq/client').Client} */
@@ -387,7 +502,7 @@ const InputType = require('./app/InputType');
             for (const template of templates) {
                 const result = patternMatcher.match(
                     ctx.message.text,
-                    template.pattern,
+                    new PatternBuilder().build(template.pattern),
                     entryMatchers,
                 );
 
@@ -509,6 +624,17 @@ const InputType = require('./app/InputType');
     bot.catch(async (error) => {
         await logError(error);
     });
+
+    function formatTemplates(templates, localize) {
+        return templates.length > 0
+            ? '\n' + templates.map(
+                template => localize('output.templates.template', {
+                    order: template.order,
+                    pattern: template.pattern
+                })
+            ).join('\n')
+            : localize('output.templates.none');
+    }
 
     function notionDatabaseIdFromUrl(link) {
         try {

@@ -2,7 +2,7 @@ class Template {
     /**
      * @param {{
      *     userId: string,
-     *     pattern: any[],
+     *     pattern: string,
      *     order?: number | null,
      *     defaultFields?: import('../fields/Field')[]
      * }} attributes
