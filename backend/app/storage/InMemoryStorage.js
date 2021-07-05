@@ -55,6 +55,13 @@ class InMemoryStorage {
         return telegramAccount;
     }
 
+    async deleteTemplateByPattern(pattern) {
+        const index = this._templates.findIndex(t => t.pattern === pattern);
+        if (index === -1) return;
+
+        this._templates.splice(index, 1);
+    }
+
     async findTelegramAccount(telegramUserId) {
         return this._telegramAccounts.find(a => a.telegramUserId === telegramUserId) || null;
     }

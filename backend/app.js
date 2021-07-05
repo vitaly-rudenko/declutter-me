@@ -443,6 +443,57 @@ function encodeTemplates(templates) {
         }
     });
 
+    bot.action('templates:delete', withUser(), withNotion(), async (ctx) => {
+        await ctx.answerCbQuery();
+
+        const templates = await storage.findTemplatesByUserId(ctx.state.userId);
+
+        await Promise.all([
+            ctx.deleteMessage(),
+            ctx.reply(
+                ctx.state.localize('command.templates.delete.chooseTemplate'),
+                Markup.inlineKeyboard([
+                    ...templates.map((template, i) => Markup.button.callback(
+                        template.pattern,
+                        `templates:delete:template:${i}`
+                    )),
+                    Markup.button.callback(
+                        ctx.state.localize('command.templates.delete.cancel'),
+                        'templates:delete:cancel'
+                    ),
+                ], { columns: 1 })
+            )
+        ]);
+    });
+
+    bot.action(/templates:delete:template:(.+)/, withUser(), withPhase(null, async (ctx) => {
+        await ctx.answerCbQuery();
+        
+        const index = Number(ctx.match[1]);
+        const templates = await storage.findTemplatesByUserId(ctx.state.userId);
+        const template = templates[index];
+
+        if (!template) {
+            return;
+        }
+
+        await storage.deleteTemplateByPattern(template.pattern);
+
+        await Promise.all([
+            ctx.deleteMessage(),
+            ctx.reply(ctx.state.localize('command.templates.delete.deleted', { template: template.pattern })),
+        ]);
+    }));
+
+    bot.action('templates:delete:cancel', withUser(), withNotion(), async (ctx) => {
+        await ctx.answerCbQuery();
+
+        await Promise.all([
+            ctx.deleteMessage(),
+            ctx.reply(ctx.state.localize('command.templates.delete.cancelled'))
+        ]);
+    });
+
     bot.action('templates:reorder', withUser(), withNotion(), async (ctx) => {
         await ctx.answerCbQuery();
 

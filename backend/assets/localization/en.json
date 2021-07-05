@@ -108,6 +108,12 @@
                 ],
                 "added": "Template has been added!"
             },
+            "delete": {
+                "chooseTemplate": "Got it, select a template to delete:",
+                "cancel": "[cancel]",
+                "cancelled": "Okay, leaving your templates untouched 😌",
+                "deleted": "🗑 Template \"{template}\" has been deleted."
+            },
             "reorder": {
                 "link": [
                     "🔗 Follow the link to reorder your templates:",
