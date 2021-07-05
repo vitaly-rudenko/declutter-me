@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { stripIndent } = require('common-tags');
 const InputType = require('../app/InputType');
 const PatternBuilder = require('../app/PatternBuilder');
 const { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } = require('../app/TokenType');
@@ -242,6 +243,38 @@ describe('PatternBuilder', () => {
                         { type: VARIABLE, value: 'My Tag', inputType: InputType.WORD },
                     ] },
                 ]);
+        });
+
+        it('should build multiline patterns properly', () => {
+            expect(patternBuilder.build(stripIndent`
+                Contact: {Name:word}[ {Surname:word}][
+                Phone: {Phone:phone}]
+                Email: {Email:email}
+            `)).to.deep.eq([
+                { type: TEXT, value: 'contact: ' },
+                { type: VARIABLE, value: 'Name', inputType: InputType.WORD },
+                { type: OPTIONAL, value: [
+                    { type: TEXT, value: ' ' },
+                    { type: VARIABLE, value: 'Surname', inputType: InputType.WORD },
+                ] },
+                { type: OPTIONAL, value: [
+                    { type: TEXT, value: '\nphone: ' },
+                    { type: VARIABLE, value: 'Phone', inputType: InputType.PHONE },
+                ] },
+                { type: TEXT, value: '\nemail: ' },
+                { type: VARIABLE, value: 'Email', inputType: InputType.EMAIL },
+            ]);
+
+            expect(patternBuilder.build(stripIndent`
+                Hello( world|
+                world)
+            `)).to.deep.eq([
+                { type: TEXT, value: 'hello' },
+                { type: VARIATIONAL, value: [
+                    [{ type: TEXT, value: ' world' }],
+                    [{ type: TEXT, value: '\nworld' }],
+                ] },
+            ]);
         });
     });
 });

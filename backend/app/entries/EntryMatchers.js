@@ -18,6 +18,8 @@ const InputTypeScore = {
     [InputType.NUMBER]: 3,
 };
 
+const WORD_BREAK_REGEX = /( |\n)/;
+
 class EntryMatchers {
     /** @param {{ dateParser }} dependencies */
     constructor({ dateParser }) {
@@ -112,7 +114,7 @@ class EntryMatchers {
             input = split(input, nextToken.value)[0];
         }
 
-        const result = split(input, ' ')[0];
+        const result = split(input, WORD_BREAK_REGEX)[0];
 
         if (result.length > 0) {
             return result;
@@ -122,7 +124,7 @@ class EntryMatchers {
     }
 
     _email(input) {
-        input = split(input, ' ')[0];
+        input = split(input, WORD_BREAK_REGEX)[0];
 
         if (EMAIL_REGEX.test(input)) {
             return input;
@@ -132,7 +134,7 @@ class EntryMatchers {
     }
 
     _phone(input) {
-        input = split(input, ' ')[0];
+        input = split(input, WORD_BREAK_REGEX)[0];
 
         if (PHONE_REGEX.test(input)) {
             return input;
@@ -142,7 +144,7 @@ class EntryMatchers {
     }
 
     _url(input) {
-        input = split(input, ' ')[0];
+        input = split(input, WORD_BREAK_REGEX)[0];
 
         if (this._isValidUrl(input)) {
             return input;
@@ -171,7 +173,7 @@ class EntryMatchers {
 
     // TODO: add support for natural language numbers
     _number(input) {
-        input = split(input, ' ')[0];
+        input = split(input, WORD_BREAK_REGEX)[0];
 
         if (!Number.isNaN(Number(input))) {
             return input;

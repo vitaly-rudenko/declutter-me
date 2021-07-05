@@ -1,3 +1,4 @@
+const { stripIndent } = require('common-tags');
 const { expect } = require('chai');
 const PatternMatcher = require('../../app/PatternMatcher');
 const PatternBuilder = require('../../app/PatternBuilder');
@@ -496,6 +497,66 @@ describe('EntryMatchers', () => {
                     new Field({ name: '2', inputType: InputType.WORD, value: '2' }),
                     new Field({ name: '3', inputType: InputType.WORD, value: '3' }),
                 ]
+            });
+        });
+
+        describe('[multiline patterns]', () => {
+            it('should match simple multiline patterns properly', () => {
+                const pattern = patternBuilder.build(stripIndent`
+                    {Name:word} {Surname:word}
+                    {Phone:phone}
+                    {Email:email}
+                `);
+
+                expect(
+                    patternMatcher.match(stripIndent`
+                        Jon Snow
+                        +380123456789
+                        jon.snow@example.com
+                    `, pattern, matchers)
+                ).to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Name', inputType: InputType.WORD, value: 'Jon' }),
+                        new Field({ name: 'Surname', inputType: InputType.WORD, value: 'Snow' }),
+                        new Field({ name: 'Phone', inputType: InputType.PHONE, value: '+380123456789' }),
+                        new Field({ name: 'Email', inputType: InputType.EMAIL, value: 'jon.snow@example.com' }),
+                    ]
+                });
+            });
+
+            it('should match complex multiline patterns properly', () => {
+                const pattern = patternBuilder.build(stripIndent`
+                    Contact: {Name:word}[ {Surname:word}][
+                    Phone: {Phone:phone}]
+                    Email: {Email:email}
+                `);
+
+                expect(
+                    patternMatcher.match(stripIndent`
+                        Contact: Jon
+                        Email: jon.snow@example.com
+                    `, pattern, matchers)
+                ).to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Name', inputType: InputType.WORD, value: 'Jon' }),
+                        new Field({ name: 'Email', inputType: InputType.EMAIL, value: 'jon.snow@example.com' }),
+                    ]
+                });
+
+                expect(
+                    patternMatcher.match(stripIndent`
+                        Contact: Jon Snow
+                        Phone: +380123456789
+                        Email: jon.snow@example.com
+                    `, pattern, matchers)
+                ).to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Name', inputType: InputType.WORD, value: 'Jon' }),
+                        new Field({ name: 'Surname', inputType: InputType.WORD, value: 'Snow' }),
+                        new Field({ name: 'Phone', inputType: InputType.PHONE, value: '+380123456789' }),
+                        new Field({ name: 'Email', inputType: InputType.EMAIL, value: 'jon.snow@example.com' }),
+                    ]
+                });
             });
         });
     });
