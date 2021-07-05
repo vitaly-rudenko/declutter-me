@@ -61,7 +61,6 @@ function encodeTemplates(templates) {
 
     function createTemplateManagerLink({ templates, language }) {
         const linkLanguage = linkLanguageMap[language] ?? 'en';
-
         const link = new URL(`${FRONTEND_DOMAIN}/${linkLanguage}/manager`);
         link.searchParams.set('templates', encodeTemplates(templates.map(t => ({ pattern: t.pattern }))));
         
@@ -70,11 +69,17 @@ function encodeTemplates(templates) {
 
     function createTemplateBuilderLink({ pattern = null, test = null, language }) {
         const linkLanguage = linkLanguageMap[language] ?? 'en';
-
         const link = new URL(`${FRONTEND_DOMAIN}/${linkLanguage}/builder`);
         if (pattern) link.searchParams.set('pattern', pattern);
         if (test) link.searchParams.set('test', test);
         
+        return link.toString();
+    }
+
+    function createTimezoneCheckerLink({ language }) {
+        const linkLanguage = linkLanguageMap[language] ?? 'en';
+        const link = new URL(`${FRONTEND_DOMAIN}/${linkLanguage}/timezone`);
+
         return link.toString();
     }
 
@@ -217,7 +222,7 @@ function encodeTemplates(templates) {
 
             await ctx.reply(
                 localize('command.start.timezone', {
-                    timezoneCheckerLink: process.env.TIMEZONE_CHECKER_LINK,
+                    timezoneCheckerLink: createTimezoneCheckerLink({ language }),
                 }, language),
                 { disable_web_page_preview: true }
             );

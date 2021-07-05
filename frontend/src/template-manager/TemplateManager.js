@@ -70,7 +70,7 @@ export const TemplateManager = () => {
         }
 
         clearTimeout(isCopiedTimeoutId);
-        setIsCopiedTimeoutId(setTimeout(() => setIsCopied(false), 5000));
+        setIsCopiedTimeoutId(setTimeout(() => setIsCopied(false), 3000));
     }, [copyValue, isCopiedTimeoutId]);
 
     const onDragEnd = useCallback((result) => {

@@ -76,5 +76,9 @@
     "tester": {
         "messagePlaceholder": "Повідомлення в Telegram",
         "database": "База даних"
+    },
+    "timezone": {
+        "copy": "Скопіювати",
+        "copied": "Скопійовано!"
     }
 }

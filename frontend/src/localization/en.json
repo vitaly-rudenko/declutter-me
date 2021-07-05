@@ -136,5 +136,9 @@
     "tester": {
         "messagePlaceholder": "Telegram message",
         "database": "Database"
+    },
+    "timezone": {
+        "copy": "Copy",
+        "copied": "Copied"
     }
 }

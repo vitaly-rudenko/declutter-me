@@ -57,7 +57,7 @@ export const TemplateBuilder = () => {
         }
 
         clearTimeout(isCopiedTimeoutId);
-        setIsCopiedTimeoutId(setTimeout(() => setIsCopied(false), 5000));
+        setIsCopiedTimeoutId(setTimeout(() => setIsCopied(false), 3000));
     }, [rawPattern, isCopiedTimeoutId]);
 
     const useExample = useCallback(() => {
