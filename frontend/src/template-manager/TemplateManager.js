@@ -21,7 +21,7 @@ function encodeTemplates(templates) {
     return base64url.fromBase64(
         Buffer.from(
             pako.deflate(
-                JSON.stringify(templates)
+                JSON.stringify(templates.map(t => JSON.stringify(t)))
             )
         ).toString('base64')
     );
@@ -41,7 +41,6 @@ export const TemplateManager = () => {
         const rawTemplates = params.get('templates');
         try {
             const result = decodeTemplates(rawTemplates);
-            console.log(result)
             if (!Array.isArray(result)) {
                 return [];
             }
@@ -56,7 +55,7 @@ export const TemplateManager = () => {
     const [templates, setTemplates] = useState(defaultTemplates);
 
     const [isCopied, setIsCopied] = useState(false);
-    const copyValue = useMemo(() => `/templates reorder${templates.map(t => '\n' + t.pattern).join('')}`, [templates]);
+    const copyValue = useMemo(() => `/templates reorder${templates.map(t => '\n' + t.pattern.replace(/\n/g, '\\n')).join('')}`, [templates]);
     const [isCopiedTimeoutId, setIsCopiedTimeoutId] = useState(null)
     const copyFieldRef = useRef(null)
     const copy = useCallback(() => {

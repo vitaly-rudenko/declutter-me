@@ -306,66 +306,6 @@ function encodeTemplates(templates) {
         );
     });
 
-    bot.command('templates', withUser(), withNotion(), async (ctx) => {
-        const TEMPLATES_REORDER_REGEX = /\/templates reorder\n(.+)/s;
-
-        if (TEMPLATES_REORDER_REGEX.test(ctx.message.text)) {
-            const [_, match] = ctx.message.text.match(TEMPLATES_REORDER_REGEX);
-
-            const patterns = match.split('\n').filter(Boolean);
-            const templates = await storage.findTemplatesByUserId(ctx.state.userId);
-
-            let partialSuccess = false;
-            let order = 0;
-            for (const pattern of patterns) {
-                const existingTemplate = templates.find(t => t.pattern === pattern);
-                if (!existingTemplate) {
-                    partialSuccess = true;
-                    continue;
-                }
-
-                order++;
-                await storage.storeTemplate(existingTemplate.clone({ order }))
-            }
-
-            for (const template of templates) {
-                if (patterns.includes(template.pattern)) continue;
-                partialSuccess = true;
-
-                order++;
-                await storage.storeTemplate(template.clone({ order }))
-            }
-
-            const updatedTemplates = await storage.findTemplatesByUserId(ctx.state.userId);
-
-            if (partialSuccess) {
-                await ctx.reply(
-                    ctx.state.localize('command.templates.reorder.partialSuccess', {
-                        templates: formatTemplates(updatedTemplates, ctx.state.localize)
-                    })
-                );
-            } else {
-                await ctx.reply(
-                    ctx.state.localize('command.templates.reorder.success', {
-                        templates: formatTemplates(updatedTemplates, ctx.state.localize)
-                    })
-                );
-            }
-
-            return;
-        }
-
-        await ctx.reply(
-            ctx.state.localize('command.templates.chooseAction'),
-            Markup.inlineKeyboard([
-                Markup.button.callback(ctx.state.localize('command.templates.actions.add'), 'templates:add'),
-                Markup.button.callback(ctx.state.localize('command.templates.actions.reorder'), 'templates:reorder'),
-                // Markup.button.callback(ctx.state.localize('command.templates.actions.edit'), 'templates:edit'),
-                Markup.button.callback(ctx.state.localize('command.templates.actions.delete'), 'templates:delete'),
-            ], { columns: 1 })
-        );
-    });
-
     bot.action('databases:add', withUser(), withNotion(), async (ctx) => {
         await ctx.answerCbQuery();
 
@@ -420,6 +360,66 @@ function encodeTemplates(templates) {
             ctx.reply(ctx.state.localize('command.databases.delete.deleted', { database: databaseAlias })),
         ]);
     }));
+
+    bot.command('templates', withUser(), withNotion(), async (ctx) => {
+        const TEMPLATES_REORDER_REGEX = /\/templates reorder\n(.+)/s;
+
+        if (TEMPLATES_REORDER_REGEX.test(ctx.message.text)) {
+            const [_, match] = ctx.message.text.match(TEMPLATES_REORDER_REGEX);
+
+            const patterns = match.split('\n').filter(Boolean).map(p => p.replace(/\\n/g, '\n'));
+            const templates = await storage.findTemplatesByUserId(ctx.state.userId);
+
+            let partialSuccess = false;
+            let order = 0;
+            for (const pattern of patterns) {
+                const existingTemplate = templates.find(t => t.pattern === pattern);
+                if (!existingTemplate) {
+                    partialSuccess = true;
+                    continue;
+                }
+
+                order++;
+                await storage.storeTemplate(existingTemplate.clone({ order }))
+            }
+
+            for (const template of templates) {
+                if (patterns.includes(template.pattern)) continue;
+                partialSuccess = true;
+
+                order++;
+                await storage.storeTemplate(template.clone({ order }))
+            }
+
+            const updatedTemplates = await storage.findTemplatesByUserId(ctx.state.userId);
+
+            if (partialSuccess) {
+                await ctx.reply(
+                    ctx.state.localize('command.templates.reorder.partialSuccess', {
+                        templates: formatTemplates(updatedTemplates, ctx.state.localize)
+                    })
+                );
+            } else {
+                await ctx.reply(
+                    ctx.state.localize('command.templates.reorder.success', {
+                        templates: formatTemplates(updatedTemplates, ctx.state.localize)
+                    })
+                );
+            }
+
+            return;
+        }
+
+        await ctx.reply(
+            ctx.state.localize('command.templates.chooseAction'),
+            Markup.inlineKeyboard([
+                Markup.button.callback(ctx.state.localize('command.templates.actions.add'), 'templates:add'),
+                Markup.button.callback(ctx.state.localize('command.templates.actions.reorder'), 'templates:reorder'),
+                // Markup.button.callback(ctx.state.localize('command.templates.actions.edit'), 'templates:edit'),
+                Markup.button.callback(ctx.state.localize('command.templates.actions.delete'), 'templates:delete'),
+            ], { columns: 1 })
+        );
+    });
 
     bot.action('templates:add', withUser(), withNotion(), async (ctx) => {
         await ctx.answerCbQuery();
@@ -644,12 +644,11 @@ function encodeTemplates(templates) {
         withPhase(phases.template.pattern, async (ctx) => {
             if (!('text' in ctx.message)) return;
 
-            const pattern = new PatternBuilder().build(ctx.message.text);
             const { defaultFields } = userSessionManager.context(ctx.state.userId);
 
             await storage.storeTemplate(
                 new Template({
-                    pattern,
+                    pattern: ctx.message.text,
                     defaultFields,
                     userId: ctx.state.userId,
                 })
