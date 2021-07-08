@@ -1,19 +1,15 @@
 class NotionDatabase {
     /**
      * @param {{
-     *     alias: string,
      *     userId: string,
+     *     alias: string,
      *     notionDatabaseId: string,
      * }} attributes
      */
-    constructor({ alias, userId, notionDatabaseId }) {
+    constructor({ userId, alias, notionDatabaseId }) {
         this._userId = userId;
         this._alias = alias;
         this._notionDatabaseId = notionDatabaseId;
-    }
-
-    get type() {
-        return 'notion';
     }
 
     get alias() {

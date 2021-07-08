@@ -2,8 +2,6 @@ class NotionAccount {
     constructor({ userId, token }) {
         this._userId = userId;
         this._token = token;
-        this._notesDatabaseId = null;
-        this._remindersDatabaseId = null;
     }
 
     get userId() {
