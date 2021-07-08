@@ -558,6 +558,33 @@ describe('EntryMatchers', () => {
                     ]
                 });
             });
+
+            it('should match multiline text', () => {
+                const pattern = patternBuilder.build('Diary:[ ][\n]{entry:text}');
+
+                expect(
+                    patternMatcher.match(stripIndent`
+                        Diary: Today was hard.
+                        I hope tomorrow will be easier!
+                    `, pattern, matchers)
+                ).to.deep.eq({
+                    fields: [
+                        new Field({ name: 'entry', inputType: InputType.TEXT, value: 'Today was hard.\nI hope tomorrow will be easier!' }),
+                    ]
+                });
+
+                expect(
+                    patternMatcher.match(stripIndent`
+                        Diary:
+                        Today was hard.
+                        I hope tomorrow will be easier!
+                    `, pattern, matchers)
+                ).to.deep.eq({
+                    fields: [
+                        new Field({ name: 'entry', inputType: InputType.TEXT, value: 'Today was hard.\nI hope tomorrow will be easier!' }),
+                    ]
+                });
+            });
         });
     });
 
