@@ -282,7 +282,8 @@ class SqliteStorage {
             .prepare(`
                 SELECT *
                 FROM templates
-                WHERE user_id = ?;
+                WHERE user_id = ?
+                ORDER BY \`order\` ASC;
             `)
             .all(userId)
             .map(item => this.deserializeTemplate(item))

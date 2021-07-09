@@ -19,6 +19,10 @@ function useMemoUnlessFailed(callback, dependencies) {
     }, [callback, ...dependencies]);
 }
 
+function formatPattern(pattern) {
+    return pattern.replace(/\n/g, '\\n')
+}
+
 export const TemplateTester = ({ test, setTest, rawPatterns }) => {
     const { localize } = useLocalize();
     const isTesting = useMemo(() => test && rawPatterns?.length > 0, [test, rawPatterns]);
@@ -102,7 +106,7 @@ export const TemplateTester = ({ test, setTest, rawPatterns }) => {
                 </Table>
             </TableContainer>
             {rawPatterns.length > 1 && <Paper classes={{ root: 'template-tester__template' }} variant="outlined">
-                {`${rawPatterns.indexOf(rawPattern) + 1}) ${rawPattern}`}
+                {`${rawPatterns.indexOf(rawPattern) + 1}) ${formatPattern(rawPattern)}`}
             </Paper>}
         </>}
     </>

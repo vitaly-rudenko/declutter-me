@@ -187,5 +187,26 @@ describe('SqliteStorage', () => {
             .to.deep.eq([
                 new Template({ userId: 'fake-user-id-2', pattern: 'fake-pattern-3', order: 6 }),
             ]);
+    });
+
+    it('should order templates by their order', async () => {
+        await sqliteStorage.storeTemplate(new Template({ userId: 'fake-user-id', pattern: 'fake-pattern-1', order: 7 }));
+        await sqliteStorage.storeTemplate(new Template({ userId: 'fake-user-id', pattern: 'fake-pattern-2', order: 3 }));
+        await sqliteStorage.storeTemplate(new Template({ userId: 'fake-user-id', pattern: 'fake-pattern-3', order: 2 }));
+        await sqliteStorage.storeTemplate(new Template({ userId: 'fake-user-id', pattern: 'fake-pattern-4', order: 1 }));
+        await sqliteStorage.storeTemplate(new Template({ userId: 'fake-user-id', pattern: 'fake-pattern-5', order: 5 }));
+        await sqliteStorage.storeTemplate(new Template({ userId: 'fake-user-id', pattern: 'fake-pattern-6', order: 4 }));
+        await sqliteStorage.storeTemplate(new Template({ userId: 'fake-user-id', pattern: 'fake-pattern-7', order: 6 }));
+
+        expect(await sqliteStorage.findTemplatesByUserId('fake-user-id'))
+            .to.deep.eq([
+                new Template({ userId: 'fake-user-id', pattern: 'fake-pattern-4', order: 1 }),
+                new Template({ userId: 'fake-user-id', pattern: 'fake-pattern-3', order: 2 }),
+                new Template({ userId: 'fake-user-id', pattern: 'fake-pattern-2', order: 3 }),
+                new Template({ userId: 'fake-user-id', pattern: 'fake-pattern-6', order: 4 }),
+                new Template({ userId: 'fake-user-id', pattern: 'fake-pattern-5', order: 5 }),
+                new Template({ userId: 'fake-user-id', pattern: 'fake-pattern-7', order: 6 }),
+                new Template({ userId: 'fake-user-id', pattern: 'fake-pattern-1', order: 7 }),
+            ]);
     })
 });

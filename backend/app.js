@@ -397,7 +397,7 @@ function encodeTemplates(templates) {
                 ctx.state.localize('command.templates.delete.chooseTemplate'),
                 Markup.inlineKeyboard([
                     ...templates.map((template, i) => Markup.button.callback(
-                        template.pattern,
+                        formatPattern(template.pattern),
                         `templates:delete:template:${i}`
                     )),
                     Markup.button.callback(
@@ -424,7 +424,7 @@ function encodeTemplates(templates) {
 
         await Promise.all([
             ctx.deleteMessage(),
-            ctx.reply(ctx.state.localize('command.templates.delete.deleted', { template: template.pattern })),
+            ctx.reply(ctx.state.localize('command.templates.delete.deleted', { template: formatPattern(template.pattern) })),
         ]);
     }));
 
@@ -748,10 +748,14 @@ function encodeTemplates(templates) {
             ? '\n' + templates.map(
                 template => localize('output.templates.template', {
                     order: template.order,
-                    pattern: template.pattern
+                    pattern: formatPattern(template.pattern)
                 })
             ).join('\n')
             : localize('output.templates.none');
+    }
+
+    function formatPattern(pattern) {
+        return pattern.replace(/\n/g, '\\n')
     }
 
     function notionDatabaseIdFromUrl(link) {

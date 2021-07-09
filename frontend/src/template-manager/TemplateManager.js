@@ -31,6 +31,10 @@ function decodeTemplates(templates) {
     return JSON.parse(pako.inflate(base64url.toBuffer(templates), { to: 'string' }));
 }
 
+function formatPattern(pattern) {
+    return pattern.replace(/\n/g, '\\n')
+}
+
 export const TemplateManager = () => {
     const { localize } = useLocalize();
     const { pathname, search } = useLocation();
@@ -122,7 +126,7 @@ export const TemplateManager = () => {
                                             <ListItem component={Paper} variant="outlined" classes={{ root: 'template-manager__template-list-item' }}>
                                                 <ListItemText
                                                     classes={{ primary: 'template-manager__template-list-item--primary' }}
-                                                    primary={`${index + 1}) ${template.pattern}`}
+                                                    primary={`${index + 1}) ${formatPattern(template.pattern)}`}
                                                 />
                                             </ListItem>
                                         </div>

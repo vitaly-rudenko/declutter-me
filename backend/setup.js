@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+const fs = require('fs').promises
 const Template = require('./app/templates/Template');
 const NotionDatabase = require('./app/notion/NotionDatabase');
 const Field = require('./app/fields/Field');
@@ -11,6 +12,8 @@ const TelegramAccount = require('./app/telegram/TelegramAccount');
 const NotionAccount = require('./app/notion/NotionAccount');
 
 async function setup() {
+    await fs.unlink('./database.db');
+
     const storage = new SqliteStorage('database.db');
     storage.setup()
 
@@ -57,7 +60,7 @@ async function setup() {
     await storage.storeTemplate(new Template({
         userId: user.id,
         order: 5,
-        pattern: '[#{:database} ][заметка ]{заметка:text}[ #{теги:word}][ #{теги:word}][ #{теги:word}]',
+        pattern: '[#{:database}( |\n)][заметка( |\n)]{заметка:text}[( |\n)#{теги:word}][( |\n)#{теги:word}][( |\n)#{теги:word}]',
         defaultFields: [
             new Field({ inputType: InputType.DATABASE, value: 'notes' })
         ]
