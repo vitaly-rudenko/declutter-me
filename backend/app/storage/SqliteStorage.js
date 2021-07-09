@@ -37,6 +37,10 @@ class SqliteStorage {
         `).run();
 
         this._sqlite.prepare(`
+            CREATE UNIQUE INDEX unique_index ON templates (user_id, pattern);
+        `).run();
+
+        this._sqlite.prepare(`
             CREATE TABLE IF NOT EXISTS notion_accounts (
                 user_id INTEGER,
                 token TEXT
@@ -227,18 +231,26 @@ class SqliteStorage {
 
     /** @param {import('../templates/Template')} template */
     async storeTemplate(template) {
+        const order = template.order ?? (this.getMaximumTemplateOrder(template.userId) + 1)
+        const defaultFields = JSON.stringify(template.defaultFields.map(item => this.serializeField(item)))
+
         return this.deserializeTemplate(
             this._sqlite
                 .prepare(`
                     INSERT INTO templates (user_id, pattern, \`order\`, default_fields)
                     VALUES (?, ?, ?, ?)
+                    ON CONFLICT
+                    DO UPDATE
+                    SET (\`order\`, default_fields) = (?, ?)
                     RETURNING *;
                 `)
                 .get(
                     template.userId,
                     template.pattern,
-                    template.order ?? (this.getMaximumTemplateOrder(template.userId) + 1),
-                    JSON.stringify(template.defaultFields.map(item => this.serializeField(item)))
+                    order,
+                    defaultFields,
+                    order,
+                    defaultFields,
                 )
         );
     }
