@@ -122,9 +122,10 @@ class NotionEntrySerializer {
     serializeMultiSelect(values) {
         return {
             'type': 'multi_select',
-            'multi_select': values.map(value => ({
-                'name': value
-            })),
+            'multi_select': (Array.isArray(values) ? values : [values])
+                .map(value => ({
+                    'name': value
+                })),
         };
     }
 

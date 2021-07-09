@@ -1,5 +1,5 @@
 class User {
-    constructor({ id, language, timezoneOffsetMinutes }) {
+    constructor({ id = null, language, timezoneOffsetMinutes }) {
         this._id = id;
         this._language = language;
         this._timezoneOffsetMinutes = timezoneOffsetMinutes;

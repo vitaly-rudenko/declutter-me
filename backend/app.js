@@ -9,7 +9,6 @@ const phases = require('./app/phases');
 const PatternBuilder = require('./app/PatternBuilder');
 const PatternMatcher = require('./app/PatternMatcher');
 const RussianDateParser = require('./app/date-parsers/RussianDateParser');
-const InMemoryStorage = require('./app/storage/InMemoryStorage');
 const Template = require('./app/templates/Template');
 const NotionSessionManager = require('./app/notion/NotionSessionManager');
 const UserSessionManager = require('./app/users/UserSessionManager');
@@ -30,6 +29,10 @@ const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
 const NotionEntry = require('./app/notion/NotionEntry');
 const NotionProperty = require('./app/notion/NotionProperty');
 const InputType = require('./app/InputType');
+const SqliteStorage = require('./app/storage/SqliteStorage');
+const User = require('./app/users/User');
+const TelegramAccount = require('./app/telegram/TelegramAccount');
+const NotionAccount = require('./app/notion/NotionAccount');
 
 const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
 
@@ -90,62 +93,7 @@ function encodeTemplates(templates) {
         throw new Error(`Invalid language: ${language}`)
     }
 
-    const storage = new InMemoryStorage();
-    const user = await storage.createUser({ language: Language.RUSSIAN, timezoneOffsetMinutes: 3 * 60 });
-    await storage.createTelegramAccount(user.id, 56681133);
-    await storage.createNotionAccount(user.id, 'secret_sUmg2sizdQDYmfGrQ0amjXSuOv4tHTevLn4PVgcopG6');
-
-    await storage.storeTemplate(new Template({
-        userId: user.id,
-        order: 1,
-        pattern: 'купить [{количество:number} (шт[ук[и]]|гр[ам[м]]|кг|кило[грам[м]]) ]{товар:text}',
-        defaultFields: [
-            new Field({ inputType: InputType.DATABASE, value: 'shopping' })
-        ]
-    }));
-
-    await storage.storeTemplate(new Template({
-        userId: user.id,
-        order: 2,
-        pattern: 'посмотреть {название:text}[ #{тип:word}]',
-        defaultFields: [
-            new Field({ inputType: InputType.DATABASE, value: 'to_watch' })
-        ]
-    }));
-
-    await storage.storeTemplate(new Template({
-        userId: user.id,
-        order: 3,
-        pattern: '(сделать|задача) {задача:text}',
-        defaultFields: [
-            new Field({ inputType: InputType.DATABASE, value: 'todo' })
-        ]
-    }));
-
-    await storage.storeTemplate(new Template({
-        userId: user.id,
-        order: 4,
-        pattern: 'контакт {имя:word} {фамилия:word}[ {телефон:phone}][ {эл. почта:email}][ {сайт:url}]',
-        defaultFields: [
-            new Field({ inputType: InputType.DATABASE, value: 'contacts' })
-        ]
-    }));
-
-    await storage.storeTemplate(new Template({
-        userId: user.id,
-        order: 5,
-        pattern: '[#{:database} ][заметка ]{заметка:text}[ #{теги:word}][ #{теги:word}][ #{теги:word}]',
-        defaultFields: [
-            new Field({ inputType: InputType.DATABASE, value: 'notes' })
-        ]
-    }));
-
-    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'to_watch', notionDatabaseId: '3af8dfb79d18428b86419bd7a211084a' }))
-    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'notes', notionDatabaseId: 'a64b650b4036407385272f3867de44f3' }))
-    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'backup_notes', notionDatabaseId: '6ea2673f45fe428aa758da2aaf1316d7' }))
-    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'todo', notionDatabaseId: '8c83e61c0fb848ef85d6644725296a15' }))
-    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'contacts', notionDatabaseId: 'ce850d3910b24a64b5cf4f6da28738bf' }))
-    await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'shopping', notionDatabaseId: 'ca75e1d762c24d4893e2d682c1823797' }))
+    const storage = new SqliteStorage('database.db');
 
     const debugChatId = process.env.DEBUG_CHAT_ID;
 
@@ -250,11 +198,6 @@ function encodeTemplates(templates) {
     //         );
     //     }),
     // )
-
-    bot.command('reset', async (ctx) => {
-        await storage.cleanUp();
-        await ctx.reply('🧹');
-    });
 
     bot.command('info', withUser({ required: false }), withNotion({ required: false }), async (ctx) => {
         const databases = ctx.state.userId ? await storage.findDatabasesByUserId(ctx.state.userId) : [];
@@ -569,10 +512,10 @@ function encodeTemplates(templates) {
             }
 
             if (!ctx.state.telegramAccount) {
-                const user = await storage.createUser({ language, timezoneOffsetMinutes });
-                await storage.createTelegramAccount(user.id, ctx.from.id);
+                const user = await storage.createUser(new User({ language, timezoneOffsetMinutes }));
+                await storage.createTelegramAccount(new TelegramAccount({ userId: user.id, telegramUserId: ctx.from.id }));
             } else {
-                await storage.updateUser(ctx.state.userId, { language, timezoneOffsetMinutes });
+                await storage.updateUser(new User({ id: ctx.state.userId, language, timezoneOffsetMinutes }));
             }
 
             userSessionManager.reset(ctx.state.userId || ctx.from.id);
@@ -600,7 +543,7 @@ function encodeTemplates(templates) {
 
             const token = ctx.message.text;
 
-            await storage.createNotionAccount(ctx.state.userId, token);
+            await storage.createNotionAccount(new NotionAccount({ userId: ctx.state.userId, token }));
             await ctx.reply(ctx.state.localize('command.notion.allSet', { token }));
 
             userSessionManager.reset(ctx.state.userId);
@@ -663,7 +606,7 @@ function encodeTemplates(templates) {
             if (!('text' in ctx.message)) return;
             if (ctx.message.text.startsWith('/')) return;
 
-            const { userId } = ctx.state;
+            const { userId, user } = ctx.state;
 
             /** @type {import('@notionhq/client').Client} */
             const notion = ctx.state.notion;

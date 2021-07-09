@@ -1,4 +1,4 @@
-/** @param {import('../../storage/InMemoryStorage')} storage */
+/** @param {import('../../storage/SqliteStorage')} storage */
 const withUserFactory = (storage) => {
     /** @param {{ required?: boolean }} [options] */
     return ({ required = true } = {}) => {

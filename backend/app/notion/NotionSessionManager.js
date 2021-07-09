@@ -3,7 +3,7 @@ const NotionAccountNotFound = require('../errors/NotionAccountNotFound');
 const Cache = require('../storage/Cache');
 
 class NotionSessionManager {
-    /** @param {{ storage: import('../storage/InMemoryStorage') }} dependencies */
+    /** @param {{ storage: import('../storage/SqliteStorage') }} dependencies */
     constructor({ storage }) {
         this._notions = new Cache(10 * 60_000);
         this._storage = storage;
@@ -14,7 +14,7 @@ class NotionSessionManager {
             return this._notions.get(userId);
         }
 
-        const notionAccount = await this._storage.findNotionAccount(userId);
+        const notionAccount = await this._storage.findNotionAccountByUserId(userId);
         if (!notionAccount) {
             throw new NotionAccountNotFound();
         }
