@@ -1,8 +1,8 @@
-const chai = require('chai');
-const InputType = require('../../frontend/src/utils/InputType');
-const PatternMatcher = require('../app/PatternMatcher');
+import chai from 'chai';
+import { InputType } from '../../frontend/src/utils/InputType';
+import { PatternMatcher } from '../app/PatternMatcher';
 
-const { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } = require('../app/TokenType');
+import { { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } } from '../app/TokenType';
 
 const { expect } = chai;
 chai.use(require('deep-equal-in-any-order'));

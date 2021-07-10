@@ -1,4 +1,4 @@
-const TokenType = require('./TokenType');
+import { TokenType } from './TokenType';
 
 class PatternBuilder {
     build(input) {

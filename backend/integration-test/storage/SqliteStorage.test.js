@@ -1,17 +1,18 @@
-const fs = require('fs').promises;
-const path = require('path');
-const chai = require('chai');
-const User = require('../../app/users/User');
-const TelegramAccount = require('../../app/telegram/TelegramAccount');
-const NotionAccount = require('../../app/notion/NotionAccount');
-const NotionDatabase = require('../../app/notion/NotionDatabase');
-const Template = require('../../app/templates/Template');
-const Field = require('../../app/fields/Field');
-const SqliteStorage = require('../../app/storage/SqliteStorage');
-const Language = require('../../app/Language');
+import { promises as fs } from 'fs';
+import path from 'path';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised'
+import { User } from '../../app/users/User';
+import { TelegramAccount } from '../../app/telegram/TelegramAccount';
+import { NotionAccount } from '../../app/notion/NotionAccount';
+import { NotionDatabase } from '../../app/notion/NotionDatabase';
+import { Template } from '../../app/templates/Template';
+import { Field } from '../../app/fields/Field';
+import { SqliteStorage } from '../../app/storage/SqliteStorage';
+import { Language } from '../../app/Language';
 
 const { expect } = chai;
-chai.use(require('chai-as-promised'));
+chai.use(chaiAsPromised);
 
 describe('SqliteStorage', () => {
     /** @type {SqliteStorage} */

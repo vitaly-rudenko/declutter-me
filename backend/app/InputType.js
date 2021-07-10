@@ -1,4 +1,4 @@
-module.exports = {
+export const InputType = {
     DATABASE: 'database',
     TEXT: 'text',
     WORD: 'word',

@@ -1,5 +1,5 @@
-const { expect } = require('chai');
-const split = require('../../app/utils/split');
+import { { expect } } from 'chai';
+import { split } from '../../app/utils/split';
 
 describe('split()', () => {
     it('should split the string with spaces properly', () => {

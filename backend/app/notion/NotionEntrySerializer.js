@@ -1,20 +1,19 @@
-const InputType = require('../InputType');
-const fuzzyEquals = require('../utils/fuzzyEquals');
-const NotionFieldType = require('./NotionFieldType');
+import { InputType } from '../InputType';
+import { NotionFieldType } from './NotionFieldType';
 
 function last(arrayOrValue) {
     return Array.isArray(arrayOrValue) ? arrayOrValue[arrayOrValue.length - 1] : arrayOrValue;
 }
 
-class NotionEntrySerializer {
+export class NotionEntrySerializer {
     /** @param {{ dateParser }} dependencies */
     constructor({ dateParser }) {
         this._dateParser = dateParser;
     }
 
     /**
-     * @param {import('./NotionEntry')} entry
-     * @param {import('../users/User')} user
+     * @param {import('./NotionEntry').NotionEntry} entry
+     * @param {import('../users/User').User} user
      * @returns {import('@notionhq/client/build/src/api-endpoints').PagesCreateParameters}
      */
     serialize(entry, user) {
@@ -156,5 +155,3 @@ class NotionEntrySerializer {
         return dateWithTimezone.toISOString().slice(0, -1) + (timezoneOffsetMinutes >= 0 ? '+' : '-') + timezone;
     }
 }
-
-module.exports = NotionEntrySerializer;

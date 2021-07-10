@@ -1,5 +1,5 @@
-const Language = require('../Language');
-const RussianDateParser = require('./RussianDateParser');
+import { Language } from '../Language';
+import { RussianDateParser } from './RussianDateParser';
 
 class DateParserFactory {
     create(language) {

@@ -1,12 +1,12 @@
-const Sqlite = require('better-sqlite3');
-const Field = require('../fields/Field');
-const NotionAccount = require('../notion/NotionAccount');
-const NotionDatabase = require('../notion/NotionDatabase');
-const TelegramAccount = require('../telegram/TelegramAccount');
-const Template = require('../templates/Template');
-const User = require('../users/User');
+import { Sqlite } from 'better-sqlite3';
+import { Field } from '../fields/Field';
+import { NotionAccount } from '../notion/NotionAccount';
+import { NotionDatabase } from '../notion/NotionDatabase';
+import { TelegramAccount } from '../telegram/TelegramAccount';
+import { Template } from '../templates/Template';
+import { User } from '../users/User';
 
-class SqliteStorage {
+export class SqliteStorage {
     constructor(filename) {
         this._sqlite = new Sqlite(filename);
     }
@@ -56,7 +56,7 @@ class SqliteStorage {
         `).run();
     }
 
-    /** @param {import('../users/User')} user */
+    /** @param {import('../users/User').User} user */
     async createUser(user) {
         return this.deserializeUser(
             this._sqlite
@@ -70,7 +70,7 @@ class SqliteStorage {
     }
 
     
-    /** @param {import('../users/User')} user */
+    /** @param {import('../users/User').User} user */
     async updateUser(user) {
         return this.deserializeUser(
             this._sqlite
@@ -106,7 +106,7 @@ class SqliteStorage {
         });
     }
 
-    /** @param {import('../telegram/TelegramAccount')} telegramAccount */
+    /** @param {import('../telegram/TelegramAccount').TelegramAccount} telegramAccount */
     async createTelegramAccount(telegramAccount) {
         return this.deserializeTelegramAccount(
             this._sqlite
@@ -139,7 +139,7 @@ class SqliteStorage {
         });
     }
 
-    /** @param {import('../notion/NotionAccount')} notionAccount */
+    /** @param {import('../notion/NotionAccount').NotionAccount} notionAccount */
     async createNotionAccount(notionAccount) {
         return this.deserializeNotionAccount(
             this._sqlite
@@ -173,7 +173,7 @@ class SqliteStorage {
     }
 
 
-    /** @param {import('../notion/NotionDatabase')} notionDatabase */
+    /** @param {import('../notion/NotionDatabase').NotionDatabase} notionDatabase */
     async storeDatabase(notionDatabase) {
         return this.deserializeDatabase(
             this._sqlite
@@ -229,7 +229,7 @@ class SqliteStorage {
         });
     }
 
-    /** @param {import('../templates/Template')} template */
+    /** @param {import('../templates/Template').Template} template */
     async storeTemplate(template) {
         const order = template.order ?? (this.getMaximumTemplateOrder(template.userId) + 1)
         const defaultFields = JSON.stringify(template.defaultFields.map(item => this.serializeField(item)))
@@ -318,5 +318,3 @@ class SqliteStorage {
         });
     }
 }
-
-module.exports = SqliteStorage;

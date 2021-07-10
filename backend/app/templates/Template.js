@@ -1,4 +1,4 @@
-class Template {
+export class Template {
     /**
      * @param {{
      *     userId: string,
@@ -41,5 +41,3 @@ class Template {
     }
 
 }
-
-module.exports = Template;

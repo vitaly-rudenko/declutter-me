@@ -1,5 +1,5 @@
-const { expect } = require('chai');
-const parseTimezoneOffsetMinutes = require('../../app/utils/parseTimezoneOffset');
+import { { expect } } from 'chai';
+import { parseTimezoneOffsetMinutes } from '../../app/utils/parseTimezoneOffset';
 
 describe('parseTimezoneOffsetMinutes()', () => {
     it('should parse timezones', () => {

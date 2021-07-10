@@ -1,4 +1,4 @@
-module.exports = {
+export const NotionFieldType = {
     TITLE: 'title',
     RICH_TEXT: 'rich_text',
     SELECT: 'select',

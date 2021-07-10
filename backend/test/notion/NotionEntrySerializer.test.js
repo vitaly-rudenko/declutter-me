@@ -1,12 +1,12 @@
-const chai = require('chai');
-const { spy } = require('sinon');
-const Field = require('../../app/fields/Field');
-const NotionEntrySerializer = require('../../app/notion/NotionEntrySerializer');
-const User = require('../../app/users/User');
-const NotionFieldType = require('../../app/notion/NotionFieldType');
-const NotionEntry = require('../../app/notion/NotionEntry');
-const NotionProperty = require('../../app/notion/NotionProperty');
-const InputType = require('../../app/InputType');
+import chai from 'chai';
+import { { spy } } from 'sinon';
+import { Field } from '../../app/fields/Field';
+import { NotionEntrySerializer } from '../../app/notion/NotionEntrySerializer';
+import { User } from '../../app/users/User';
+import { NotionFieldType } from '../../app/notion/NotionFieldType';
+import { NotionEntry } from '../../app/notion/NotionEntry';
+import { NotionProperty } from '../../app/notion/NotionProperty';
+import { InputType } from '../../app/InputType';
 
 chai.use(require('sinon-chai'));
 const { expect } = chai;

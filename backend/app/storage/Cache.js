@@ -1,4 +1,4 @@
-class Cache {
+export class Cache {
     constructor(ttlMs) {
         this._ttlMs = ttlMs;
         this._data = new Map();
@@ -32,5 +32,3 @@ class Cache {
         this._data.delete(key);
     }
 }
-
-module.exports = Cache;

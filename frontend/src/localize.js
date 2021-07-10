@@ -1,8 +1,8 @@
-const en = require('./localization/en.json');
-const ru = require('./localization/ru.json');
-const uk = require('./localization/uk.json');
+import { en } from './localization/en.json';
+import { ru } from './localization/ru.json';
+import { uk } from './localization/uk.json';
 
-const Language = require('./Language');
+import { Language } from './Language';
 
 function getMessages(language) {
     if (language === Language.ENGLISH) {

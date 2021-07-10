@@ -1,4 +1,4 @@
-class NotionDatabase {
+export class NotionDatabase {
     /**
      * @param {{
      *     userId: string,
@@ -24,5 +24,3 @@ class NotionDatabase {
         return this._notionDatabaseId;
     }
 }
-
-module.exports = NotionDatabase;

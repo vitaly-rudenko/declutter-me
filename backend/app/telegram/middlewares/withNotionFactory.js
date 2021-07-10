@@ -1,7 +1,7 @@
-const NotionAccountNotFound = require('../../errors/NotionAccountNotFound');
+import { NotionAccountNotFound } from '../../errors/NotionAccountNotFound';
 
-/** @param {import('../../notion/NotionSessionManager')} notionSessionManager */
-const withNotionFactory = (notionSessionManager) => {
+/** @param {import('../../notion/NotionSessionManager').NotionSessionManager} notionSessionManager */
+export const withNotionFactory = (notionSessionManager) => {
     /** @param {{ required?: boolean }} [options] */
     return ({ required = true } = {}) => {
         /** @param {import('telegraf').Context} context @param {Function} next */
@@ -26,5 +26,3 @@ const withNotionFactory = (notionSessionManager) => {
         };
     };
 };
-
-module.exports = withNotionFactory;

@@ -1,12 +1,12 @@
-const Field = require('./fields/Field');
-const TokenType = require('./TokenType');
+import { Field } from './fields/Field';
+import { TokenType } from './TokenType';
 
-class PatternMatcher {
+export class PatternMatcher {
     /**
      * 
      * @param {string} input
      * @param {any[]} pattern
-     * @param {import('./entries/EntryMatchers')} matchers
+     * @param {import('./entries/EntryMatchers').EntryMatchers} matchers
      * @returns {{ fields: Field[] } | null}
      */
     match(input, pattern, matchers) {
@@ -169,5 +169,3 @@ class PatternMatcher {
         }, []);
     }
 }
-
-module.exports = PatternMatcher;

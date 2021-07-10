@@ -1,5 +1,5 @@
-/** @param {import('../../storage/SqliteStorage')} storage */
-const withUserFactory = (storage) => {
+/** @param {import('../../storage/SqliteStorage').SqliteStorage} storage */
+export const withUserFactory = (storage) => {
     /** @param {{ required?: boolean }} [options] */
     return ({ required = true } = {}) => {
         /** @param {import('telegraf').Context} context @param {Function} next */
@@ -19,5 +19,3 @@ const withUserFactory = (storage) => {
         };
     };
 };
-
-module.exports = withUserFactory;

@@ -1,4 +1,4 @@
-class TelegramAccount {
+export class TelegramAccount {
     constructor({ userId, telegramUserId }) {
         this._userId = userId;
         this._telegramUserId = telegramUserId;
@@ -12,5 +12,3 @@ class TelegramAccount {
         return this._telegramUserId;
     }
 }
-
-module.exports = TelegramAccount;

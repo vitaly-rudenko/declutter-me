@@ -1,9 +1,9 @@
-const Language = require('../../Language');
-const localize = require('../../localize');
+import { Language } from '../../Language';
+import { localize } from '../../localize';
 
 const DEFAULT_LANGUAGE = Language.ENGLISH;
 
-const withLocalization = () => {
+export const withLocalization = () => {
     /** @param {import('telegraf').Context} context @param {Function} next */
     return (context, next) => {
         context.state.localize = (message, replacements) =>
@@ -12,5 +12,3 @@ const withLocalization = () => {
         next();
     }
 }
-
-module.exports = withLocalization;

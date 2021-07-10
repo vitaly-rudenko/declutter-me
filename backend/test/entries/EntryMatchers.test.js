@@ -1,11 +1,11 @@
-const { stripIndent } = require('common-tags');
-const { expect } = require('chai');
-const PatternMatcher = require('../../app/PatternMatcher');
-const PatternBuilder = require('../../app/PatternBuilder');
-const RussianDateParser = require('../../app/date-parsers/RussianDateParser');
-const EntryMatchers = require('../../app/entries/EntryMatchers');
-const Field = require('../../app/fields/Field');
-const InputType = require('../../app/InputType');
+import { { stripIndent } } from 'common-tags';
+import { { expect } } from 'chai';
+import { PatternMatcher } from '../../app/PatternMatcher';
+import { PatternBuilder } from '../../app/PatternBuilder';
+import { RussianDateParser } from '../../app/date-parsers/RussianDateParser';
+import { EntryMatchers } from '../../app/entries/EntryMatchers';
+import { Field } from '../../app/fields/Field';
+import { InputType } from '../../app/InputType';
 
 describe('EntryMatchers', () => {
     /** @type {PatternMatcher} */

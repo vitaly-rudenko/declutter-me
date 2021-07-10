@@ -1,6 +1,6 @@
-const Cache = require('../storage/Cache');
+import { Cache } from '../storage/Cache';
 
-class UserSessionManager {
+export class UserSessionManager {
     constructor() {
         this._phases = new Cache(60 * 60_000);
         this._contexts = new Cache(60 * 60_000);
@@ -27,5 +27,3 @@ class UserSessionManager {
         this._contexts.delete(userId);
     }
 }
-
-module.exports = UserSessionManager;

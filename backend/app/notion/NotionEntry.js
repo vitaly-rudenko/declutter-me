@@ -1,6 +1,6 @@
-const fuzzyEquals = require('../utils/fuzzyEquals');
+import { fuzzyEquals } from '../utils/fuzzyEquals';
 
-class NotionEntry {
+export class NotionEntry {
     /** @param {{
      *     databaseId: string,
      *     fields: import('../fields/Field')[],
@@ -24,5 +24,3 @@ class NotionEntry {
         return this._fields;
     }
 }
-
-module.exports = NotionEntry;

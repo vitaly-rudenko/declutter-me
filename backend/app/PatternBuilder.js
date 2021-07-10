@@ -1,6 +1,6 @@
-const TokenType = require('./TokenType');
+import { TokenType } from './TokenType';
 
-class PatternBuilder {
+export class PatternBuilder {
     build(input) {
         const result = [];
 
@@ -106,5 +106,3 @@ class PatternBuilder {
         return result;
     }
 }
-
-module.exports = PatternBuilder;

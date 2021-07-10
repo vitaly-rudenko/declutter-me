@@ -1,38 +1,39 @@
-require('dotenv').config();
+import dotenv from 'dotenv'
+dotenv.config();
 
-const { Telegraf, Markup } = require('telegraf');
-const { URL } = require('url');
-const pako = require('pako');
-const base64url = require('base64url');
+import { Telegraf, Markup } from 'telegraf';
+import { URL } from 'url';
+import pako from 'pako';
+import base64url from 'base64url';
 
-const phases = require('./app/phases');
-const PatternBuilder = require('./app/PatternBuilder');
-const PatternMatcher = require('./app/PatternMatcher');
-const RussianDateParser = require('./app/date-parsers/RussianDateParser');
-const Template = require('./app/templates/Template');
-const NotionSessionManager = require('./app/notion/NotionSessionManager');
-const UserSessionManager = require('./app/users/UserSessionManager');
+import { phases } from './app/phases';
+import { PatternBuilder } from './app/PatternBuilder';
+import { PatternMatcher } from './app/PatternMatcher';
+import { RussianDateParser } from './app/date-parsers/RussianDateParser';
+import { Template } from './app/templates/Template';
+import { NotionSessionManager } from './app/notion/NotionSessionManager';
+import { UserSessionManager } from './app/users/UserSessionManager';
 
-const withTelegramAccount = require('./app/telegram/middlewares/withTelegramAccount');
-const withPhaseFactory = require('./app/telegram/middlewares/withPhaseFactory');
-const withUserFactory = require('./app/telegram/middlewares/withUserFactory');
-const withNotionFactory = require('./app/telegram/middlewares/withNotionFactory');
-const withLocalization = require('./app/telegram/middlewares/withLocalization');
+import { withTelegramAccount } from './app/telegram/middlewares/withTelegramAccount';
+import { withPhaseFactory } from './app/telegram/middlewares/withPhaseFactory';
+import { withUserFactory } from './app/telegram/middlewares/withUserFactory';
+import { withNotionFactory } from './app/telegram/middlewares/withNotionFactory';
+import { withLocalization } from './app/telegram/middlewares/withLocalization';
 
-const NotionDatabase = require('./app/notion/NotionDatabase');
-const EntryMatchers = require('./app/entries/EntryMatchers');
-const NotionEntrySerializer = require('./app/notion/NotionEntrySerializer');
-const Field = require('./app/fields/Field');
-const localize = require('./app/localize');
-const Language = require('./app/Language');
-const parseTimezoneOffsetMinutes = require('./app/utils/parseTimezoneOffset');
-const NotionEntry = require('./app/notion/NotionEntry');
-const NotionProperty = require('./app/notion/NotionProperty');
-const InputType = require('./app/InputType');
-const SqliteStorage = require('./app/storage/SqliteStorage');
-const User = require('./app/users/User');
-const TelegramAccount = require('./app/telegram/TelegramAccount');
-const NotionAccount = require('./app/notion/NotionAccount');
+import { NotionDatabase } from './app/notion/NotionDatabase';
+import { EntryMatchers } from './app/entries/EntryMatchers';
+import { NotionEntrySerializer } from './app/notion/NotionEntrySerializer';
+import { Field } from './app/fields/Field';
+import { localize } from './app/localize';
+import { Language } from './app/Language';
+import { parseTimezoneOffsetMinutes } from './app/utils/parseTimezoneOffset';
+import { NotionEntry } from './app/notion/NotionEntry';
+import { NotionProperty } from './app/notion/NotionProperty';
+import { InputType } from './app/InputType';
+import { SqliteStorage } from './app/storage/SqliteStorage';
+import { User } from './app/users/User';
+import { TelegramAccount } from './app/telegram/TelegramAccount';
+import { NotionAccount } from './app/notion/NotionAccount';
 
 const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
 

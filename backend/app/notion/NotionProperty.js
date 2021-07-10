@@ -1,4 +1,4 @@
-class NotionProperty {
+export class NotionProperty {
     constructor({ name, type }) {
         this._name = name;
         this._type = type;
@@ -12,5 +12,3 @@ class NotionProperty {
         return this._type;
     }
 }
-
-module.exports = NotionProperty;

@@ -1,7 +1,7 @@
-const { expect } = require('chai');
-const sinon = require('sinon');
+import { { expect } } from 'chai';
+import { sinon } from 'sinon';
 
-const RussianDateParser = require('../../app/date-parsers/RussianDateParser');
+import { RussianDateParser } from '../../app/date-parsers/RussianDateParser';
 
 describe('RussianDateParser', () => {
     /** @type {RussianDateParser} */

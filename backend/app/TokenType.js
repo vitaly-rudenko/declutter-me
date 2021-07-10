@@ -1,4 +1,4 @@
-module.exports = {
+export const TokenType = {
     TEXT: 'text',
     VARIABLE: 'variable',
     OPTIONAL: 'optional',

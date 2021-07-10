@@ -1,4 +1,4 @@
-class User {
+export class User {
     constructor({ id = null, language, timezoneOffsetMinutes }) {
         this._id = id;
         this._language = language;
@@ -26,5 +26,3 @@ class User {
         return this._timezoneOffsetMinutes;
     }
 }
-
-module.exports = User;

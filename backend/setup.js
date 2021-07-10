@@ -1,15 +1,16 @@
-require('dotenv').config();
+import dotenv from 'dotenv'
+dotenv.config()
 
-const fs = require('fs').promises
-const Template = require('./app/templates/Template');
-const NotionDatabase = require('./app/notion/NotionDatabase');
-const Field = require('./app/fields/Field');
-const Language = require('./app/Language');
-const InputType = require('./app/InputType');
-const SqliteStorage = require('./app/storage/SqliteStorage');
-const User = require('./app/users/User');
-const TelegramAccount = require('./app/telegram/TelegramAccount');
-const NotionAccount = require('./app/notion/NotionAccount');
+import { promises as fs } from 'fs';
+import { Template } from './app/templates/Template';
+import { NotionDatabase } from './app/notion/NotionDatabase';
+import { Field } from './app/fields/Field';
+import { Language } from './app/Language';
+import { InputType } from './app/InputType';
+import { SqliteStorage } from './app/storage/SqliteStorage';
+import { User } from './app/users/User';
+import { TelegramAccount } from './app/telegram/TelegramAccount';
+import { NotionAccount } from './app/notion/NotionAccount';
 
 async function setup() {
     await fs.unlink('./database.db');

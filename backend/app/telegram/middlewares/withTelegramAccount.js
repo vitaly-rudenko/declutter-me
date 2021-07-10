@@ -1,5 +1,5 @@
-/** @param {import('../../storage/SqliteStorage')} storage */
-const withTelegramAccount = (storage) => {
+/** @param {import('../../storage/SqliteStorage').SqliteStorage} storage */
+export const withTelegramAccount = (storage) => {
     /** @param {import('telegraf').Context} context @param {Function} next */
     return async (context, next) => {
         context.state.telegramAccount = await storage.findTelegramAccountByTelegramUserId(context.from.id);
@@ -11,5 +11,3 @@ const withTelegramAccount = (storage) => {
         next();
     };
 };
-
-module.exports = withTelegramAccount;

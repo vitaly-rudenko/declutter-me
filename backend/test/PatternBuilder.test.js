@@ -1,8 +1,8 @@
-const { expect } = require('chai');
-const { stripIndent } = require('common-tags');
-const InputType = require('../app/InputType');
-const PatternBuilder = require('../app/PatternBuilder');
-const { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } = require('../app/TokenType');
+import { { expect } } from 'chai';
+import { { stripIndent } } from 'common-tags';
+import { InputType } from '../app/InputType';
+import { PatternBuilder } from '../app/PatternBuilder';
+import { { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } } from '../app/TokenType';
 
 describe('PatternBuilder', () => {
     /** @type {PatternBuilder} */

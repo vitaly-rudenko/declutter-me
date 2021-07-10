@@ -1,7 +1,7 @@
 /** @typedef {import('telegraf').Context} Context */
 
-/** @param {import('../../users/UserSessionManager')} userSessionManager */
-const withPhaseFactory = (userSessionManager) => {
+/** @param {import('../../users/UserSessionManager').UserSessionManager} userSessionManager */
+export const withPhaseFactory = (userSessionManager) => {
     /**
      * @param {string | null} phase
      * @param {(context: T, next: Function) => any} middleware
@@ -20,5 +20,3 @@ const withPhaseFactory = (userSessionManager) => {
         }
     };
 };
-
-module.exports = withPhaseFactory;

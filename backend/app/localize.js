@@ -1,8 +1,8 @@
-const en = require('../assets/localization/en.json');
-const ru = require('../assets/localization/ru.json');
-const uk = require('../assets/localization/uk.json');
+import { en } from '../assets/localization/en.json';
+import { ru } from '../assets/localization/ru.json';
+import { uk } from '../assets/localization/uk.json';
 
-const Language = require('./Language');
+import { Language } from './Language';
 
 function getMessages(language) {
     if (language === Language.ENGLISH) {
@@ -20,7 +20,7 @@ function getMessages(language) {
     throw new Error('Invalid language: ' + language);
 }
 
-const localize = (message, replacements = null, language) => {
+export const localize = (message, replacements = null, language) => {
     const path = message.split('.');
 
     let result = getMessages(language);
@@ -48,5 +48,3 @@ const localize = (message, replacements = null, language) => {
 
     return result;
 };
-
-module.exports = localize;

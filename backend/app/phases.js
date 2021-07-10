@@ -1,4 +1,4 @@
-module.exports = organizeValues({
+export const phases = organizeValues({
     start: {
         language: '1',
         timezone: '1',

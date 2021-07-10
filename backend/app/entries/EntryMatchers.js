@@ -1,6 +1,6 @@
-const InputType = require('../InputType');
-const TokenType = require('../TokenType');
-const split = require('../utils/split');
+import { InputType } from '../InputType';
+import { TokenType } from '../TokenType';
+import { split } from '../utils/split';
 
 const PHONE_REGEX = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
 const EMAIL_REGEX = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -20,7 +20,7 @@ const InputTypeScore = {
 
 const WORD_BREAK_REGEX = /( |\n)/;
 
-class EntryMatchers {
+export class EntryMatchers {
     /** @param {{ dateParser }} dependencies */
     constructor({ dateParser }) {
         this._dateParser = dateParser;
@@ -199,5 +199,3 @@ class EntryMatchers {
         return lastDate;
     }
 }
-
-module.exports = EntryMatchers;

@@ -1,8 +1,8 @@
-const { Client } = require('@notionhq/client/build/src');
-const NotionAccountNotFound = require('../errors/NotionAccountNotFound');
-const Cache = require('../storage/Cache');
+import { Client } from '@notionhq/client/build/src';
+import { NotionAccountNotFound } from '../errors/NotionAccountNotFound';
+import { Cache } from '../storage/Cache';
 
-class NotionSessionManager {
+export class NotionSessionManager {
     /** @param {{ storage: import('../storage/SqliteStorage') }} dependencies */
     constructor({ storage }) {
         this._notions = new Cache(10 * 60_000);
@@ -25,5 +25,3 @@ class NotionSessionManager {
         return [notion, notionAccount];
     }
 }
-
-module.exports = NotionSessionManager;

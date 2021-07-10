@@ -1,7 +1,6 @@
-var axios = require("axios").default;
-const fs = require('fs')
-
-const ru = require('./assets/localization/ru.json')
+import axios from 'axios';
+import fs from 'fs';
+import ru from './assets/localization/ru.json';
 
 async function getTranslated(obj) {
     const res = {};
