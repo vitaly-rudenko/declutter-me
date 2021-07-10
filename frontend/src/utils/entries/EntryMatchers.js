@@ -1,6 +1,6 @@
-import { InputType } from '../InputType';
-import { TokenType } from '../TokenType';
-import { split } from '../utils/split';
+import { InputType } from '../InputType.js';
+import { TokenType } from '../TokenType.js';
+import { split } from '../utils/split.js';
 
 const PHONE_REGEX = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
 const EMAIL_REGEX = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -18,7 +18,9 @@ const InputTypeScore = {
     [InputType.NUMBER]: 3,
 };
 
-class EntryMatchers {
+const WORD_BREAK_REGEX = /( |\n)/;
+
+export class EntryMatchers {
     /** @param {{ dateParser }} dependencies */
     constructor({ dateParser }) {
         this._dateParser = dateParser;
@@ -112,7 +114,7 @@ class EntryMatchers {
             input = split(input, nextToken.value)[0];
         }
 
-        const result = split(input, ' ')[0];
+        const result = split(input, WORD_BREAK_REGEX)[0];
 
         if (result.length > 0) {
             return result;
@@ -122,7 +124,7 @@ class EntryMatchers {
     }
 
     _email(input) {
-        input = split(input, ' ')[0];
+        input = split(input, WORD_BREAK_REGEX)[0];
 
         if (EMAIL_REGEX.test(input)) {
             return input;
@@ -132,7 +134,7 @@ class EntryMatchers {
     }
 
     _phone(input) {
-        input = split(input, ' ')[0];
+        input = split(input, WORD_BREAK_REGEX)[0];
 
         if (PHONE_REGEX.test(input)) {
             return input;
@@ -142,7 +144,7 @@ class EntryMatchers {
     }
 
     _url(input) {
-        input = split(input, ' ')[0];
+        input = split(input, WORD_BREAK_REGEX)[0];
 
         if (this._isValidUrl(input)) {
             return input;
@@ -171,7 +173,7 @@ class EntryMatchers {
 
     // TODO: add support for natural language numbers
     _number(input) {
-        input = split(input, ' ')[0];
+        input = split(input, WORD_BREAK_REGEX)[0];
 
         if (!Number.isNaN(Number(input))) {
             return input;
@@ -197,5 +199,3 @@ class EntryMatchers {
         return lastDate;
     }
 }
-
-module.exports = EntryMatchers;

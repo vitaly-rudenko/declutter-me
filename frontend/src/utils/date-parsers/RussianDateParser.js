@@ -100,7 +100,7 @@ function endsWith(array, item) {
     return array[array.length - 1] === item;
 }
 
-class RussianDateParser {
+export class RussianDateParser {
     /**
      * @param {string} input
      * @param {{ origin?: Date, futureOnly?: boolean }} [options]
@@ -547,5 +547,3 @@ class RussianDateParser {
         return result;
     }
 }
-
-module.exports = RussianDateParser;

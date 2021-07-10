@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import Language from './Language';
+import { Language } from './Language';
 
 import { get, localize } from './localize';
 

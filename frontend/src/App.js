@@ -1,7 +1,7 @@
 import { createMuiTheme, CssBaseline, Fab, ThemeProvider } from '@material-ui/core';
 import { Brightness4 } from '@material-ui/icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import { HashRouter, Route, Switch } from 'react-router-dom';
 import { TemplateManager } from './template-manager/TemplateManager';
 import { TemplateBuilder } from './template-builder/TemplateBuilder';
 import './App.css';
@@ -32,13 +32,13 @@ export const App = () => {
 
     return <ThemeProvider theme={muiTheme}>
         <CssBaseline />
-        <BrowserRouter>
+        <HashRouter basename='/'>
             <Switch>
                 <Route path='/:language/builder' component={TemplateBuilder} />
                 <Route path='/:language/manager' component={TemplateManager} />
                 <Route path='/:language/timezone' component={Timezone} />
             </Switch>
-        </BrowserRouter>
+        </HashRouter>
         <Fab size="small" color="primary" classes={{ root: 'switch-theme-button' }} onClick={switchTheme}><Brightness4/></Fab>
     </ThemeProvider>;
 }

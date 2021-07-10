@@ -1,6 +1,6 @@
-import { en } from './localization/en.json';
-import { ru } from './localization/ru.json';
-import { uk } from './localization/uk.json';
+import en from './localization/en.json';
+import ru from './localization/ru.json';
+import uk from './localization/uk.json';
 
 import { Language } from './Language';
 
@@ -20,7 +20,7 @@ function getMessages(language) {
     throw new Error('Invalid language: ' + language);
 }
 
-const get = (messageKey, language) => {
+export const get = (messageKey, language) => {
     const path = messageKey.split('.');
 
     let result = getMessages(language);
@@ -31,7 +31,7 @@ const get = (messageKey, language) => {
     return result ?? messageKey;
 };
 
-const localize = (messageKey, replacements = null, language) => {
+export const localize = (messageKey, replacements = null, language) => {
     let result = get(messageKey, language);
 
     if (Array.isArray(result)) {
@@ -46,6 +46,4 @@ const localize = (messageKey, replacements = null, language) => {
 
     return result;
 };
-
-module.exports = { localize, get };
 

@@ -1,6 +1,6 @@
-module.exports = function split(text, delimiter) {
+export const split = (text, delimiter) => {
     const textLower = text.toLowerCase();
-    const delimiterLower = delimiter.toLowerCase();
+    const delimiterLower = typeof delimiter === 'string' ? delimiter.toLowerCase() : delimiter;
 
     const splitResult = textLower.split(delimiterLower);
 

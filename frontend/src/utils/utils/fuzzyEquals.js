@@ -1,4 +1,4 @@
-module.exports = function fuzzyEquals(actualValue, ...expectedValues) {
+export const fuzzyEquals = (actualValue, ...expectedValues) => {
     return expectedValues.some(expectedValue => normalize(actualValue) === normalize(expectedValue));
 }
 

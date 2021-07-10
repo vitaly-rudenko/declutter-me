@@ -1,7 +1,7 @@
-import { Field } from './fields/Field';
-import { TokenType } from './TokenType';
+import { Field } from './fields/Field.js';
+import { TokenType } from './TokenType.js';
 
-class PatternMatcher {
+export class PatternMatcher {
     /**
      * 
      * @param {string} input
@@ -169,5 +169,3 @@ class PatternMatcher {
         }, []);
     }
 }
-
-module.exports = PatternMatcher;

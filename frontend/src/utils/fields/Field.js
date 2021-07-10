@@ -1,4 +1,4 @@
-class Field {
+export class Field {
     /**
      * @param {{
      *     name?: string,
@@ -30,5 +30,3 @@ class Field {
         return this._bang;
     }
 }
-
-module.exports = Field;

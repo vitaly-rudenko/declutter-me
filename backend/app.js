@@ -65,26 +65,24 @@ function encodeTemplates(templates) {
 
     function createTemplateManagerLink({ templates, language }) {
         const linkLanguage = linkLanguageMap[language] ?? 'en';
-        const link = new URL(`${FRONTEND_DOMAIN}/${linkLanguage}/manager`);
-        link.searchParams.set('templates', encodeTemplates(templates.map(t => ({ pattern: t.pattern }))));
+        const searchParams = new URLSearchParams()
+        searchParams.append('templates', encodeTemplates(templates.map(t => ({ pattern: t.pattern }))));
         
-        return link.toString();
+        return `${FRONTEND_DOMAIN}/#/${linkLanguage}/manager?${searchParams.toString()}`;
     }
 
     function createTemplateBuilderLink({ pattern = null, test = null, language }) {
         const linkLanguage = linkLanguageMap[language] ?? 'en';
-        const link = new URL(`${FRONTEND_DOMAIN}/${linkLanguage}/builder`);
-        if (pattern) link.searchParams.set('pattern', pattern);
-        if (test) link.searchParams.set('test', test);
+        const searchParams = new URLSearchParams()
+        searchParams.append('pattern', pattern);
+        searchParams.append('test', test);
         
-        return link.toString();
+        return `${FRONTEND_DOMAIN}/#/${linkLanguage}/builder?${searchParams.toString()}`;
     }
 
     function createTimezoneCheckerLink({ language }) {
         const linkLanguage = linkLanguageMap[language] ?? 'en';
-        const link = new URL(`${FRONTEND_DOMAIN}/${linkLanguage}/timezone`);
-
-        return link.toString();
+        return `${FRONTEND_DOMAIN}/#/${linkLanguage}/timezone`;
     }
 
     function getGuideLink({ language }) {

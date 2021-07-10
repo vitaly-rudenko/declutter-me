@@ -1,4 +1,4 @@
-const parseTimezoneOffsetMinutes = (value) => {
+export const parseTimezoneOffsetMinutes = (value) => {
     if (value === 'UTC' || value === 'GMT') {
         return 0;
     }
@@ -21,5 +21,3 @@ const parseTimezoneOffsetMinutes = (value) => {
 
     return hours * 60 + sign * (Number.isInteger(minutes) ? minutes : 0);
 }
-
-module.exports = parseTimezoneOffsetMinutes;

@@ -1,12 +1,10 @@
-import { Language } from '../Language';
-import { RussianDateParser } from './RussianDateParser';
+import { Language } from '../Language.js';
+import { RussianDateParser } from './RussianDateParser.js';
 
-class DateParserFactory {
+export class DateParserFactory {
     create(language) {
         if (language === Language.RUSSIAN) {
             return new RussianDateParser();
         }
     }
 }
-
-module.exports = DateParserFactory;
