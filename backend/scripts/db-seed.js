@@ -1,22 +1,18 @@
 import dotenv from 'dotenv'
 dotenv.config()
 
-import { promises as fs } from 'fs';
-import { Template } from './app/templates/Template.js';
-import { NotionDatabase } from './app/notion/NotionDatabase.js';
-import { Field } from './app/fields/Field.js';
-import { Language } from './app/Language.js';
-import { InputType } from './app/InputType.js';
-import { SqliteStorage } from './app/storage/SqliteStorage.js';
-import { User } from './app/users/User.js';
-import { TelegramAccount } from './app/telegram/TelegramAccount.js';
-import { NotionAccount } from './app/notion/NotionAccount.js';
+import { Template } from '../app/templates/Template.js';
+import { NotionDatabase } from '../app/notion/NotionDatabase.js';
+import { Field } from '../app/fields/Field.js';
+import { Language } from '../app/Language.js';
+import { InputType } from '../app/InputType.js';
+import { SqliteStorage } from '../app/storage/SqliteStorage.js';
+import { User } from '../app/users/User.js';
+import { TelegramAccount } from '../app/telegram/TelegramAccount.js';
+import { NotionAccount } from '../app/notion/NotionAccount.js';
 
-async function setup() {
-    await fs.unlink('./database.db');
-
+async function run() {
     const storage = new SqliteStorage('database.db');
-    storage.setup()
 
     const user = await storage.createUser(new User({ language: Language.RUSSIAN, timezoneOffsetMinutes: 3 * 60 }));
     await storage.createTelegramAccount(new TelegramAccount({ userId: user.id, telegramUserId: 56681133 }));
@@ -75,4 +71,9 @@ async function setup() {
     await storage.storeDatabase(new NotionDatabase({ userId: user.id, alias: 'shopping', notionDatabaseId: 'ca75e1d762c24d4893e2d682c1823797' }))
 }
 
-setup();
+run()
+    .then(() => process.exit())
+    .catch((error) => {
+        console.error(error);
+        process.exit(1);
+    });

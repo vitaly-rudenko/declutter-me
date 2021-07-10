@@ -5,14 +5,17 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "start": "node app.js",
-    "debug": "nodemon app.js",
+    "start": "npm run db:migrate && node app.js",
+    "debug": "npm run db:migrate && nodemon app.js",
     "test": "mocha --recursive",
     "test:watch": "npm run test -- --watch",
     "test:mutate": "stryker run",
     "test:integration": "mocha --recursive integration-test",
     "test:integration:watch": "npm run test:integration -- --watch",
-    "test:all": "npm run test && npm run test:integration"
+    "test:all": "npm run test && npm run test:integration",
+    "db:migrate": "node scripts/db-migrate.js",
+    "db:reset": "node scripts/db-reset.js",
+    "db:seed": "npm run db:reset && npm run db:migrate && node scripts/db-seed.js"
   },
   "repository": {
     "type": "git",

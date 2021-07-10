@@ -37,7 +37,7 @@ export class SqliteStorage {
         `).run();
 
         this._sqlite.prepare(`
-            CREATE UNIQUE INDEX unique_index ON templates (user_id, pattern);
+            CREATE UNIQUE INDEX IF NOT EXISTS unique_index ON templates (user_id, pattern);
         `).run();
 
         this._sqlite.prepare(`
