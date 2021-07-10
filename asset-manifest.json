@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/declutter-me/static/css/main.13344538.chunk.css",
-    "main.js": "/declutter-me/static/js/main.c2f497cf.chunk.js",
-    "main.js.map": "/declutter-me/static/js/main.c2f497cf.chunk.js.map",
+    "main.js": "/declutter-me/static/js/main.9556e586.chunk.js",
+    "main.js.map": "/declutter-me/static/js/main.9556e586.chunk.js.map",
     "runtime-main.js": "/declutter-me/static/js/runtime-main.4041a83d.js",
     "runtime-main.js.map": "/declutter-me/static/js/runtime-main.4041a83d.js.map",
     "static/js/2.c030d761.chunk.js": "/declutter-me/static/js/2.c030d761.chunk.js",
@@ -15,6 +15,6 @@
     "static/js/runtime-main.4041a83d.js",
     "static/js/2.c030d761.chunk.js",
     "static/css/main.13344538.chunk.css",
-    "static/js/main.c2f497cf.chunk.js"
+    "static/js/main.9556e586.chunk.js"
   ]
 }
