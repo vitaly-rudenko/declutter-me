@@ -1,4 +1,4 @@
-import { NotionAccountNotFound } from '../../errors/NotionAccountNotFound';
+import { NotionAccountNotFound } from '../../errors/NotionAccountNotFound.js';
 
 /** @param {import('../../notion/NotionSessionManager').NotionSessionManager} notionSessionManager */
 export const withNotionFactory = (notionSessionManager) => {

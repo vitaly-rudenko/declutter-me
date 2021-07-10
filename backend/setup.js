@@ -2,15 +2,15 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 import { promises as fs } from 'fs';
-import { Template } from './app/templates/Template';
-import { NotionDatabase } from './app/notion/NotionDatabase';
-import { Field } from './app/fields/Field';
-import { Language } from './app/Language';
-import { InputType } from './app/InputType';
-import { SqliteStorage } from './app/storage/SqliteStorage';
-import { User } from './app/users/User';
-import { TelegramAccount } from './app/telegram/TelegramAccount';
-import { NotionAccount } from './app/notion/NotionAccount';
+import { Template } from './app/templates/Template.js';
+import { NotionDatabase } from './app/notion/NotionDatabase.js';
+import { Field } from './app/fields/Field.js';
+import { Language } from './app/Language.js';
+import { InputType } from './app/InputType.js';
+import { SqliteStorage } from './app/storage/SqliteStorage.js';
+import { User } from './app/users/User.js';
+import { TelegramAccount } from './app/telegram/TelegramAccount.js';
+import { NotionAccount } from './app/notion/NotionAccount.js';
 
 async function setup() {
     await fs.unlink('./database.db');

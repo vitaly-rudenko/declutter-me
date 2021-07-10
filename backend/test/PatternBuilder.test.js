@@ -1,8 +1,8 @@
-import { { expect } } from 'chai';
-import { { stripIndent } } from 'common-tags';
-import { InputType } from '../app/InputType';
-import { PatternBuilder } from '../app/PatternBuilder';
-import { { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } } from '../app/TokenType';
+import { expect } from 'chai';
+import { stripIndent } from 'common-tags';
+import { InputType } from '../app/InputType.js';
+import { PatternBuilder } from '../app/PatternBuilder.js';
+import { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } from '../app/TokenType.js';
 
 describe('PatternBuilder', () => {
     /** @type {PatternBuilder} */

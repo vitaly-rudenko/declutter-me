@@ -1,8 +1,8 @@
 import chai from 'chai';
-import { InputType } from '../../frontend/src/utils/InputType';
-import { PatternMatcher } from '../app/PatternMatcher';
+import { InputType } from '../../frontend/src/utils/InputType.js';
+import { PatternMatcher } from '../app/PatternMatcher.js';
 
-import { { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } } from '../app/TokenType';
+import { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } from '../app/TokenType.js';
 
 const { expect } = chai;
 chai.use(require('deep-equal-in-any-order'));

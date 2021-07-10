@@ -1,5 +1,5 @@
-import { InputType } from '../InputType';
-import { NotionFieldType } from './NotionFieldType';
+import { InputType } from '../InputType.js';
+import { NotionFieldType } from './NotionFieldType.js';
 
 function last(arrayOrValue) {
     return Array.isArray(arrayOrValue) ? arrayOrValue[arrayOrValue.length - 1] : arrayOrValue;

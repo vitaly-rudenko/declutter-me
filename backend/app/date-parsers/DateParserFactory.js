@@ -1,5 +1,5 @@
-import { Language } from '../Language';
-import { RussianDateParser } from './RussianDateParser';
+import { Language } from '../Language.js';
+import { RussianDateParser } from './RussianDateParser.js';
 
 export class DateParserFactory {
     create(language) {

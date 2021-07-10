@@ -1,5 +1,5 @@
-import { { expect } } from 'chai';
-import { parseTimezoneOffsetMinutes } from '../../app/utils/parseTimezoneOffset';
+import { expect } from 'chai';
+import { parseTimezoneOffsetMinutes } from '../../app/utils/parseTimezoneOffset.js';
 
 describe('parseTimezoneOffsetMinutes()', () => {
     it('should parse timezones', () => {

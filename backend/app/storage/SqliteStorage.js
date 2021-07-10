@@ -1,10 +1,10 @@
-import { Sqlite } from 'better-sqlite3';
-import { Field } from '../fields/Field';
-import { NotionAccount } from '../notion/NotionAccount';
-import { NotionDatabase } from '../notion/NotionDatabase';
-import { TelegramAccount } from '../telegram/TelegramAccount';
-import { Template } from '../templates/Template';
-import { User } from '../users/User';
+import Sqlite from 'better-sqlite3';
+import { Field } from '../fields/Field.js';
+import { NotionAccount } from '../notion/NotionAccount.js';
+import { NotionDatabase } from '../notion/NotionDatabase.js';
+import { TelegramAccount } from '../telegram/TelegramAccount.js';
+import { Template } from '../templates/Template.js';
+import { User } from '../users/User.js';
 
 export class SqliteStorage {
     constructor(filename) {

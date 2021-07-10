@@ -2,14 +2,14 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised'
-import { User } from '../../app/users/User';
-import { TelegramAccount } from '../../app/telegram/TelegramAccount';
-import { NotionAccount } from '../../app/notion/NotionAccount';
-import { NotionDatabase } from '../../app/notion/NotionDatabase';
-import { Template } from '../../app/templates/Template';
-import { Field } from '../../app/fields/Field';
-import { SqliteStorage } from '../../app/storage/SqliteStorage';
-import { Language } from '../../app/Language';
+import { User } from '../../app/users/User.js';
+import { TelegramAccount } from '../../app/telegram/TelegramAccount.js';
+import { NotionAccount } from '../../app/notion/NotionAccount.js';
+import { NotionDatabase } from '../../app/notion/NotionDatabase.js';
+import { Template } from '../../app/templates/Template.js';
+import { Field } from '../../app/fields/Field.js';
+import { SqliteStorage } from '../../app/storage/SqliteStorage.js';
+import { Language } from '../../app/Language.js';
 
 const { expect } = chai;
 chai.use(chaiAsPromised);

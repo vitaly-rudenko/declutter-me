@@ -1,4 +1,4 @@
-import { TokenType } from './TokenType';
+import { TokenType } from './TokenType.js';
 
 export class PatternBuilder {
     build(input) {

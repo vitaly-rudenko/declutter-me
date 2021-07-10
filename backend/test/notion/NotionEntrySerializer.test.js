@@ -1,12 +1,12 @@
 import chai from 'chai';
-import { { spy } } from 'sinon';
-import { Field } from '../../app/fields/Field';
-import { NotionEntrySerializer } from '../../app/notion/NotionEntrySerializer';
-import { User } from '../../app/users/User';
-import { NotionFieldType } from '../../app/notion/NotionFieldType';
-import { NotionEntry } from '../../app/notion/NotionEntry';
-import { NotionProperty } from '../../app/notion/NotionProperty';
-import { InputType } from '../../app/InputType';
+import { spy } from 'sinon';
+import { Field } from '../../app/fields/Field.js';
+import { NotionEntrySerializer } from '../../app/notion/NotionEntrySerializer.js';
+import { User } from '../../app/users/User.js';
+import { NotionFieldType } from '../../app/notion/NotionFieldType.js';
+import { NotionEntry } from '../../app/notion/NotionEntry.js';
+import { NotionProperty } from '../../app/notion/NotionProperty.js';
+import { InputType } from '../../app/InputType.js';
 
 chai.use(require('sinon-chai'));
 const { expect } = chai;

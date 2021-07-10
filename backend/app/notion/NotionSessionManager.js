@@ -1,9 +1,9 @@
-import { Client } from '@notionhq/client/build/src';
-import { NotionAccountNotFound } from '../errors/NotionAccountNotFound';
-import { Cache } from '../storage/Cache';
+import { Client } from '@notionhq/client';
+import { NotionAccountNotFound } from '../errors/NotionAccountNotFound.js';
+import { Cache } from '../storage/Cache.js';
 
 export class NotionSessionManager {
-    /** @param {{ storage: import('../storage/SqliteStorage') }} dependencies */
+    /** @param {{ storage: import('../storage/SqliteStorage').SqliteStorage }} dependencies */
     constructor({ storage }) {
         this._notions = new Cache(10 * 60_000);
         this._storage = storage;

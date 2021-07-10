@@ -1,5 +1,5 @@
-import { Field } from './fields/Field';
-import { TokenType } from './TokenType';
+import { Field } from './fields/Field.js';
+import { TokenType } from './TokenType.js';
 
 export class PatternMatcher {
     /**

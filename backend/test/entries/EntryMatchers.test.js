@@ -1,11 +1,11 @@
-import { { stripIndent } } from 'common-tags';
-import { { expect } } from 'chai';
-import { PatternMatcher } from '../../app/PatternMatcher';
-import { PatternBuilder } from '../../app/PatternBuilder';
-import { RussianDateParser } from '../../app/date-parsers/RussianDateParser';
-import { EntryMatchers } from '../../app/entries/EntryMatchers';
-import { Field } from '../../app/fields/Field';
-import { InputType } from '../../app/InputType';
+import { stripIndent } from 'common-tags';
+import { expect } from 'chai';
+import { PatternMatcher } from '../../app/PatternMatcher.js';
+import { PatternBuilder } from '../../app/PatternBuilder.js';
+import { RussianDateParser } from '../../app/date-parsers/RussianDateParser.js';
+import { EntryMatchers } from '../../app/entries/EntryMatchers.js';
+import { Field } from '../../app/fields/Field.js';
+import { InputType } from '../../app/InputType.js';
 
 describe('EntryMatchers', () => {
     /** @type {PatternMatcher} */

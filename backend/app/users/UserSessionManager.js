@@ -1,4 +1,4 @@
-import { Cache } from '../storage/Cache';
+import { Cache } from '../storage/Cache.js';
 
 export class UserSessionManager {
     constructor() {

@@ -1,5 +1,5 @@
 import { sinon } from 'sinon';
-import { Cache } from '../../app/storage/Cache';
+import { Cache } from '../../app/storage/Cache.js';
 
 describe('Cache', () => {
     const TTL_MS = 14600;

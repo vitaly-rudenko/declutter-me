@@ -1,10 +1,10 @@
-import { fuzzyEquals } from '../utils/fuzzyEquals';
+import { fuzzyEquals } from '../utils/fuzzyEquals.js';
 
 export class NotionEntry {
     /** @param {{
      *     databaseId: string,
-     *     fields: import('../fields/Field')[],
-     *     properties: import('./NotionProperty')[],
+     *     fields: import('../fields/Field').Field[],
+     *     properties: import('./NotionProperty').NotionProperty[],
      * }} attributes */
     constructor({ databaseId, fields, properties }) {
         this._databaseId = databaseId;

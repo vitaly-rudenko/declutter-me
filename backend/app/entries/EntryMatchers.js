@@ -1,6 +1,6 @@
-import { InputType } from '../InputType';
-import { TokenType } from '../TokenType';
-import { split } from '../utils/split';
+import { InputType } from '../InputType.js';
+import { TokenType } from '../TokenType.js';
+import { split } from '../utils/split.js';
 
 const PHONE_REGEX = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
 const EMAIL_REGEX = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;

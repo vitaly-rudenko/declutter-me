@@ -1,5 +1,5 @@
-import { Language } from '../../Language';
-import { localize } from '../../localize';
+import { Language } from '../../Language.js';
+import { localize } from '../../localize.js';
 
 const DEFAULT_LANGUAGE = Language.ENGLISH;
 

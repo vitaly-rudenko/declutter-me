@@ -1,40 +1,44 @@
-import { en } from '../assets/localization/en.json';
-import { ru } from '../assets/localization/ru.json';
-import { uk } from '../assets/localization/uk.json';
+import fs from 'fs'
+import { Language } from './Language.js';
 
-import { Language } from './Language';
+const cachedLocalizations = {}
+function loadLocalization(name) {
+    if (!cachedLocalizations[name]) {
+        cachedLocalizations[name] = JSON.parse(fs.readFileSync(`./assets/localization/${name}.json`, { encoding: 'utf-8' }));
+    }
+
+    return cachedLocalizations[name];
+}
 
 function getMessages(language) {
     if (language === Language.ENGLISH) {
-        return en;
+        return loadLocalization('en');
     }
 
     if (language === Language.RUSSIAN) {
-        return ru;
+        return loadLocalization('ru');
     }
 
     if (language === Language.UKRAINIAN) {
-        return uk;
+        return loadLocalization('uk');
     }
 
     throw new Error('Invalid language: ' + language);
 }
 
-export const localize = (message, replacements = null, language) => {
-    const path = message.split('.');
+export const get = (messageKey, language) => {
+    const path = messageKey.split('.');
 
     let result = getMessages(language);
     while (result && path.length > 0) {
         result = result[path.shift()];
     }
 
-    if (!result) {
-        if (replacements) {
-            return `${message}\n${JSON.stringify(replacements, null, 4)}`;
-        } else {
-            return message;
-        }
-    }
+    return result ?? messageKey;
+};
+
+export const localize = (messageKey, replacements = null, language) => {
+    let result = get(messageKey, language);
 
     if (Array.isArray(result)) {
         result = result.join('\n');

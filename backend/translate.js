@@ -1,6 +1,5 @@
 import axios from 'axios';
 import fs from 'fs';
-import ru from './assets/localization/ru.json';
 
 async function getTranslated(obj) {
     const res = {};
@@ -24,6 +23,7 @@ async function getTranslated(obj) {
 }
 
 async function init() {
+    const ru = JSON.parse(fs.readFileSync('./assets/localization/ru.json', { encoding: 'utf-8' }))
     const uk = await getTranslated(ru);
 
     fs.writeFileSync('./uk.json', JSON.stringify(uk, null, 4));
