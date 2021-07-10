@@ -1,1 +1,1 @@
-backend: cd backend; npm start
+backend: npm start
