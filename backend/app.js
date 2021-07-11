@@ -34,6 +34,7 @@ import { PostgresStorage } from './app/storage/PostgresStorage.js';
 import { User } from './app/users/User.js';
 import { TelegramAccount } from './app/telegram/TelegramAccount.js';
 import { NotionAccount } from './app/notion/NotionAccount.js';
+import { escapeMd } from './app/utils/escapeMd.js';
 
 const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
 
@@ -48,15 +49,6 @@ function encodeTemplates(templates) {
 }
 
 (async () => {
-    const { markdownEscapes } = await import('markdown-escapes');
-
-    function escapeMd(string) {
-        for (const escape of markdownEscapes) {
-            string = string.replace(new RegExp(`(\\${escape})`, 'g'), `\\$1`);
-        }
-        return string;
-    }
-
     const linkLanguageMap = {
         [Language.ENGLISH]: 'en',
         [Language.RUSSIAN]: 'ru',
@@ -74,10 +66,15 @@ function encodeTemplates(templates) {
     function createTemplateBuilderLink({ pattern = null, test = null, language }) {
         const linkLanguage = linkLanguageMap[language] ?? 'en';
         const searchParams = new URLSearchParams()
-        searchParams.append('pattern', pattern);
-        searchParams.append('test', test);
+        if (pattern) searchParams.append('pattern', pattern);
+        if (test) searchParams.append('test', test);
+
+        let queryParams = searchParams.toString();
+        if (queryParams) {
+            queryParams = '?' + queryParams;
+        }
         
-        return `${FRONTEND_DOMAIN}/#/${linkLanguage}/builder?${searchParams.toString()}`;
+        return `${FRONTEND_DOMAIN}/#/${linkLanguage}/builder${queryParams}`;
     }
 
     function createTimezoneCheckerLink({ language }) {
@@ -210,22 +207,24 @@ function encodeTemplates(templates) {
 
         await ctx.reply(
             ctx.state.localize('command.info.response', {
-                name: ctx.from.first_name,
+                name: escapeMd(ctx.from.first_name),
                 language: ctx.state.user?.language
                     ? ctx.state.localize(`language.${ctx.state.user.language}`)
                     : ctx.state.localize('command.info.notProvided'),
                 timezone: ctx.state.user?.timezoneOffsetMinutes
-                    ? formatTimezone(ctx.state.user?.timezoneOffsetMinutes)
+                    ? escapeMd(formatTimezone(ctx.state.user?.timezoneOffsetMinutes))
                     : ctx.state.localize('command.info.notProvided'),
-                notionToken: ctx.state.notionAccount?.token ?? ctx.state.localize('command.info.notProvided'),
+                notionToken: escapeMd(ctx.state.notionAccount?.token ?? ctx.state.localize('command.info.notProvided')),
                 databases: databases.length > 0
                     ? '\n' + databases.map(list => ctx.state.localize('command.info.database', {
-                        notionDatabaseId: list.notionDatabaseId,
-                        alias: list.alias
+                        notionDatabaseId: escapeMd(list.notionDatabaseId),
+                        notionDatabaseUrl: list.notionDatabaseUrl,
+                        alias: escapeMd(list.alias),
                     })).join('\n')
                     : ctx.state.localize('command.info.none'),
                 templates: formatTemplates(templates, ctx.state.localize),
-            })
+            }),
+            { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
         );
     });
 
@@ -234,7 +233,7 @@ function encodeTemplates(templates) {
             ctx.state.localize('command.help', {
                 guideLink: getGuideLink({ language: ctx.state.user?.language })
             }),
-            { parse_mode: 'Markdown', disable_web_page_preview: true }
+            { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
         );
     });
 
@@ -345,13 +344,15 @@ function encodeTemplates(templates) {
                 await ctx.reply(
                     ctx.state.localize('command.templates.reorder.partialSuccess', {
                         templates: formatTemplates(updatedTemplates, ctx.state.localize)
-                    })
+                    }),
+                    { parse_mode: 'MarkdownV2' }
                 );
             } else {
                 await ctx.reply(
                     ctx.state.localize('command.templates.reorder.success', {
                         templates: formatTemplates(updatedTemplates, ctx.state.localize)
-                    })
+                    }),
+                    { parse_mode: 'MarkdownV2' }
                 );
             }
 
@@ -455,7 +456,7 @@ function encodeTemplates(templates) {
                     link,
                     linkLabel: escapeMd(link),
                 }),
-                { parse_mode: 'Markdown', disable_web_page_preview: true }
+                { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
             )
         ]);
     });
@@ -477,7 +478,7 @@ function encodeTemplates(templates) {
                     templateBuilderLink,
                     guideLink: getGuideLink({ language: ctx.state.user?.language }),
                 }),
-                { parse_mode: 'Markdown', disable_web_page_preview: true }
+                { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
             ),
         ]);
 
@@ -496,7 +497,7 @@ function encodeTemplates(templates) {
                     templateBuilderLink,
                     guideLink: getGuideLink({ language: ctx.state.user?.language }),
                 }),
-                { parse_mode: 'Markdown', disable_web_page_preview: true }
+                { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
             )
         ]);
 
@@ -538,7 +539,7 @@ function encodeTemplates(templates) {
                 localize('command.help', {
                     guideLink: getGuideLink({ language })
                 }, language),
-                { parse_mode: 'Markdown', disable_web_page_preview: true }
+                { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
             );
         }),
         withUser(),
@@ -557,15 +558,15 @@ function encodeTemplates(templates) {
         withPhase(phases.addDatabase.link, async (ctx) => {
             if (!('text' in ctx.message)) return;
 
-            const notionDatabaseId = notionDatabaseIdFromUrl(ctx.message.text);
-            if (!notionDatabaseId) {
+            const notionDatabaseUrl = ctx.message.text;
+            if (!isValidNotionDatabaseUrl(notionDatabaseUrl)) {
                 await ctx.reply(ctx.state.localize('command.databases.add.invalidLink'));
                 return;
             }
 
-            userSessionManager.context(ctx.state.userId).notionDatabaseId = notionDatabaseId;
+            userSessionManager.context(ctx.state.userId).notionDatabaseUrl = notionDatabaseUrl;
             userSessionManager.setPhase(ctx.state.userId, phases.addDatabase.alias);
-            await ctx.reply(ctx.state.localize('command.databases.add.alias', { match: notionDatabaseId }));
+            await ctx.reply(ctx.state.localize('command.databases.add.alias'));
         }),
         withPhase(phases.addDatabase.alias, async (ctx) => {
             if (!('text' in ctx.message)) return;
@@ -576,11 +577,11 @@ function encodeTemplates(templates) {
                 return;
             }
 
-            const { notionDatabaseId } = userSessionManager.context(ctx.state.userId);
+            const { notionDatabaseUrl } = userSessionManager.context(ctx.state.userId);
             await storage.storeDatabase(
                 new NotionDatabase({
                     userId: ctx.state.userId,
-                    notionDatabaseId,
+                    notionDatabaseUrl,
                     alias,
                 })
             );
@@ -753,7 +754,7 @@ function encodeTemplates(templates) {
             ? '\n' + templates.map(
                 template => localize('output.templates.template', {
                     order: template.order,
-                    pattern: formatPattern(template.pattern)
+                    pattern: escapeMd(formatPattern(template.pattern))
                 })
             ).join('\n')
             : localize('output.templates.none');
@@ -763,7 +764,7 @@ function encodeTemplates(templates) {
         return pattern.replace(/\n/g, '\\n')
     }
 
-    function notionDatabaseIdFromUrl(link) {
+    function isValidNotionDatabaseUrl(link) {
         try {
             return new URL(link).pathname.slice(1);
         } catch (error) {

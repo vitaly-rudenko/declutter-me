@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "npm run umzug db:migrate && node app.js",
-    "debug": "npm run umzug db:migrate && nodemon app.js",
+    "debug": "npm run umzug db:migrate && nodemon --legacy-watch app.js",
     "test": "mocha --recursive",
     "test:watch": "npm run test -- --watch --parallel",
     "test:mutate": "stryker run",

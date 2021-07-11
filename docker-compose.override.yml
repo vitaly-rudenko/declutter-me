@@ -1,14 +1,14 @@
 version: '3.7'
 services:
-  integration-test:
-    container_name: integration-test
+  backend:
+    container_name: backend
     build:
       context: backend
       dockerfile: docker/Dockerfile
     depends_on:
-      - postgres-test
+      - postgres
     environment:
-      POSTGRES_HOST: postgres-test
+      POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_DB: declutter_me
       POSTGRES_USER: declutter_me
@@ -16,11 +16,11 @@ services:
     volumes:
       - ./backend:/backend
     command: |
-      ./wait-for-it.sh postgres-test:5432 -t 120 --
-      npm run test:integration
+      ./wait-for-it.sh postgres:5432 -t 120 --
+      npm run debug
 
-  postgres-test:
-    container_name: postgres-test
+  postgres:
+    container_name: postgres
     image: postgres:13-alpine
     environment:
       POSTGRES_DB: declutter_me

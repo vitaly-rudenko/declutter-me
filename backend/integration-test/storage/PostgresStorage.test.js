@@ -22,7 +22,7 @@ const generateUserId = () => uuid();
 const generateTelegramUserId = () => Math.floor(Date.now() / 100) * 100 + Math.floor(Math.random() * 100);
 const generateNotionToken = createStringGenerator('token-');
 const generateDatabaseAlias = createStringGenerator('alias-');
-const generateNotionDatabaseId = createStringGenerator('notion-database-id-');
+const generateNotionDatabaseUrl = createStringGenerator('http://notion.example.com/');
 
 describe('PostgresStorage', () => {
     /** @type {PostgresStorage} */
@@ -102,7 +102,7 @@ describe('PostgresStorage', () => {
     it('should implement Database flow [Notion]', async () => {
         const userId = generateUserId()
         const alias = generateDatabaseAlias()
-        const notionDatabaseId = generateNotionDatabaseId()
+        const notionDatabaseUrl = generateNotionDatabaseUrl()
 
         expect(await postgresStorage.findDatabaseByAlias(userId, alias))
             .to.be.null;
@@ -113,13 +113,13 @@ describe('PostgresStorage', () => {
             new NotionDatabase({
                 userId,
                 alias,
-                notionDatabaseId,
+                notionDatabaseUrl,
             })
         );
 
         expect(database.userId).to.equal(userId);
         expect(database.alias).to.equal(alias);
-        expect(database.notionDatabaseId).to.equal(notionDatabaseId);
+        expect(database.notionDatabaseUrl).to.equal(notionDatabaseUrl);
 
         expect(await postgresStorage.findDatabaseByAlias(userId, alias))
             .to.deep.equal(database);

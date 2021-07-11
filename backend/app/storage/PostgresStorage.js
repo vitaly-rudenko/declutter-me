@@ -101,6 +101,8 @@ export class PostgresStorage {
         const response = await this._pool.query(`
             INSERT INTO notion_accounts (user_id, token)
             VALUES ($1, $2)
+            ON CONFLICT ON CONSTRAINT notion_accounts_pkey
+            DO NOTHING
             RETURNING *;
         `, [notionAccount.userId, notionAccount.token]);
 
@@ -129,10 +131,10 @@ export class PostgresStorage {
     /** @param {import('../notion/NotionDatabase').NotionDatabase} notionDatabase */
     async storeDatabase(notionDatabase) {
         const response = await this._pool.query(`
-            INSERT INTO notion_databases (user_id, alias, notion_database_id)
+            INSERT INTO notion_databases (user_id, alias, notion_database_url)
             VALUES ($1, $2, $3)
             RETURNING *;
-        `, [notionDatabase.userId, notionDatabase.alias, notionDatabase.notionDatabaseId]);
+        `, [notionDatabase.userId, notionDatabase.alias, notionDatabase.notionDatabaseUrl]);
 
         return this.deserializeDatabase(response.rows[0]);
     }
@@ -171,7 +173,7 @@ export class PostgresStorage {
         return new NotionDatabase({
             userId: row['user_id'],
             alias: row['alias'],
-            notionDatabaseId: row['notion_database_id'],
+            notionDatabaseUrl: row['notion_database_url'],
         });
     }
 

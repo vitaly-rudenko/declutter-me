@@ -5,7 +5,7 @@ module.exports = {
             CREATE TABLE notion_databases (
                 user_id VARCHAR,
                 alias VARCHAR,
-                notion_database_id VARCHAR,
+                notion_database_url VARCHAR,
                 PRIMARY KEY (user_id, alias)
             );
         `);

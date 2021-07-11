@@ -3,13 +3,13 @@ export class NotionDatabase {
      * @param {{
      *     userId: string,
      *     alias: string,
-     *     notionDatabaseId: string,
+     *     notionDatabaseUrl: string,
      * }} attributes
      */
-    constructor({ userId, alias, notionDatabaseId }) {
+    constructor({ userId, alias, notionDatabaseUrl }) {
         this._userId = userId;
         this._alias = alias;
-        this._notionDatabaseId = notionDatabaseId;
+        this._notionDatabaseUrl = notionDatabaseUrl;
     }
 
     get alias() {
@@ -20,7 +20,11 @@ export class NotionDatabase {
         return this._userId;
     }
 
+    get notionDatabaseUrl() {
+        return this._notionDatabaseUrl;
+    }
+
     get notionDatabaseId() {
-        return this._notionDatabaseId;
+        return new URL(this._notionDatabaseUrl).pathname.slice(1);
     }
 }
