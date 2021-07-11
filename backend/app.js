@@ -30,7 +30,7 @@ import { parseTimezoneOffsetMinutes } from './app/utils/parseTimezoneOffset.js';
 import { NotionEntry } from './app/notion/NotionEntry.js';
 import { NotionProperty } from './app/notion/NotionProperty.js';
 import { InputType } from './app/InputType.js';
-import { SqliteStorage } from './app/storage/SqliteStorage.js';
+import { PostgresStorage } from './app/storage/PostgresStorage.js';
 import { User } from './app/users/User.js';
 import { TelegramAccount } from './app/telegram/TelegramAccount.js';
 import { NotionAccount } from './app/notion/NotionAccount.js';
@@ -92,7 +92,13 @@ function encodeTemplates(templates) {
         throw new Error(`Invalid language: ${language}`)
     }
 
-    const storage = new SqliteStorage('database.db');
+    const storage = new PostgresStorage({
+        host: process.env.POSTGRES_HOST,
+        port: Number(process.env.POSTGRES_PORT),
+        database: process.env.POSTGRES_DB,
+        user: process.env.POSTGRES_USER,
+        password: process.env.POSTGRES_PASSWORD,
+    });
 
     const debugChatId = process.env.DEBUG_CHAT_ID;
 
