@@ -1,11 +1,13 @@
 import chai from 'chai';
-import { InputType } from '../../frontend/src/utils/InputType.js';
+import { InputType } from '../app/InputType.js';
 import { PatternMatcher } from '../app/PatternMatcher.js';
-
-import { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } from '../app/TokenType.js';
+import { TokenType } from '../app/TokenType.js';
+import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 
 const { expect } = chai;
-chai.use(require('deep-equal-in-any-order'));
+chai.use(deepEqualInAnyOrder);
+
+const { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } = TokenType;
 
 describe('PatternMatcher', () => {
     /** @type {PatternMatcher} */

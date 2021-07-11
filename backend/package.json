@@ -8,7 +8,7 @@
     "start": "npm run db:migrate && node app.js",
     "debug": "npm run db:migrate && nodemon app.js",
     "test": "mocha --recursive",
-    "test:watch": "npm run test -- --watch",
+    "test:watch": "npm run test -- --watch --parallel",
     "test:mutate": "stryker run",
     "test:integration": "mocha --recursive integration-test",
     "test:integration:watch": "npm run test:integration -- --watch",

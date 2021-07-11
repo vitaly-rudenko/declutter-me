@@ -595,7 +595,7 @@ describe('EntryMatchers', () => {
             expect(patternMatcher.match('послезавтра купить морковку', pattern, matchers))
                     .to.deep.eq({
                         fields: [
-                            new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
+                            new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
                             new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'купить морковку' }),
                         ]
                     });
@@ -603,7 +603,7 @@ describe('EntryMatchers', () => {
             expect(patternMatcher.match('через тридцать дней позвонить', pattern, matchers))
                 .to.deep.eq({
                     fields: [
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'позвонить' }),
                     ]
                 });
@@ -611,7 +611,7 @@ describe('EntryMatchers', () => {
             expect(patternMatcher.match('девятого декабря 2025 года пойти к стоматологу', pattern, matchers))
                 .to.deep.eq({
                     fields: [
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'пойти к стоматологу' }),
                     ]
                 });
@@ -619,7 +619,7 @@ describe('EntryMatchers', () => {
             expect(patternMatcher.match('через три недели вечером погулять', pattern, matchers))
                 .to.deep.eq({
                     fields: [
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через три недели вечером' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'через три недели вечером' }),
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'погулять' }),
                     ]
                 });
@@ -627,7 +627,7 @@ describe('EntryMatchers', () => {
             expect(patternMatcher.match('21 сентября в 21:00 увидеть это напоминание', pattern, matchers))
                 .to.deep.eq({
                     fields: [
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: '21 сентября в 21:00' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: '21 сентября в 21:00' }),
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'увидеть это напоминание' }),
                     ]
                 });
@@ -640,7 +640,7 @@ describe('EntryMatchers', () => {
                     .to.deep.eq({
                         fields:  [
                             new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'купить морковку' }),
-                            new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
+                            new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
                         ]
                     });
     
@@ -648,7 +648,7 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'позвонить' }),
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
                     ]
                 });
     
@@ -656,7 +656,7 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'пойти к стоматологу' }),
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
                     ]
                 });
         });
@@ -668,7 +668,7 @@ describe('EntryMatchers', () => {
                     .to.deep.eq({
                         fields: [
                             new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'купить морковку, баклажан и капусту' }),
-                            new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
+                            new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
                         ]
                     });
     
@@ -676,7 +676,7 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'позвонить маме, папе' }),
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
                     ]
                 });
     
@@ -684,7 +684,7 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'пойти к стоматологу, дантисту' }),
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
                     ]
                 });
         });
@@ -696,7 +696,7 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'купить морковку' }),
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'послезавтра' }),
                     ]
                 });
     
@@ -704,7 +704,7 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'позвонить' }),
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'через тридцать дней' }),
                     ]
                 });
     
@@ -712,7 +712,7 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'пойти к стоматологу' }),
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'девятого декабря 2025 года' }),
                     ]
                 });
             
@@ -720,7 +720,7 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'пойти погулять' }),
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через три недели вечером' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'через три недели вечером' }),
                     ]
                 });
             
@@ -728,7 +728,7 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'увидеть это напоминание' }),
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: '21 сентября в 21:00' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: '21 сентября в 21:00' }),
                     ]
                 });
         });
@@ -740,14 +740,14 @@ describe('EntryMatchers', () => {
                 .to.deep.eq({
                     fields: [
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'съесть морковку' }),
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через минуту' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'через минуту' }),
                     ]
                 });
             
             expect(patternMatcher.match('напомни через минуту съесть морковку', pattern, matchers))
                 .to.deep.eq({
                     fields: [
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'через минуту' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'через минуту' }),
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'съесть морковку' }),
                     ]
                 });
@@ -755,10 +755,23 @@ describe('EntryMatchers', () => {
             expect(patternMatcher.match('завтра в 16:00 съесть морковку', pattern, matchers))
                 .to.deep.eq({
                     fields: [
-                        new Field({ name: InputType.DATE, inputType: InputType.FUTURE_DATE, value: 'завтра в 16:00' }),
+                        new Field({ name: 'date', inputType: InputType.FUTURE_DATE, value: 'завтра в 16:00' }),
                         new Field({ name: 'reminder', inputType: InputType.TEXT, value: 'съесть морковку' }),
                     ]
                 });
-        }); 
+        });
+
+        it('should match numbers without separators', () => {
+            const pattern = patternBuilder.build('buy {kg:number}kg of {item:text}');
+
+
+            expect(patternMatcher.match('buy 5kg of potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'kg', inputType: InputType.NUMBER, value: '5' }),
+                        new Field({ name: 'item', inputType: InputType.TEXT, value: 'potatoes' }),
+                    ]
+                });
+        })
     });
 });

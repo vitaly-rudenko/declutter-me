@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { sinon } from 'sinon';
+import sinon from 'sinon';
 
 import { RussianDateParser } from '../../app/date-parsers/RussianDateParser.js';
 

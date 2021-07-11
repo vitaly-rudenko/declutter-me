@@ -175,8 +175,12 @@ export class EntryMatchers {
     _number(input) {
         input = split(input, WORD_BREAK_REGEX)[0];
 
-        if (!Number.isNaN(Number(input))) {
-            return input;
+        while (input.length > 0) {
+            input = input.slice(0, -1);
+
+            if (Number.isFinite(Number(input))) {
+                return input;
+            }
         }
 
         return null;

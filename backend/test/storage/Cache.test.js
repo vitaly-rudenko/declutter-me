@@ -1,4 +1,4 @@
-import { sinon } from 'sinon';
+import sinon from 'sinon';
 import { Cache } from '../../app/storage/Cache.js';
 
 describe('Cache', () => {
