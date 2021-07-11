@@ -5,17 +5,14 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "start": "npm run db:migrate && node app.js",
+    "start": "node app.js",
     "debug": "npm run db:migrate && nodemon app.js",
     "test": "mocha --recursive",
     "test:watch": "npm run test -- --watch --parallel",
     "test:mutate": "stryker run",
-    "test:integration": "mocha --recursive integration-test",
-    "test:integration:watch": "npm run test:integration -- --watch",
+    "test:integration": "npm run umzug db:migrate:undo:all && npm run umzug db:migrate && mocha --recursive integration-test",
     "test:all": "npm run test && npm run test:integration",
-    "db:migrate": "node scripts/db-migrate.js",
-    "db:reset": "node scripts/db-reset.js",
-    "db:seed": "npm run db:reset && npm run db:migrate && node scripts/db-seed.js"
+    "umzug": "node ./umzug/cli.js"
   },
   "repository": {
     "type": "git",
@@ -36,12 +33,14 @@
   "dependencies": {
     "@notionhq/client": "^0.1.9",
     "base64url": "^3.0.1",
-    "better-sqlite3": "^7.4.0",
     "dotenv": "^10.0.0",
     "log4js": "^6.3.0",
     "markdown-escapes": "^2.0.0",
     "pako": "^2.0.3",
-    "telegraf": "^4.3.0"
+    "pg": "^8.6.0",
+    "telegraf": "^4.3.0",
+    "umzug": "^2.3.0",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@stryker-mutator/core": "^5.0.1",
