@@ -1,0 +1,45 @@
+version: '3.7'
+services:
+  integration-test:
+    container_name: integration-test
+    build:
+      context: backend
+      dockerfile: docker/Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: declutter_me
+      POSTGRES_USER: declutter_me
+      POSTGRES_PASSWORD: p4ssw0rd
+    volumes:
+      - ./backend:/backend
+    networks:
+      - declutter_me
+    command: |
+      ./wait-for-it.sh postgres:5432 -t 120 --
+      npm run test:integration
+
+  postgres:
+    container_name: postgres
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_DB: declutter_me
+      POSTGRES_USER: declutter_me
+      POSTGRES_PASSWORD: p4ssw0rd
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - declutter_me
+    ports:
+      - 5432:5432
+    command: postgres -c logging_collector=on -c log_statement=all
+  
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  declutter_me:
+    driver: bridge
