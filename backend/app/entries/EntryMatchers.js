@@ -18,8 +18,6 @@ const InputTypeScore = {
     [InputType.NUMBER]: 3,
 };
 
-const WORD_BREAK_REGEX = /( |\n)/;
-
 export class EntryMatchers {
     /** @param {{ dateParser }} dependencies */
     constructor({ dateParser }) {
@@ -110,47 +108,19 @@ export class EntryMatchers {
     }
 
     _word(input, { nextTokens: [nextToken] }) {
-        if (nextToken?.type === TokenType.TEXT) {
-            input = split(input, nextToken.value)[0];
-        }
-
-        const result = split(input, WORD_BREAK_REGEX)[0];
-
-        if (result.length > 0) {
-            return result;
-        }
-
-        return null;
+        return this._select(input, nextToken, value => !/(\s|\n)/.test(value));
     }
 
-    _email(input) {
-        input = split(input, WORD_BREAK_REGEX)[0];
-
-        if (EMAIL_REGEX.test(input)) {
-            return input;
-        }
-
-        return null;
+    _email(input, { nextTokens: [nextToken] }) {
+        return this._select(input, nextToken, value => EMAIL_REGEX.test(value));
     }
 
-    _phone(input) {
-        input = split(input, WORD_BREAK_REGEX)[0];
-
-        if (PHONE_REGEX.test(input)) {
-            return input;
-        }
-
-        return null;
+    _phone(input, { nextTokens: [nextToken] }) {
+        return this._select(input, nextToken, value => PHONE_REGEX.test(value));
     }
 
-    _url(input) {
-        input = split(input, WORD_BREAK_REGEX)[0];
-
-        if (this._isValidUrl(input)) {
-            return input;
-        }
-
-        return null;
+    _url(input, { nextTokens: [nextToken] }) {
+        return this._select(input, nextToken, value => this._isValidUrl(value));
     }
 
     _isValidUrl(input) {
@@ -172,18 +142,8 @@ export class EntryMatchers {
     }
 
     // TODO: add support for natural language numbers
-    _number(input) {
-        input = split(input, WORD_BREAK_REGEX)[0];
-
-        while (input.length > 0) {
-            input = input.slice(0, -1);
-
-            if (Number.isFinite(Number(input))) {
-                return input;
-            }
-        }
-
-        return null;
+    _number(input, { nextTokens: [nextToken] }) {
+        return this._select(input, nextToken, value => Number.isFinite(Number(value)))
     }
 
     _date(input, futureOnly) {
@@ -201,5 +161,32 @@ export class EntryMatchers {
         }
 
         return lastDate;
+    }
+
+    _select(input, nextToken, matcher) {
+        if (nextToken && nextToken.type === TokenType.TEXT) {
+            let start = 0
+
+            const parts = split(input, nextToken.value)
+            const variants = []
+            let value = parts.shift()
+
+            for (const part of parts) {
+                if (matcher(value)) {
+                    variants.push(value)
+                }
+
+                value += nextToken.value + part
+            }
+
+            if (variants.length === 0) return null
+            return variants
+        }
+
+        if (matcher(input)) {
+            return input;
+        }
+
+        return null;
     }
 }

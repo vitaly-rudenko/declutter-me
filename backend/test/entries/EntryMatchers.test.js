@@ -586,6 +586,60 @@ describe('EntryMatchers', () => {
                 });
             });
         });
+
+        it('should match numbers next to the text', () => {
+            const pattern1 = patternBuilder.build('{num:number}45');
+            const pattern2 = patternBuilder.build('123{num:number}');
+            const pattern3 = patternBuilder.build('12{num:number}56');
+
+            expect(patternMatcher.match('12345', pattern1, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'num', value: '123', inputType: InputType.NUMBER })
+                    ]
+                })
+
+            expect(patternMatcher.match('12345', pattern2, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'num', value: '45', inputType: InputType.NUMBER })
+                    ]
+                })
+
+            expect(patternMatcher.match('123456', pattern3, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'num', value: '34', inputType: InputType.NUMBER })
+                    ]
+                })
+        })
+
+        it('should match words next to the text', () => {
+            const pattern1 = patternBuilder.build('{str:word}def');
+            const pattern2 = patternBuilder.build('abc{str:word}');
+            const pattern3 = patternBuilder.build('ab{str:word}ef');
+
+            expect(patternMatcher.match('abcdef', pattern1, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'str', value: 'abc', inputType: InputType.WORD })
+                    ]
+                })
+
+            expect(patternMatcher.match('abcdef', pattern2, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'str', value: 'def', inputType: InputType.WORD })
+                    ]
+                })
+
+            expect(patternMatcher.match('abcdef', pattern3, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'str', value: 'cd', inputType: InputType.WORD })
+                    ]
+                })
+        })
     });
 
     describe('[reminders]', () => {
