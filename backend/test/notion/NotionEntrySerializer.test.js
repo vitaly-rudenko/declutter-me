@@ -1,12 +1,11 @@
 import chai from 'chai';
 import sinon from 'sinon';
-import { Field } from '../../app/fields/Field.js';
+import { Field, InputType } from '@vitalyrudenko/templater';
 import { NotionEntrySerializer } from '../../app/notion/NotionEntrySerializer.js';
 import { User } from '../../app/users/User.js';
 import { NotionFieldType } from '../../app/notion/NotionFieldType.js';
 import { NotionEntry } from '../../app/notion/NotionEntry.js';
 import { NotionProperty } from '../../app/notion/NotionProperty.js';
-import { InputType } from '../../app/InputType.js';
 import sinonChai from 'sinon-chai'
 
 chai.use(sinonChai);

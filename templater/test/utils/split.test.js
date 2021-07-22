@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { split } from '../../src/utils/split.js';
+import { split } from '../../index.js';
 
 describe('split()', () => {
     it('should split the string with spaces properly', () => {

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 
-import { RussianDateParser } from '../../src/date-parsers/RussianDateParser.js';
+import { RussianDateParser } from '../../index.js';
 
 describe('RussianDateParser', () => {
     /** @type {RussianDateParser} */

@@ -1,8 +1,6 @@
 import { expect } from 'chai';
 import { stripIndent } from 'common-tags';
-import { InputType } from '../src/InputType.js';
-import { PatternBuilder } from '../src/PatternBuilder.js';
-import { TokenType } from '../src/TokenType.js';
+import { InputType, PatternBuilder, TokenType } from '../index.js';
 
 const { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } = TokenType;
 

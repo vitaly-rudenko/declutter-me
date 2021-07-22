@@ -1,7 +1,5 @@
 import chai from 'chai';
-import { InputType } from '../src/InputType.js';
-import { PatternMatcher } from '../src/PatternMatcher.js';
-import { TokenType } from '../src/TokenType.js';
+import { InputType, PatternMatcher, TokenType } from '../index.js';
 import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 
 const { expect } = chai;
