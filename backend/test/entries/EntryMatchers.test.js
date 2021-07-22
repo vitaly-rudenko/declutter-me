@@ -559,7 +559,27 @@ describe('EntryMatchers', () => {
                 });
             });
 
-            it('should match multiline text', () => {
+            it('should match complex multiline patterns', () => {
+                const pattern = patternBuilder.build('[#{:database}( |\n)][заметка( |\n)]{заметка:text}[( |\n)#{теги:word}][( |\n)#{теги:word}][( |\n)#{теги:word}]');
+
+                expect(
+                    patternMatcher.match(stripIndent`
+                        #notes
+                        Привет мир.
+                        Как дела?
+                        #tag1 #tag2
+                        #tag3
+                    `, pattern, matchers)
+                ).to.deep.eq({
+                    fields: [
+                        new Field({ name: '', inputType: InputType.DATABASE, value: 'notes' }),
+                        new Field({ name: 'заметка', inputType: InputType.TEXT, value: 'Привет мир.\nКак дела?' }),
+                        new Field({ name: 'теги', inputType: InputType.WORD, value: ['tag1', 'tag2', 'tag3'] }),
+                    ]
+                });
+            });
+
+            it('should match simple multiline text', () => {
                 const pattern = patternBuilder.build('Diary:[ ][\n]{entry:text}');
 
                 expect(
