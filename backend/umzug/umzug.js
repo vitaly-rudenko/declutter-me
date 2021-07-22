@@ -8,6 +8,6 @@ export const umzug = new Umzug({
     storage: new PostgresStorage(client, 'migrations_meta'),
     migrations: {
         pattern: /\d+-.+\.cjs/,
-        params: [pool]
+        params: [client]
     }
 });
