@@ -793,15 +793,10 @@ function encodeTemplates(templates) {
     }
 
     if (useWebhooks) {
-        const port = Number(process.env.PORT) || 3000
-        const domain = process.env.DOMAIN
-        const botToken = process.env.TELEGRAM_BOT_TOKEN
-        console.log('Domain:', domain, 'Port:', port, 'Bot token:', botToken);
-
         await bot.launch({
             webhook: {
                 domain: process.env.DOMAIN,
-                port,
+                port: Number(process.env.PORT) || 3000,
             }
         })
     } else {
