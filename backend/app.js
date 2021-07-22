@@ -794,11 +794,9 @@ function encodeTemplates(templates) {
         console.log('Domain:', domain, 'Port:', port, 'Bot token:', botToken);
 
         await bot.launch({
-            allowedUpdates: ['callback_query', 'message'],
             webhook: {
                 domain: process.env.DOMAIN,
                 port,
-                host: '0.0.0.0',
             }
         })
     } else {
