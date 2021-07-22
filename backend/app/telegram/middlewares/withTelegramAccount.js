@@ -1,4 +1,4 @@
-/** @param {import('../../storage/SqliteStorage').SqliteStorage} storage */
+/** @param {import('../../storage/PostgresStorage').PostgresStorage} storage */
 export const withTelegramAccount = (storage) => {
     /** @param {import('telegraf').Context} context @param {Function} next */
     return async (context, next) => {

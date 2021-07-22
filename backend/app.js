@@ -7,9 +7,7 @@ import pako from 'pako';
 import base64url from 'base64url';
 
 import { phases } from './app/phases.js';
-import { PatternBuilder } from './app/PatternBuilder.js';
-import { PatternMatcher } from './app/PatternMatcher.js';
-import { RussianDateParser } from './app/date-parsers/RussianDateParser.js';
+import { PatternBuilder, Field, InputType, RussianDateParser, PatternMatcher, EntryMatchers } from '@vitalyrudenko/templater';
 import { Template } from './app/templates/Template.js';
 import { NotionSessionManager } from './app/notion/NotionSessionManager.js';
 import { UserSessionManager } from './app/users/UserSessionManager.js';
@@ -21,15 +19,12 @@ import { withNotionFactory } from './app/telegram/middlewares/withNotionFactory.
 import { withLocalization } from './app/telegram/middlewares/withLocalization.js';
 
 import { NotionDatabase } from './app/notion/NotionDatabase.js';
-import { EntryMatchers } from './app/entries/EntryMatchers.js';
 import { NotionEntrySerializer } from './app/notion/NotionEntrySerializer.js';
-import { Field } from './app/fields/Field.js';
 import { localize } from './app/localize.js';
 import { Language } from './app/Language.js';
 import { parseTimezoneOffsetMinutes } from './app/utils/parseTimezoneOffset.js';
 import { NotionEntry } from './app/notion/NotionEntry.js';
 import { NotionProperty } from './app/notion/NotionProperty.js';
-import { InputType } from './app/InputType.js';
 import { PostgresStorage } from './app/storage/PostgresStorage.js';
 import { User } from './app/users/User.js';
 import { TelegramAccount } from './app/telegram/TelegramAccount.js';

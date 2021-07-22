@@ -1,4 +1,4 @@
-import { fuzzyEquals } from '../utils/fuzzyEquals.js';
+import { fuzzyEquals } from '@vitalyrudenko/templater';
 
 export class NotionEntry {
     /** @param {{

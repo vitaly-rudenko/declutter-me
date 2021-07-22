@@ -5,8 +5,7 @@ import {
     List, ListItem, Divider, ListItemText, Button
 } from '@material-ui/core'
 import { HelpOutline } from '@material-ui/icons'
-import { PatternBuilder } from '../utils/PatternBuilder';
-import { PatternMatcher } from '../utils/PatternMatcher';
+import { PatternBuilder, PatternMatcher } from '@vitalyrudenko/templater';
 import copyToClipboard from 'copy-to-clipboard';
 import { TemplateTester } from '../shared/TemplateTester';
 import { InputTypeIcons } from '../shared/InputTypeIcons';

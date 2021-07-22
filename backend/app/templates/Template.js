@@ -4,7 +4,7 @@ export class Template {
      *     userId: string,
      *     pattern: string,
      *     order?: number | null,
-     *     defaultFields?: import('../fields/Field').Field[]
+     *     defaultFields?: import('@vitalyrudenko/templater').Field[]
      * }} attributes
      */
     constructor({ userId, pattern, order = null, defaultFields = [] }) {

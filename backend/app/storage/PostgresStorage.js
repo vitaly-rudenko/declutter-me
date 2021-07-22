@@ -1,6 +1,6 @@
 import pg from 'pg';
 import { v4 as uuid } from 'uuid'
-import { Field } from '../fields/Field.js';
+import { Field } from '@vitalyrudenko/templater';
 import { NotionAccount } from '../notion/NotionAccount.js';
 import { NotionDatabase } from '../notion/NotionDatabase.js';
 import { TelegramAccount } from '../telegram/TelegramAccount.js';

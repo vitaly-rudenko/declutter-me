@@ -1,4 +1,4 @@
-import { InputType } from '../InputType.js';
+import { InputType } from '@vitalyrudenko/templater';
 import { NotionFieldType } from './NotionFieldType.js';
 
 function last(arrayOrValue) {

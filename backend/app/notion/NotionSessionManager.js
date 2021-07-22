@@ -3,7 +3,7 @@ import { NotionAccountNotFound } from '../errors/NotionAccountNotFound.js';
 import { Cache } from '../storage/Cache.js';
 
 export class NotionSessionManager {
-    /** @param {{ storage: import('../storage/SqliteStorage').SqliteStorage }} dependencies */
+    /** @param {{ storage: import('../storage/PostgresStorage').PostgresStorage }} dependencies */
     constructor({ storage }) {
         this._notions = new Cache(10 * 60_000);
         this._storage = storage;

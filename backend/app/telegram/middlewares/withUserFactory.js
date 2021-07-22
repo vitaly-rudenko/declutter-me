@@ -1,4 +1,4 @@
-/** @param {import('../../storage/SqliteStorage').SqliteStorage} storage */
+/** @param {import('../../storage/PostgresStorage').PostgresStorage} storage */
 export const withUserFactory = (storage) => {
     /** @param {{ required?: boolean }} [options] */
     return ({ required = true } = {}) => {

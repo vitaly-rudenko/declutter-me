@@ -1,10 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { Button, Chip, Link, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@material-ui/core';
 import { InputTypeIcons } from './InputTypeIcons';
-import { RussianDateParser } from '../utils/date-parsers/RussianDateParser';
-import { EntryMatchers } from '../utils/entries/EntryMatchers';
-import { PatternMatcher } from '../utils/PatternMatcher';
-import { PatternBuilder } from '../utils/PatternBuilder';
+import { RussianDateParser, EntryMatchers, PatternMatcher, PatternBuilder } from '@vitalyrudenko/templater';
 import { useLocalize } from '../useLocalize';
 import './TemplateTester.css';
 
