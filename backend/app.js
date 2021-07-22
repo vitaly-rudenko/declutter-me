@@ -93,6 +93,7 @@ function encodeTemplates(templates) {
         database: process.env.POSTGRES_DB,
         user: process.env.POSTGRES_USER,
         password: process.env.POSTGRES_PASSWORD,
+        useSsl: process.env.USE_POSTGRES_SSL === 'true',
     });
 
     const debugChatId = process.env.DEBUG_CHAT_ID;

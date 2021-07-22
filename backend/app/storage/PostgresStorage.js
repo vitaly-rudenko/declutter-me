@@ -14,6 +14,7 @@ export class PostgresStorage {
         database,
         user,
         password,
+        useSsl,
     }) {
         this._pool = new pg.Pool({
             host,
@@ -21,6 +22,7 @@ export class PostgresStorage {
             database,
             user,
             password,
+            ssl: useSsl,
         });
     }
 
