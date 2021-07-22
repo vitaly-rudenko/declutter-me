@@ -1,4 +1,4 @@
-import pg from 'pg';
+import { Client } from 'pg';
 import { v4 as uuid } from 'uuid'
 import { Field } from '@vitalyrudenko/templater';
 import { NotionAccount } from '../notion/NotionAccount.js';
@@ -9,7 +9,7 @@ import { User } from '../users/User.js';
 
 export class PostgresStorage {
     constructor({ connectionString }) {
-        this._pool = new pg.Pool({
+        this._client = new Client({
             connectionString,
             ssl: {
                 rejectUnauthorized: false,
@@ -19,7 +19,7 @@ export class PostgresStorage {
 
     /** @param {import('../users/User').User} user */
     async createUser(user) {
-        const response = await this._pool.query(`
+        const response = await this._client.query(`
             INSERT INTO users (id, language, timezone_offset_minutes)
             VALUES ($1, $2, $3)
             RETURNING *;
@@ -31,7 +31,7 @@ export class PostgresStorage {
     
     /** @param {import('../users/User').User} user */
     async updateUser(user) {
-        const response = await this._pool.query(`
+        const response = await this._client.query(`
             UPDATE users
             SET (language, timezone_offset_minutes) = ($1, $2)
             WHERE id = $3
@@ -42,7 +42,7 @@ export class PostgresStorage {
     }
 
     async findUserById(userId) {
-        const response = await this._pool.query(`
+        const response = await this._client.query(`
             SELECT *
             FROM users
             WHERE id = $1
@@ -62,7 +62,7 @@ export class PostgresStorage {
 
     /** @param {import('../telegram/TelegramAccount').TelegramAccount} telegramAccount */
     async createTelegramAccount(telegramAccount) {
-        const response = await this._pool.query(`
+        const response = await this._client.query(`
             INSERT INTO telegram_accounts (user_id, telegram_user_id)
             VALUES ($1, $2)
             RETURNING *;
@@ -72,7 +72,7 @@ export class PostgresStorage {
     }
 
     async findTelegramAccountByTelegramUserId(telegramUserId) {
-        const response = await this._pool.query(`
+        const response = await this._client.query(`
             SELECT *
             FROM telegram_accounts
             WHERE telegram_user_id = $1;
@@ -91,7 +91,7 @@ export class PostgresStorage {
 
     /** @param {import('../notion/NotionAccount').NotionAccount} notionAccount */
     async createNotionAccount(notionAccount) {
-        const response = await this._pool.query(`
+        const response = await this._client.query(`
             INSERT INTO notion_accounts (user_id, token)
             VALUES ($1, $2)
             ON CONFLICT ON CONSTRAINT notion_accounts_pkey
@@ -103,7 +103,7 @@ export class PostgresStorage {
     }
 
     async findNotionAccountByUserId(userId) {
-        const response = await this._pool.query(`
+        const response = await this._client.query(`
             SELECT *
             FROM notion_accounts
             WHERE user_id = $1
@@ -123,7 +123,7 @@ export class PostgresStorage {
 
     /** @param {import('../notion/NotionDatabase').NotionDatabase} notionDatabase */
     async storeDatabase(notionDatabase) {
-        const response = await this._pool.query(`
+        const response = await this._client.query(`
             INSERT INTO notion_databases (user_id, alias, notion_database_url)
             VALUES ($1, $2, $3)
             RETURNING *;
@@ -133,7 +133,7 @@ export class PostgresStorage {
     }
 
     async deleteDatabaseByAlias(userId, alias) {
-        await this._pool.query(`
+        await this._client.query(`
             DELETE FROM notion_databases
             WHERE alias = $1
             AND user_id = $2;
@@ -141,7 +141,7 @@ export class PostgresStorage {
     }
 
     async findDatabasesByUserId(userId) {
-        const response = await this._pool.query(`
+        const response = await this._client.query(`
             SELECT *
             FROM notion_databases
             WHERE user_id = $1;
@@ -151,7 +151,7 @@ export class PostgresStorage {
     }
 
     async findDatabaseByAlias(userId, alias) {
-        const response = await this._pool.query(`
+        const response = await this._client.query(`
             SELECT *
             FROM notion_databases
             WHERE user_id = $1
@@ -175,7 +175,7 @@ export class PostgresStorage {
         const order = template.order ?? (await this.getMaximumTemplateOrder(template.userId) + 1)
         const defaultFields = JSON.stringify(template.defaultFields.map(item => this.serializeField(item)))
 
-        const response = await this._pool.query(`
+        const response = await this._client.query(`
             INSERT INTO templates (user_id, pattern, "order", default_fields)
             VALUES ($1, $2, $3, $4)
             ON CONFLICT ON CONSTRAINT templates_pkey
@@ -193,7 +193,7 @@ export class PostgresStorage {
     }
 
     async getMaximumTemplateOrder(userId) {
-        const response = await this._pool.query(`
+        const response = await this._client.query(`
             SELECT MAX("order") AS max_order
             FROM templates
             WHERE user_id = $1;
@@ -203,7 +203,7 @@ export class PostgresStorage {
     }
 
     async deleteTemplateByPattern(userId, pattern) {
-        await this._pool.query(`
+        await this._client.query(`
             DELETE FROM templates
             WHERE pattern = $1
             AND user_id = $2;
@@ -211,7 +211,7 @@ export class PostgresStorage {
     }
 
     async findTemplatesByUserId(userId) {
-        const response = await this._pool.query(`
+        const response = await this._client.query(`
             SELECT *
             FROM templates
             WHERE user_id = $1
