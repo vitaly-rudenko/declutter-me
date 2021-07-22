@@ -788,13 +788,18 @@ function encodeTemplates(templates) {
     }
 
     if (process.env.USE_WEBHOOKS === 'true') {
-        const port = Number(process.env.PORT) || 80
+        const port = Number(process.env.PORT) || 3000
         const domain = process.env.DOMAIN
         const botToken = process.env.TELEGRAM_BOT_TOKEN
         console.log('Domain:', domain, 'Port:', port, 'Bot token:', botToken);
 
-        bot.telegram.setWebhook(`${domain}/bot${botToken}`);
-        bot.startWebhook(`/bot${botToken}`, null, port);
+        await bot.launch({
+            webhook: {
+                domain: process.env.DOMAIN,
+                port,
+                host: '0.0.0.0',
+            }
+        })
     } else {
         await bot.launch({
             allowedUpdates: ['callback_query', 'message'],
