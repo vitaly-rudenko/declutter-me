@@ -90,8 +90,13 @@ function encodeTemplates(templates) {
     const storage = new PostgresStorage(process.env.DATABASE_URL);
 
     const debugChatId = process.env.DEBUG_CHAT_ID;
+    const useWebhooks = process.env.USE_WEBHOOKS === 'true'
 
-    const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+    const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN, {
+        telegram: {
+            webhookReply: useWebhooks,
+        }
+    });
 
     process.on('unhandledRejection', async (error) => {
         await logError(error);
@@ -787,7 +792,7 @@ function encodeTemplates(templates) {
         return (timezoneOffsetMinutes >= 0 ? '+' : '-') + String(timezoneHours).padStart(2, '0') + ':' + String(timezoneMinutes).padStart(2, '0');
     }
 
-    if (process.env.USE_WEBHOOKS === 'true') {
+    if (useWebhooks) {
         const port = Number(process.env.PORT) || 3000
         const domain = process.env.DOMAIN
         const botToken = process.env.TELEGRAM_BOT_TOKEN
