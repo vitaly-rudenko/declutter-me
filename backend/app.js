@@ -788,8 +788,12 @@ function encodeTemplates(templates) {
     }
 
     if (process.env.USE_WEBHOOKS === 'true') {
-        bot.telegram.setWebhook(`${process.env.DOMAIN}/bot`);
-        bot.startWebhook('/bot', null, Number(process.env.PORT) || 3000);
+        const domain = process.env.DOMAIN
+        const port = Number(process.env.port) || 3000
+        console.log('Domain:', domain, 'Port:', port)
+
+        bot.telegram.setWebhook(`${domain}/bot`);
+        bot.startWebhook('/bot', null, port);
     } else {
         await bot.launch({
             allowedUpdates: ['callback_query', 'message'],
