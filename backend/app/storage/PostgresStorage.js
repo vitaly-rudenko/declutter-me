@@ -11,9 +11,7 @@ export class PostgresStorage {
     constructor({ connectionString }) {
         this._client = new Client({
             connectionString,
-            ssl: {
-                rejectUnauthorized: false,
-            },
+            ssl: true,
         });
     }
 
