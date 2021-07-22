@@ -1,4 +1,4 @@
-import { Client } from 'pg';
+import pg from 'pg';
 import { v4 as uuid } from 'uuid'
 import { Field } from '@vitalyrudenko/templater';
 import { NotionAccount } from '../notion/NotionAccount.js';
@@ -9,10 +9,7 @@ import { User } from '../users/User.js';
 
 export class PostgresStorage {
     constructor({ connectionString }) {
-        this._client = new Client({
-            connectionString,
-            ssl: true,
-        });
+        this._client = new pg.Client({ connectionString });
     }
 
     /** @param {import('../users/User').User} user */
