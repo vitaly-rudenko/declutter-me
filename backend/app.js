@@ -87,7 +87,7 @@ function encodeTemplates(templates) {
         throw new Error(`Invalid language: ${language}`)
     }
 
-    const storage = new PostgresStorage({ connectionString: process.env.DATABASE_URL });
+    const storage = new PostgresStorage(process.env.DATABASE_URL);
 
     const debugChatId = process.env.DEBUG_CHAT_ID;
 

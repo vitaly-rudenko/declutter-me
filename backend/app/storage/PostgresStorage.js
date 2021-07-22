@@ -8,8 +8,8 @@ import { Template } from '../templates/Template.js';
 import { User } from '../users/User.js';
 
 export class PostgresStorage {
-    constructor({ connectionString }) {
-        this._client = new pg.Client({ connectionString });
+    constructor(connectionString) {
+        this._client = new pg.Client(connectionString);
     }
 
     /** @param {import('../users/User').User} user */
