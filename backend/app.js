@@ -3,6 +3,7 @@ dotenv.config();
 
 import { Telegraf, Markup } from 'telegraf';
 import { URL } from 'url';
+import { promises as fs } from 'fs';
 import pako from 'pako';
 import base64url from 'base64url';
 
@@ -49,6 +50,8 @@ function encodeTemplates(templates) {
         [Language.RUSSIAN]: 'ru',
         [Language.UKRAINIAN]: 'uk',
     };
+
+    const packageJson = JSON.parse(await fs.readFile('package.json', { encoding: 'utf-8' }));
 
     function createTemplateManagerLink({ templates, language }) {
         const linkLanguage = linkLanguageMap[language] ?? 'en';
@@ -230,6 +233,10 @@ function encodeTemplates(templates) {
             }),
             { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
         );
+    });
+
+    bot.command('version', async (ctx) => {
+        await ctx.reply(packageJson.version);
     });
 
     bot.command('notion', withUser(), async (ctx) => {
