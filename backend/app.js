@@ -788,8 +788,8 @@ function encodeTemplates(templates) {
     }
 
     if (process.env.USE_WEBHOOKS === 'true') {
-        const domain = process.env.DOMAIN
-        const port = Number(process.env.port) || 3000
+        const port = Number(process.env.port) || 80
+        const domain = `${process.env.DOMAIN}:${port}`
         console.log('Domain:', domain, 'Port:', port)
 
         bot.telegram.setWebhook(`${domain}/bot`);
