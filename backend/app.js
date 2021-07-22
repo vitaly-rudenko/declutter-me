@@ -786,10 +786,19 @@ function encodeTemplates(templates) {
         return (timezoneOffsetMinutes >= 0 ? '+' : '-') + String(timezoneHours).padStart(2, '0') + ':' + String(timezoneMinutes).padStart(2, '0');
     }
 
-    await bot.launch({
-        allowedUpdates: ['callback_query', 'message'],
-        dropPendingUpdates: true,
-    });
+    if (process.env.USE_WEBHOOKS === 'true') {
+        await bot.launch({
+            webhook: {
+                domain: process.env.WEBHOOKS_DOMAIN,
+                port: Number(process.env.PORT),
+            }
+        });
+    } else {
+        await bot.launch({
+            allowedUpdates: ['callback_query', 'message'],
+            dropPendingUpdates: true,
+        });
+    }
 })()
     .then(() => console.log('Started!'));
 
