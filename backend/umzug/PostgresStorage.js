@@ -1,17 +1,17 @@
 export class PostgresStorage {
     /**
-   * @param {import('pg').Pool} connectionPool Postgres connection pool
+   * @param {import('pg').Client} client Postgres client
    * @param {string} tableName Name of the migrations meta table
    */
-    constructor(connectionPool, tableName) {
-        this.pool = connectionPool;
+    constructor(client, tableName) {
+        this.client = client;
         this.tableName = tableName;
     }
 
     async logMigration(migrationName) {
         await this.init();
 
-        await this.pool.query(`
+        await this.client.query(`
             INSERT INTO ${this.tableName}(name)
             VALUES ('${migrationName}')
             ON CONFLICT DO NOTHING;
@@ -21,7 +21,7 @@ export class PostgresStorage {
     async unlogMigration(migrationName) {
         await this.init();
 
-        await this.pool.query(`
+        await this.client.query(`
             DELETE FROM ${this.tableName}
             WHERE name = '${migrationName}';
         `);
@@ -30,7 +30,7 @@ export class PostgresStorage {
     async executed() {
         await this.init();
 
-        const { rows } = await this.pool.query(`
+        const { rows } = await this.client.query(`
             SELECT name FROM ${this.tableName};
         `);
 
@@ -38,7 +38,7 @@ export class PostgresStorage {
     }
 
     async init() {
-        await this.pool.query(`
+        await this.client.query(`
             CREATE TABLE IF NOT EXISTS ${this.tableName} (
                 name varchar(255) PRIMARY KEY
             );
