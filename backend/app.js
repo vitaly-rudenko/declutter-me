@@ -119,7 +119,7 @@ function encodeTemplates(templates) {
     const notionSessionManager = new NotionSessionManager({ storage });
 
     bot.telegram.setMyCommands(
-        ['databases', 'templates', 'info', 'notion', 'help', 'start']
+        ['databases', 'templates', 'info', 'notion', 'help', 'start', 'version']
             .map(command => ({
                 command: `/${command}`,
                 description: localize(`help.command.${command}`, null, Language.ENGLISH)
@@ -235,7 +235,9 @@ function encodeTemplates(templates) {
     });
 
     bot.command('version', async (ctx) => {
+        console.log('...version')
         await ctx.reply(packageJson.version);
+        console.log('version sent...')
     });
 
     bot.command('notion', withUser(), async (ctx) => {

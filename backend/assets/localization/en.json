@@ -162,7 +162,8 @@
             "notion": "Configure Notion integration",
             "databases": "Manage your databases",
             "templates": "Manage your templates",
-            "help": "Help"
+            "help": "Help",
+            "version": "Version"
         }
     }
 }
