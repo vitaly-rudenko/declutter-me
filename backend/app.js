@@ -426,7 +426,7 @@ function encodeTemplates(templates) {
             return;
         }
 
-        await storage.deleteTemplateByPattern(template.pattern);
+        await storage.deleteTemplateByPattern(ctx.state.userId, template.pattern);
 
         await Promise.all([
             ctx.deleteMessage(),
@@ -597,7 +597,7 @@ function encodeTemplates(templates) {
 
             await storage.storeTemplate(
                 new Template({
-                    pattern: ctx.message.text,
+                    pattern: ctx.message.text.replace(/\\n/g, '\n'),
                     defaultFields,
                     userId: ctx.state.userId,
                 })
