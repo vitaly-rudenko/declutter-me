@@ -94,7 +94,7 @@ function encodeTemplates(templates) {
 
     const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN, {
         telegram: {
-            webhookReply: useWebhooks,
+            webhookReply: false,
         }
     });
 
