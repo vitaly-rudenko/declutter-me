@@ -8,21 +8,12 @@ import { Template } from '../templates/Template.js';
 import { User } from '../users/User.js';
 
 export class PostgresStorage {
-    constructor({
-        host,
-        port,
-        database,
-        user,
-        password,
-        useSsl,
-    }) {
+    constructor({ connectionString }) {
         this._pool = new pg.Pool({
-            host,
-            port,
-            database,
-            user,
-            password,
-            ssl: useSsl,
+            connectionString,
+            ssl: {
+                rejectUnauthorized: false,
+            },
         });
     }
 
