@@ -789,7 +789,7 @@ function encodeTemplates(templates) {
 
     if (process.env.USE_WEBHOOKS === 'true') {
         const port = Number(process.env.PORT) || 80
-        const domain = `${process.env.DOMAIN}:${port}`
+        const domain = process.env.DOMAIN
         const botToken = process.env.TELEGRAM_BOT_TOKEN
         console.log('Domain:', domain, 'Port:', port, 'Bot token:', botToken);
 
