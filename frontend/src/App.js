@@ -1,11 +1,13 @@
-import { createTheme, CssBaseline, Fab, ThemeProvider } from '@material-ui/core';
+import { createTheme, CssBaseline, Fab, ThemeProvider, Typography } from '@material-ui/core';
 import { Brightness4 } from '@material-ui/icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { HashRouter, Redirect, Route, Switch } from 'react-router-dom';
 import { TemplateManager } from './template-manager/TemplateManager';
 import { TemplateBuilder } from './template-builder/TemplateBuilder';
-import './App.css';
 import { Timezone } from './timezone/Timezone';
+import './App.css';
+
+const version = require('../package.json').version;
 
 export const App = () => {
     const [theme, setTheme] = useState(localStorage.getItem('v1.theme') ?? 'dark');
@@ -43,5 +45,6 @@ export const App = () => {
             </Switch>
         </HashRouter>
         <Fab size="small" color="primary" classes={{ root: 'switch-theme-button' }} onClick={switchTheme}><Brightness4/></Fab>
+        <div id="version">{version}</div>
     </ThemeProvider>;
 }
