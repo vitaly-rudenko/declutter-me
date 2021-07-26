@@ -1,0 +1,51 @@
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+        monospace;
+}
+
+.page {
+    margin-bottom: 40px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+
+    animation: appear ease-out 0.5s forwards;
+    opacity: 0;
+}
+
+.page > *:not(:last-child) {
+    margin-bottom: 20px;
+}
+
+.page > * {
+    animation: appear ease-out 0.3s forwards;
+    animation-delay: 0.3s;
+    opacity: 0;
+}
+
+.page > *:nth-child(1) { animation-delay: 0s; }
+.page > *:nth-child(2) { animation-delay: 0.05s; }
+.page > *:nth-child(3) { animation-delay: 0.1s; }
+.page > *:nth-child(4) { animation-delay: 0.15s; }
+.page > *:nth-child(5) { animation-delay: 0.2s; }
+.page > *:nth-child(6) { animation-delay: 0.25s; }
+
+@media only screen and (min-width: 900px) {
+    .page {
+        margin-top: 20px;
+    }
+}
+
+@keyframes appear {
+    to {
+        opacity: 1;
+    }
+}

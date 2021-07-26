@@ -1,0 +1,59 @@
+{
+  "name": "declutter-me",
+  "version": "1.0.0",
+  "description": "Smart & customizable organizer",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "npm run db:migrate && node app.js",
+    "debug": "npm run db:migrate && nodemon --legacy-watch app.js",
+    "test": "mocha --recursive",
+    "test:watch": "npm run test -- --watch --parallel",
+    "test:mutate": "stryker run",
+    "test:integration": "npm run db:reset && mocha --recursive integration-test",
+    "db:reset": "npm run umzug db:migrate:undo:all && npm run db:migrate",
+    "db:migrate": "npm run umzug db:migrate",
+    "umzug": "node ./umzug/cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitaly-rudenko/declutter-me.git"
+  },
+  "keywords": [
+    "organizer",
+    "notes",
+    "telegram-bot",
+    "notion"
+  ],
+  "author": "Vitaly Rudenko",
+  "license": "GPL-3.0-only",
+  "bugs": {
+    "url": "https://github.com/vitaly-rudenko/declutter-me/issues"
+  },
+  "homepage": "https://github.com/vitaly-rudenko/declutter-me#readme",
+  "dependencies": {
+    "@notionhq/client": "^0.1.9",
+    "@vitalyrudenko/templater": "^0.0.4",
+    "base64url": "^3.0.1",
+    "dotenv": "^10.0.0",
+    "log4js": "^6.3.0",
+    "markdown-escapes": "^2.0.0",
+    "pako": "^2.0.3",
+    "pg": "^8.6.0",
+    "telegraf": "^4.3.0",
+    "umzug": "^2.3.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@stryker-mutator/core": "^5.0.1",
+    "@stryker-mutator/mocha-runner": "^5.0.1",
+    "chai": "^4.3.4",
+    "chai-as-promised": "^7.1.1",
+    "common-tags": "^1.8.0",
+    "deep-equal-in-any-order": "^1.0.28",
+    "mocha": "^8.3.2",
+    "nodemon": "^2.0.7",
+    "sinon": "^9.2.4",
+    "sinon-chai": "^3.5.0"
+  }
+}

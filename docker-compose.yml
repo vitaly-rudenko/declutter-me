@@ -1,0 +1,41 @@
+version: '3.7'
+services:
+  backend:
+    container_name: backend
+    build:
+      context: backend
+      dockerfile: docker/Dockerfile
+    depends_on:
+      - postgres
+      - localtunnel
+    environment:
+      USE_NATIVE_ENV: "true"
+      DATABASE_URL: "postgres://declutter_me:p4ssw0rd@postgres:5432/declutter_me"
+      TELEGRAM_BOT_TOKEN: "1815276176:AAEZvnG2E6DYNgwsf9i-G-w8SSk_NWNTf0g"
+      DEBUG_CHAT_ID: "-424950579"
+      FRONTEND_DOMAIN: "https://vitaly-rudenko.github.io/declutter-me"
+      GUIDE_LINK_EN: "https://www.notion.so/Declutter-Me-Complete-Guide-78984108cfe840baaf66a5fa4878c4a4"
+      GUIDE_LINK_RU: "https://www.notion.so/Declutter-Me-65e3b12213924208aefa8cf443b28b65"
+      GUIDE_LINK_UK: "https://www.notion.so/Declutter-Me-e8c012521ffa4dc6bbd8476a287c57de"
+      USE_WEBHOOKS: "true"
+      DOMAIN: "https://declutter-me.loca.lt"
+      PORT: "1234"
+    volumes:
+      - ./backend:/backend
+    command: |
+      ./wait-for-it.sh postgres:5432 -t 120 --
+      npm start
+
+  postgres:
+    container_name: postgres
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_DB: declutter_me
+      POSTGRES_USER: declutter_me
+      POSTGRES_PASSWORD: p4ssw0rd
+
+  localtunnel:
+    container_name: localtunnel
+    image: efrecon/localtunnel
+    command:
+      --local-host backend --print-requests --port 1234 --subdomain declutter-me

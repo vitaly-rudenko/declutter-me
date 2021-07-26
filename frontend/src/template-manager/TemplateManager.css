@@ -1,0 +1,11 @@
+span.template-manager__template-list-item--primary {
+    font-family: monospace;
+}
+
+.template-manager__template-list-item-wrapper {
+    margin-bottom: 10px;
+}
+
+.template-manager__template-list-wrapper {
+    margin-bottom: 10px !important;
+}

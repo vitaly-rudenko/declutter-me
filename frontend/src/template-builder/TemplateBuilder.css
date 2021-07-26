@@ -1,0 +1,112 @@
+.template-builder__template-field textarea {
+    font-family: monospace;
+}
+
+.template-builder__token {
+    border-radius: 0px !important;
+}
+
+.template-builder__token-example {
+    line-height: 3em;
+    text-decoration: underline;
+    font-family: monospace !important;
+    white-space: pre-wrap;
+}
+
+.template-builder__token-example-text {
+    text-decoration: underline dotted;
+    text-decoration-color: gray;
+    font-family: monospace !important;
+    white-space: pre-wrap;
+}
+
+@media only screen and (max-width: 900px) {
+    .template-builder__token-example {
+        font-size: smaller !important;
+    }
+    
+    .template-builder__token-example-text {
+        font-size: smaller !important;
+    }
+}
+
+.template-builder__combination-list-item {
+    padding: 0 !important;
+    margin: 0;
+    margin-top: 5px;
+}
+
+.template-builder__combination-list-item--primary {
+    position: relative;
+    margin-top: 10px !important;
+}
+
+.template-builder__token-example-label {
+    position: absolute;
+    margin-top: -1.3em;
+    user-select: none;
+}
+
+.template-builder__token-example-space {
+    user-select: none;
+}
+
+.template-builder__token-example-icon {
+    font-size: 1em !important;
+    margin-right: 0.1em;
+    margin-left: -0.2em;
+    margin-bottom: -0.2em;
+}
+
+.template-builder__token-example--invalid {
+    color: #f44336;
+    text-decoration: wavy underline;
+}
+
+:root {
+    --orange: rgb(179, 111, 75);
+    --yellow: rgb(158, 150, 80);
+    --green: rgb(86, 160, 99);
+    --blue: rgb(87, 129, 161);
+    --purple: rgb(163, 97, 158);
+}
+
+.template-builder__token-example--orange {
+    text-decoration-color: var(--orange);
+}
+
+.template-builder__token-example--orange .template-builder__token-example-label {
+    color: var(--orange);
+}
+
+.template-builder__token-example--yellow {
+    text-decoration-color: var(--yellow);
+}
+
+.template-builder__token-example--yellow .template-builder__token-example-label {
+    color: var(--yellow);
+}
+
+.template-builder__token-example--green {
+    text-decoration-color: var(--green);
+}
+
+.template-builder__token-example--green .template-builder__token-example-label {
+    color: var(--green);
+}
+
+.template-builder__token-example--blue {
+    text-decoration-color: var(--blue);
+}
+
+.template-builder__token-example--blue .template-builder__token-example-label {
+    color: var(--blue);
+}
+
+.template-builder__token-example--purple {
+    text-decoration-color: var(--purple);
+}
+
+.template-builder__token-example--purple .template-builder__token-example-label {
+    color: var(--purple);
+}
