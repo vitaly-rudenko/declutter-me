@@ -5,13 +5,14 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "start": "npm run umzug db:migrate && node app.js",
-    "debug": "npm run umzug db:migrate && nodemon --legacy-watch app.js",
+    "start": "npm run db:migrate && node app.js",
+    "debug": "npm run db:migrate && nodemon --legacy-watch app.js",
     "test": "mocha --recursive",
     "test:watch": "npm run test -- --watch --parallel",
     "test:mutate": "stryker run",
     "test:integration": "npm run db:reset && mocha --recursive integration-test",
-    "db:reset": "npm run umzug db:migrate:undo:all && npm run umzug db:migrate",
+    "db:reset": "npm run umzug db:migrate:undo:all && npm run db:migrate",
+    "db:migrate": "npm run umzug db:migrate",
     "umzug": "node ./umzug/cli.js"
   },
   "repository": {

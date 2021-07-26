@@ -12,6 +12,10 @@ export class PostgresStorage {
         this._client = new pg.Client(connectionString);
     }
 
+    async connect() {
+        await this._client.connect();
+    }
+
     /** @param {import('../users/User').User} user */
     async createUser(user) {
         const response = await this._client.query(`

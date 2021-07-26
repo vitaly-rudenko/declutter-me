@@ -1,5 +1,9 @@
 import dotenv from 'dotenv'
-dotenv.config();
+
+if (process.env.USE_NATIVE_ENV !== 'true') {
+    console.log('Using .env file')
+    dotenv.config();
+}
 
 import { Telegraf, Markup } from 'telegraf';
 import { URL } from 'url';
@@ -88,11 +92,13 @@ function encodeTemplates(templates) {
     }
 
     const storage = new PostgresStorage(process.env.DATABASE_URL);
+    await storage.connect();
 
     const debugChatId = process.env.DEBUG_CHAT_ID;
     const useWebhooks = process.env.USE_WEBHOOKS === 'true'
+    const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN
 
-    const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN, {
+    const bot = new Telegraf(telegramBotToken, {
         telegram: {
             webhookReply: false,
         }
@@ -129,6 +135,10 @@ function encodeTemplates(templates) {
     const withPhase = withPhaseFactory(userSessionManager);
     const withUser = withUserFactory(storage);
     const withNotion = withNotionFactory(notionSessionManager);
+
+    bot.command('version', async (ctx) => {
+        await ctx.reply(packageJson.version);
+    });
 
     bot.use(async (context, next) => {
         if (context.chat.type === 'private') {
@@ -232,12 +242,6 @@ function encodeTemplates(templates) {
             }),
             { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
         );
-    });
-
-    bot.command('version', async (ctx) => {
-        console.log('...version')
-        await ctx.reply(packageJson.version);
-        console.log('version sent...')
     });
 
     bot.command('notion', withUser(), async (ctx) => {
@@ -794,12 +798,20 @@ function encodeTemplates(templates) {
         return (timezoneOffsetMinutes >= 0 ? '+' : '-') + String(timezoneHours).padStart(2, '0') + ':' + String(timezoneMinutes).padStart(2, '0');
     }
 
+    await bot.telegram.deleteWebhook();
+
     if (useWebhooks) {
+        const domain = process.env.DOMAIN;
+        // TODO: fix port
+        const port = 1234; //Number(process.env.PORT) || 3001;
+
+        console.log('Connecting webhook to:', `${domain}:${port}`);
+
         await bot.launch({
             webhook: {
-                domain: process.env.DOMAIN,
-                port: Number(process.env.PORT) || 3000,
-            }
+                domain,
+                port,
+            },
         })
     } else {
         await bot.launch({
