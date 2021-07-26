@@ -802,10 +802,9 @@ function encodeTemplates(templates) {
 
     if (useWebhooks) {
         const domain = process.env.DOMAIN;
-        // TODO: fix port
-        const port = 1234; //Number(process.env.PORT) || 3001;
+        const port = Number(process.env.PORT) || 3001;
 
-        console.log('Connecting webhook to:', `${domain}:${port}`);
+        console.log('Connecting webhook:', `0.0.0.0:${port} => ${domain}`);
 
         await bot.launch({
             webhook: {
