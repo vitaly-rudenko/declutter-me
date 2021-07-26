@@ -1,20 +1,20 @@
 {
   "files": {
-    "main.css": "/declutter-me/static/css/main.13344538.chunk.css",
-    "main.js": "/declutter-me/static/js/main.dca9eb0b.chunk.js",
-    "main.js.map": "/declutter-me/static/js/main.dca9eb0b.chunk.js.map",
+    "main.css": "/declutter-me/static/css/main.ff023f9d.chunk.css",
+    "main.js": "/declutter-me/static/js/main.db36aeba.chunk.js",
+    "main.js.map": "/declutter-me/static/js/main.db36aeba.chunk.js.map",
     "runtime-main.js": "/declutter-me/static/js/runtime-main.97f43e1f.js",
     "runtime-main.js.map": "/declutter-me/static/js/runtime-main.97f43e1f.js.map",
-    "static/js/2.521ceaaf.chunk.js": "/declutter-me/static/js/2.521ceaaf.chunk.js",
-    "static/js/2.521ceaaf.chunk.js.map": "/declutter-me/static/js/2.521ceaaf.chunk.js.map",
+    "static/js/2.6897dbc6.chunk.js": "/declutter-me/static/js/2.6897dbc6.chunk.js",
+    "static/js/2.6897dbc6.chunk.js.map": "/declutter-me/static/js/2.6897dbc6.chunk.js.map",
     "index.html": "/declutter-me/index.html",
-    "static/css/main.13344538.chunk.css.map": "/declutter-me/static/css/main.13344538.chunk.css.map",
-    "static/js/2.521ceaaf.chunk.js.LICENSE.txt": "/declutter-me/static/js/2.521ceaaf.chunk.js.LICENSE.txt"
+    "static/css/main.ff023f9d.chunk.css.map": "/declutter-me/static/css/main.ff023f9d.chunk.css.map",
+    "static/js/2.6897dbc6.chunk.js.LICENSE.txt": "/declutter-me/static/js/2.6897dbc6.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.97f43e1f.js",
-    "static/js/2.521ceaaf.chunk.js",
-    "static/css/main.13344538.chunk.css",
-    "static/js/main.dca9eb0b.chunk.js"
+    "static/js/2.6897dbc6.chunk.js",
+    "static/css/main.ff023f9d.chunk.css",
+    "static/js/main.db36aeba.chunk.js"
   ]
 }
