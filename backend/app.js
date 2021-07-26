@@ -307,7 +307,7 @@ function encodeTemplates(templates) {
         await ctx.answerCbQuery();
         
         const databaseAlias = ctx.match[1];
-        await storage.deleteDatabaseByAlias(databaseAlias);
+        await storage.deleteDatabaseByAlias(ctx.state.userId, databaseAlias);
 
         await Promise.all([
             ctx.deleteMessage(),
@@ -693,7 +693,7 @@ function encodeTemplates(templates) {
                 try {
                     const notionDatabase = await notion.databases.retrieve({ database_id: database.notionDatabaseId });
                     const entry = new NotionEntry({
-                        databaseId: database.notionDatabaseId,
+                        databaseId: notionDatabase.id,
                         fields,
                         properties: Object.entries(notionDatabase.properties)
                             .map(([name, options]) => new NotionProperty({
@@ -773,7 +773,8 @@ function encodeTemplates(templates) {
 
     function isValidNotionDatabaseUrl(link) {
         try {
-            return new URL(link).pathname.slice(1);
+            const databaseId = new URL(link).pathname.slice(1).split('/').pop().split('-').pop();
+            return (/^[a-z0-9]+$/i).test(databaseId);
         } catch (error) {
             return null;
         }
