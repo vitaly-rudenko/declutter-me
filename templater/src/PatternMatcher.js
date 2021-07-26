@@ -50,7 +50,7 @@ export class PatternMatcher {
                     }
 
                     if (value !== undefined && value !== null) {
-                        const existingValue = fieldMap[name]?.value;
+                        const existingValue = fieldMap[name] && fieldMap[name].value;
 
                         fieldMap[name] = new Field({
                             name,
@@ -108,8 +108,8 @@ export class PatternMatcher {
             .map(this.simplifyPattern)
             .filter((combination) => (
                 !combination.some((_, i) => (
-                    combination[i]?.type === TokenType.VARIABLE &&
-                    combination[i - 1]?.type === TokenType.VARIABLE
+                    (combination[i] && combination[i].type) === TokenType.VARIABLE &&
+                    (combination[i - 1] && combination[i - 1].type) === TokenType.VARIABLE
                 ))
             ));
 
@@ -131,7 +131,8 @@ export class PatternMatcher {
     }
 
     scoreCombination(combination, matchers) {
-        return combination.reduce((acc, curr) => acc + (matchers?.score?.(curr) ?? 1), 0);
+        const score = matchers && matchers.score || (() => 1);
+        return combination.reduce((acc, curr) => acc + score(curr), 0);
     }
 
     getTokenCombinations(token, matchers) {
@@ -159,7 +160,7 @@ export class PatternMatcher {
         return pattern.reduce((result, token, i) => {
             const latestToken = result[result.length - 1];
 
-            if (latestToken?.type === TokenType.TEXT && token.type === TokenType.TEXT) {
+            if ((latestToken && latestToken.type) === TokenType.TEXT && token.type === TokenType.TEXT) {
                 latestToken.value += token.value;
             } else {
                 result.push({ ...token });

@@ -1,11 +1,12 @@
 {
   "name": "@vitalyrudenko/templater",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Text pattern matcher",
   "main": "index.js",
   "type": "module",
   "directories": {
-    "test": "test"
+    "test": "test",
+    "prepublish": "npm run test"
   },
   "scripts": {
     "test": "mocha --recursive",
