@@ -95,8 +95,7 @@ function encodeTemplates(templates) {
     await storage.connect();
 
     const debugChatId = process.env.DEBUG_CHAT_ID;
-    const useWebhooks = process.env.USE_WEBHOOKS === 'true'
-    const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN
+    const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
 
     const bot = new Telegraf(telegramBotToken, {
         telegram: {
@@ -142,7 +141,7 @@ function encodeTemplates(templates) {
 
     bot.use(async (context, next) => {
         if (context.chat.type === 'private') {
-            next();
+            await next();
         }
     });
 
@@ -801,24 +800,20 @@ function encodeTemplates(templates) {
 
     await bot.telegram.deleteWebhook();
 
-    if (useWebhooks) {
-        const domain = process.env.DOMAIN;
-        const port = Number(process.env.PORT) || 3001;
+    const domain = process.env.DOMAIN;
+    const port = Number(process.env.PORT) || 3001;
 
-        console.log('Connecting webhook:', `0.0.0.0:${port} => ${domain}`);
+    console.log('Connecting webhook:', `0.0.0.0:${port} => ${domain}`);
 
-        await bot.launch({
-            webhook: {
-                domain,
-                port,
-            },
-        })
-    } else {
-        await bot.launch({
-            allowedUpdates: ['callback_query', 'message'],
-            dropPendingUpdates: true,
-        });
-    }
+    await bot.launch({
+        dropPendingUpdates: true,
+        webhook: {
+            domain,
+            port,
+        },
+    })
+
+    console.log('Webhook info:', await bot.telegram.getWebhookInfo());
 })()
     .then(() => console.log('Started!'));
 

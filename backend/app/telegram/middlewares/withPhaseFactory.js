@@ -15,7 +15,7 @@ export const withPhaseFactory = (userSessionManager) => {
             if (userSessionManager.getPhase(userId) === phase) {
                 await middleware(context, next);
             } else {
-                next();
+                await next();
             }
         }
     };

@@ -22,7 +22,7 @@ export const withNotionFactory = (notionSessionManager) => {
                 throw error;
             }
 
-            next();
+            await next();
         };
     };
 };
