@@ -103,6 +103,11 @@ function encodeTemplates(templates) {
         }
     });
 
+    bot.use(async (context, next) => {
+        console.log('Request received:', context.message);
+        await next();
+    });
+
     process.on('unhandledRejection', async (error) => {
         await logError(error);
     });
