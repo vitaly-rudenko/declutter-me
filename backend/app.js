@@ -812,6 +812,7 @@ function encodeTemplates(templates) {
 
     await bot.launch({
         dropPendingUpdates: true,
+        allowedUpdates: ['callback_query', 'message'],
         webhook: {
             domain,
             port,
