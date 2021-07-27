@@ -811,7 +811,7 @@ function encodeTemplates(templates) {
     console.log('Connecting webhook:', `0.0.0.0:${port} => ${domain}`);
 
     await bot.launch({
-        dropPendingUpdates: true,
+        // dropPendingUpdates: true,
         allowedUpdates: ['callback_query', 'message'],
         webhook: {
             domain,
