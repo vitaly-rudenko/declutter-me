@@ -820,6 +820,11 @@ function encodeTemplates(templates) {
     })
 
     console.log('Webhook info:', await bot.telegram.getWebhookInfo());
+
+    setTimeout(() => {
+        console.log('Exiting...');
+        process.exit(0);
+    }, 10_000);
 })()
     .then(() => console.log('Started!'));
 
