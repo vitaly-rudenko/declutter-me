@@ -16,7 +16,7 @@ export class Cache {
         }, ttlMs);
     }
 
-    set(key, value) {
+    set(key, value = true) {
         this._data.set(key, [Date.now(), value]);
     }
 
@@ -26,6 +26,10 @@ export class Cache {
         }
 
         return this._data.get(key)[1];
+    }
+
+    has(key) {
+        return this._data.has(key);
     }
 
     delete(key) {

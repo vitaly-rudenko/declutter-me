@@ -36,6 +36,7 @@ import { User } from './app/users/User.js';
 import { TelegramAccount } from './app/telegram/TelegramAccount.js';
 import { NotionAccount } from './app/notion/NotionAccount.js';
 import { escapeMd } from './app/utils/escapeMd.js';
+import { Cache } from './app/storage/Cache.js';
 
 const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
 
@@ -803,9 +804,25 @@ function encodeTemplates(templates) {
 
     await bot.telegram.setWebhook(webhookUrl, { allowed_updates: ['message', 'callback_query'] });
 
+    const handledUpdates = new Cache(60_000);
+
     const app = express();
     app.use(express.json());
     app.post(`/bot${telegramBotToken}`, async (req, res, next) => {
+        const updateId = req.body['update_id']
+        if (!updateId) {
+            console.log('Invalid update:', req.body);
+            res.sendStatus(500);
+            return;
+        }
+
+        if (handledUpdates.has(updateId)) {
+            console.log('Update is already handled:', req.body);
+            res.sendStatus(500);
+            return;
+        }
+
+        handledUpdates.set(updateId);
         console.log('Update received:', req.body);
 
         try {
