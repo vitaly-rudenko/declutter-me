@@ -8,6 +8,7 @@ if (process.env.USE_NATIVE_ENV !== 'true') {
 import { Telegraf, Markup } from 'telegraf';
 import { URL } from 'url';
 import { promises as fs } from 'fs';
+import express from 'express';
 import pako from 'pako';
 import base64url from 'base64url';
 
@@ -97,16 +98,7 @@ function encodeTemplates(templates) {
     const debugChatId = process.env.DEBUG_CHAT_ID;
     const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
 
-    const bot = new Telegraf(telegramBotToken, {
-        telegram: {
-            webhookReply: false,
-        }
-    });
-
-    bot.use(async (context, next) => {
-        console.log('Request received:', context.message);
-        await next();
-    });
+    const bot = new Telegraf(telegramBotToken);
 
     process.on('unhandledRejection', async (error) => {
         await logError(error);
@@ -807,19 +799,26 @@ function encodeTemplates(templates) {
 
     const domain = process.env.DOMAIN;
     const port = Number(process.env.PORT) || 3001;
+    const webhookUrl = `${domain}/bot${telegramBotToken}`;
 
-    console.log('Connecting webhook:', `0.0.0.0:${port} => ${domain}`);
+    await bot.telegram.setWebhook(webhookUrl, { allowed_updates: ['message', 'callback_query'] });
 
-    await bot.launch({
-        // dropPendingUpdates: true,
-        allowedUpdates: ['callback_query', 'message'],
-        webhook: {
-            domain,
-            port,
-        },
-    })
+    const app = express();
+    app.use(express.json());
+    app.post(`/bot${telegramBotToken}`, async (req, res, next) => {
+        console.log('Update received:', req.body);
 
-    console.log('Webhook info:', await bot.telegram.getWebhookInfo());
-})()
-    .then(() => console.log('Started!'));
+        try {
+            await bot.handleUpdate(req.body, res);
+        } catch (error) {
+            next(error);
+        }
+    });
 
+    await new Promise(resolve => app.listen(port, () => resolve()));
+
+    console.log(
+        `Webhook 0.0.0.0:${port} is listening at ${webhookUrl}:`,
+        await bot.telegram.getWebhookInfo()
+    );
+})();
