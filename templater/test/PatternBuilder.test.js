@@ -1,8 +1,11 @@
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
+import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 import { stripIndent } from 'common-tags';
 import { InputType, PatternBuilder, TokenType } from '../index.js';
 
 const { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } = TokenType;
+
+chai.use(deepEqualInAnyOrder);
 
 describe('PatternBuilder', () => {
     /** @type {PatternBuilder} */
@@ -276,5 +279,25 @@ describe('PatternBuilder', () => {
                 ] },
             ]);
         });
+
+        it('should build patterns for complex nested variational and optional tokens', () => {
+            expect(patternBuilder.build('(кг|кило[грам[(а|ов)]])')).to.deep.equalInAnyOrder([
+                { type: VARIATIONAL, value: [
+                    [{ type: TEXT, value: 'кг' }],
+                    [
+                        { type: TEXT, value: 'кило' },
+                        { type: OPTIONAL, value: [
+                            { type: TEXT, value: 'грам' },
+                            { type: OPTIONAL, value: [
+                                { type: VARIATIONAL, value: [
+                                    [{ type: TEXT, value: 'а' }],
+                                    [{ type: TEXT, value: 'ов' }],
+                                ] }
+                            ] }
+                        ] }
+                    ]
+                ] }
+            ])
+        })
     });
 });

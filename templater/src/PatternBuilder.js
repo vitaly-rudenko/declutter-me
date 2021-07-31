@@ -2,6 +2,8 @@ import { TokenType } from './TokenType.js';
 
 export class PatternBuilder {
     build(input) {
+        input = input.replace(/\\\|/g, '|')
+
         const result = [];
 
         let currentType = TokenType.TEXT;
@@ -86,7 +88,7 @@ export class PatternBuilder {
                     value: currentType === TokenType.OPTIONAL
                         ? this.build(value)
                         : currentType === TokenType.VARIATIONAL
-                            ? value.split('|').map(v => this.build(v))
+                            ? value.split(/(?<!\\)\|/g).map(v => this.build(v))
                             : currentType === TokenType.VARIABLE
                                 ? value
                                 : value.toLowerCase(),
@@ -97,6 +99,10 @@ export class PatternBuilder {
 
             currentType = type;
             if (!skip) {
+                if (character === '|' && nested > 1) {
+                    value += '\\';
+                }
+
                 value += character;
             }
 
