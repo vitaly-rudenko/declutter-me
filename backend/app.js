@@ -781,7 +781,7 @@ function encodeTemplates(templates) {
                     if (database) {
                         return localize(
                             'output.templates.templateWithDatabase',
-                            { index, pattern, database: database.value }
+                            { index, pattern, database: escapeMd(database.value) }
                         );    
                     }
                     
