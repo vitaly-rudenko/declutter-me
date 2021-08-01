@@ -391,7 +391,15 @@ function encodeTemplates(templates) {
             );
             userSessionManager.setPhase(ctx.state.userId, phases.template.database);
         } else {
-            await ctx.reply(ctx.state.localize('command.templates.add.sendTemplate'));
+            const templateBuilderLink = createTemplateBuilderLink({ language: ctx.state.user?.language });
+            await ctx.reply(
+                ctx.state.localize('command.templates.add.sendTemplate', {
+                    templateBuilderLink,
+                    guideLink: getGuideLink({ language: ctx.state.user?.language }),
+                }),
+                { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
+            );
+
             userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
         }
     });
