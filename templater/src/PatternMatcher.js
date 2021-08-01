@@ -1,4 +1,5 @@
 import { Field } from './fields/Field.js';
+import { InputType } from './InputType.js';
 import { TokenType } from './TokenType.js';
 import { generateCombinations } from './utils/generateCombinations.js';
 import { squashCombinations } from './utils/squashCombinations.js';
@@ -36,7 +37,12 @@ export class PatternMatcher {
                     }
 
                     const nextTokens = combination.slice(i + 1);
-                    value = matcher(remainingInput, { nextTokens });
+                    value = matcher(remainingInput, {
+                        token,
+                        nextTokens,
+                        match: (input, pattern) => this.match(input, pattern, matchers),
+                    });
+                    
                     if (Array.isArray(value)) {
                         for (const valueVariation of value) {
                             const matchResult = this.match(remainingInput.slice(valueVariation.length), nextTokens, matchers);
@@ -51,21 +57,23 @@ export class PatternMatcher {
                         }
                     }
 
-                    if (value !== undefined && value !== null) {
-                        const existingValue = fieldMap[name] && fieldMap[name].value;
-
-                        fieldMap[name] = new Field({
-                            name,
-                            inputType,
-                            value: Array.isArray(existingValue)
-                                ? [...existingValue, value]
-                                : existingValue
-                                    ? [existingValue, value]
-                                    : value,
-                            bang,
-                        })
-                    } else {
-                        fieldMap[name] = undefined;
+                    if (name !== undefined || inputType === InputType.DATABASE) {
+                        if (value !== undefined && value !== null) {
+                            const existingValue = fieldMap[name] && fieldMap[name].value;
+    
+                            fieldMap[name] = new Field({
+                                name,
+                                inputType,
+                                value: Array.isArray(existingValue)
+                                    ? [...existingValue, value]
+                                    : existingValue
+                                        ? [existingValue, value]
+                                        : value,
+                                bang,
+                            })
+                        } else {
+                            fieldMap[name] = undefined;
+                        }
                     }
                 }
 

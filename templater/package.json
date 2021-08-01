@@ -1,6 +1,6 @@
 {
   "name": "@vitalyrudenko/templater",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Text pattern matcher",
   "main": "index.js",
   "type": "module",

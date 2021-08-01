@@ -1,3 +1,4 @@
+import { PatternMatcher } from '../../index.js';
 import { InputType } from '../InputType.js';
 import { TokenType } from '../TokenType.js';
 import { split } from '../utils/split.js';
@@ -35,6 +36,8 @@ export class EntryMatchers {
         this[InputType.EMAIL] = this._email.bind(this);
         this[InputType.PHONE] = this._phone.bind(this);
         this[InputType.NUMBER] = this._number.bind(this);
+
+        this[InputType.MATCH] = this._match.bind(this);
     }
 
     score(token) {
@@ -143,7 +146,11 @@ export class EntryMatchers {
 
     // TODO: add support for natural language numbers
     _number(input, { nextTokens: [nextToken] }) {
-        return this._select(input, nextToken, value => Number.isFinite(Number(value)))
+        return this._select(input, nextToken, value => Number.isFinite(Number(value)));
+    }
+
+    _match(input, { token, nextTokens: [nextToken], match }) {
+        return this._select(input, nextToken, value => match(value, token.match));
     }
 
     _date(input, futureOnly) {
@@ -165,8 +172,6 @@ export class EntryMatchers {
 
     _select(input, nextToken, matcher) {
         if (nextToken && nextToken.type === TokenType.TEXT) {
-            let start = 0
-
             const parts = split(input, nextToken.value)
             const variants = []
             let value = parts.shift()

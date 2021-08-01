@@ -1,3 +1,4 @@
+import { InputType } from './InputType.js';
 import { TokenType } from './TokenType.js';
 
 export class PatternBuilder {
@@ -94,20 +95,38 @@ export class PatternBuilder {
                     }
 
                     let inputType;
-                    [value, inputType] = value.split(':');
 
-                    if (inputType) metadata.inputType = inputType;
+                    if (value === 'database') {
+                        inputType = InputType.DATABASE;
+                        value = null;
+                    } else {
+                        const parts = value.split(':');
+                        if (parts.length > 1) {
+                            value = parts.shift();
+                            inputType = parts.join(':');
+                        }
+                    }
+                    
+
+                    if (inputType) {
+                        if (Object.values(InputType).includes(inputType)) {
+                            metadata.inputType = inputType;
+                        } else {
+                            metadata.inputType = InputType.MATCH;
+                            metadata.match = this.build(inputType);
+                        }
+                    }
                 }
 
                 result.push({
                     type: currentType,
-                    value: currentType === TokenType.OPTIONAL
+                    ...value && { value: currentType === TokenType.OPTIONAL
                         ? this.build(value)
                         : (currentType === TokenType.VARIATIONAL || currentType === TokenType.ANY_ORDER)
                             ? value.split(/(?<!\\)\|/g).map(v => this.build(v))
                             : currentType === TokenType.VARIABLE
                                 ? value
-                                : value.toLowerCase(),
+                                : value.toLowerCase() },
                     ...metadata,
                 });
                 value = '';

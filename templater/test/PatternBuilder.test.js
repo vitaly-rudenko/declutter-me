@@ -233,7 +233,7 @@ describe('PatternBuilder', () => {
             expect(patternBuilder.build('#{database!} buy {Note:text}, please[ {when:future_date}][ #{My Tag:word}]'))
                 .to.deep.eq([
                     { type: TEXT, value: '#' },
-                    { type: VARIABLE, value: 'database', bang: true },
+                    { type: VARIABLE, inputType: InputType.DATABASE, bang: true },
                     { type: TEXT, value: ' buy ' },
                     { type: VARIABLE, value: 'Note', inputType: TEXT },
                     { type: TEXT, value: ', please' },
@@ -318,6 +318,31 @@ describe('PatternBuilder', () => {
                     ] }],
                     [{ type: TEXT, value: 'd ' }],
                 ] }
+            ]);
+        });
+
+        it('should build patterns for custom input types', () => {
+            expect(patternBuilder.build('{Unit:(kg|g|pcs)}')).to.deep.eq([
+                { type: VARIABLE, inputType: InputType.MATCH, value: 'Unit', match: [
+                    { type: VARIATIONAL, value: [
+                        [{ type: TEXT, value: 'kg' }],
+                        [{ type: TEXT, value: 'g' }],
+                        [{ type: TEXT, value: 'pcs' }],
+                    ] }
+                ] }
+            ]);
+
+            expect(patternBuilder.build('{Amount:{:number} kg}')).to.deep.eq([
+                { type: VARIABLE, inputType: InputType.MATCH, value: 'Amount', match: [
+                    { type: VARIABLE, inputType: InputType.NUMBER },
+                    { type: TEXT, value: ' kg' },
+                ] }
+            ]);
+        });
+
+        it('should parse {database} variable properly', () => {
+            expect(patternBuilder.build('{database}')).to.deep.eq([
+                { type: VARIABLE, inputType: InputType.DATABASE }
             ]);
         });
     });

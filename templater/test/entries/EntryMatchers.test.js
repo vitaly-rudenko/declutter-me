@@ -555,7 +555,7 @@ describe('EntryMatchers', () => {
             });
 
             it('should match complex multiline patterns', () => {
-                const pattern = patternBuilder.build('[#{:database}( |\n)][заметка( |\n)]{заметка:text}[( |\n)#{теги:word}][( |\n)#{теги:word}][( |\n)#{теги:word}]');
+                const pattern = patternBuilder.build('[#{database}( |\n)][заметка( |\n)]{заметка:text}[( |\n)#{теги:word}][( |\n)#{теги:word}][( |\n)#{теги:word}]');
 
                 expect(
                     patternMatcher.match(stripIndent`
@@ -567,7 +567,7 @@ describe('EntryMatchers', () => {
                     `, pattern, matchers)
                 ).to.deep.eq({
                     fields: [
-                        new Field({ name: '', inputType: InputType.DATABASE, value: 'notes' }),
+                        new Field({ inputType: InputType.DATABASE, value: 'notes' }),
                         new Field({ name: 'заметка', inputType: InputType.TEXT, value: 'Привет мир.\nКак дела?' }),
                         new Field({ name: 'теги', inputType: InputType.WORD, value: ['tag1', 'tag2', 'tag3'] }),
                     ]
@@ -883,6 +883,31 @@ describe('EntryMatchers', () => {
                         new Field({ name: 'Name', inputType: InputType.WORD, value: 'Jon' }),
                         new Field({ name: 'E-mail', inputType: InputType.EMAIL, value: 'jon.snow@example.com' }),
                         new Field({ name: 'Phone', inputType: InputType.PHONE, value: '+1234567890' }),
+                    ]
+                });
+        });
+
+        it('should match variables with custom matchers', () => {
+            const pattern = patternBuilder.build('buy {Amount:number} {Unit:(kg|g|pcs)} of {Item:text}');
+
+            expect(patternMatcher.match('buy 5 kg of fresh potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Amount', inputType: InputType.NUMBER, value: '5' }),
+                        new Field({ name: 'Unit', inputType: InputType.MATCH, value: 'kg' }),
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
+                    ]
+                });
+        });
+
+        it('should ignore variables without names', () => {
+            const pattern = patternBuilder.build('buy {Amount:{:number} kg} of {Item:text}');
+
+            expect(patternMatcher.match('buy 5 kg of fresh potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Amount', inputType: InputType.MATCH, value: '5 kg' }),
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
                     ]
                 });
         });
