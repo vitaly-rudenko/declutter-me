@@ -1,4 +1,3 @@
-import { PatternMatcher } from '../../index.js';
 import { InputType } from '../InputType.js';
 import { TokenType } from '../TokenType.js';
 import { split } from '../utils/split.js';
@@ -17,6 +16,7 @@ const InputTypeScore = {
     [InputType.EMAIL]: 3,
     [InputType.PHONE]: 3,
     [InputType.NUMBER]: 3,
+    [InputType.MATCH]: 3,
 };
 
 export class EntryMatchers {

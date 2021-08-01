@@ -888,7 +888,14 @@ describe('EntryMatchers', () => {
         });
 
         it('should match variables with custom matchers', () => {
-            const pattern = patternBuilder.build('buy {Amount:number} {Unit:(kg|g|pcs)} of {Item:text}');
+            const pattern = patternBuilder.build('buy [{Amount:number} {Unit:(kg|g|pcs)} of ]{Item:text}');
+
+            expect(patternMatcher.match('buy fresh potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
+                    ]
+                });
 
             expect(patternMatcher.match('buy 5 kg of fresh potatoes', pattern, matchers))
                 .to.deep.eq({
@@ -900,13 +907,55 @@ describe('EntryMatchers', () => {
                 });
         });
 
-        it('should ignore variables without names', () => {
-            const pattern = patternBuilder.build('buy {Amount:{:number} kg} of {Item:text}');
+        it('should match variables with complex custom matchers', () => {
+            const pattern = patternBuilder.build('buy [{Amount:{:number}[ ][(kg|g|pcs)]}[ of] ]{Item:text}');
 
+            expect(patternMatcher.match('buy fresh potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
+                    ]
+                });
+
+            expect(patternMatcher.match('buy 5 fresh potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Amount', inputType: InputType.MATCH, value: '5' }),
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
+                    ]
+                });
+            
             expect(patternMatcher.match('buy 5 kg of fresh potatoes', pattern, matchers))
                 .to.deep.eq({
                     fields: [
                         new Field({ name: 'Amount', inputType: InputType.MATCH, value: '5 kg' }),
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
+                    ]
+                });
+            
+            expect(patternMatcher.match('buy 100g of fresh potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Amount', inputType: InputType.MATCH, value: '100g' }),
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
+                    ]
+                });
+            
+            expect(patternMatcher.match('buy 123 pcs of fresh potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Amount', inputType: InputType.MATCH, value: '123 pcs' }),
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
+                    ]
+                });
+        });
+
+        it('should ignore variables without names', () => {
+            const pattern = patternBuilder.build('buy {:number} kg of {Item:text}');
+
+            expect(patternMatcher.match('buy 5 kg of fresh potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
                         new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
                     ]
                 });
