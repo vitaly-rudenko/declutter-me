@@ -172,20 +172,20 @@ export class EntryMatchers {
 
     _select(input, nextToken, matcher) {
         if (nextToken && nextToken.type === TokenType.TEXT) {
-            const parts = split(input, nextToken.value)
-            const variants = []
-            let value = parts.shift()
+            const parts = split(input, nextToken.value);
+            const variants = [];
+            let value = parts.shift();
 
             for (const part of parts) {
                 if (matcher(value)) {
-                    variants.push(value)
+                    variants.push(value);
                 }
 
-                value += nextToken.value + part
+                value += nextToken.value + part;
             }
 
-            if (variants.length === 0) return null
-            return variants
+            if (variants.length === 0) return null;
+            return variants.reverse();
         }
 
         if (matcher(input)) {

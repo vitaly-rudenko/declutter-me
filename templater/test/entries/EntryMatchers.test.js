@@ -950,6 +950,18 @@ describe('EntryMatchers', () => {
                 });
         });
 
+        it('should match simple variables with custom matchers', () => {
+            const pattern = patternBuilder.build('{a:{:number}[ a]} {b:text}');
+
+            expect(patternMatcher.match('123 a b', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'a', inputType: InputType.MATCH, value: '123 a' }),
+                        new Field({ name: 'b', inputType: InputType.TEXT, value: 'b' }),
+                    ]
+                });
+        });
+
         it('should ignore variables without names', () => {
             const pattern = patternBuilder.build('buy {:number} kg of {Item:text}');
 
