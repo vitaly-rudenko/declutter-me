@@ -528,8 +528,9 @@ function encodeTemplates(templates) {
         // Start
         withPhase(phases.start.timezone, async (ctx) => {
             if (!('text' in ctx.message)) return;
-
-            const { language } = userSessionManager.context(ctx.state.userId || ctx.from.id);
+            
+            const userId = ctx.state.userId || ctx.from.id;
+            const { language } = userSessionManager.context(userId);
 
             const timezoneOffsetMinutes = parseTimezoneOffsetMinutes(ctx.message.text);
             if (timezoneOffsetMinutes === null) {
@@ -544,7 +545,8 @@ function encodeTemplates(templates) {
                 await storage.updateUser(new User({ id: ctx.state.userId, language, timezoneOffsetMinutes }));
             }
 
-            userSessionManager.reset(ctx.state.userId || ctx.from.id);
+            notionSessionManager.clear(userId)
+            userSessionManager.clear(userId);
 
             await ctx.reply(localize(
                 'command.start.finished',
@@ -569,10 +571,11 @@ function encodeTemplates(templates) {
 
             const token = ctx.message.text;
 
-            await storage.createNotionAccount(new NotionAccount({ userId: ctx.state.userId, token }));
+            await storage.upsertNotionAccount(new NotionAccount({ userId: ctx.state.userId, token }));
             await ctx.reply(ctx.state.localize('command.notion.allSet', { token }));
 
-            userSessionManager.reset(ctx.state.userId);
+            userSessionManager.clear(ctx.state.userId);
+            notionSessionManager.clear(ctx.state.userId);
         }),
         // Databases
         withPhase(phases.addDatabase.link, async (ctx) => {
@@ -606,7 +609,7 @@ function encodeTemplates(templates) {
                 })
             );
 
-            userSessionManager.reset(ctx.state.userId);
+            userSessionManager.clear(ctx.state.userId);
             await ctx.reply(ctx.state.localize('command.databases.add.added', { alias }));
         }),
         // Patterns
@@ -623,7 +626,7 @@ function encodeTemplates(templates) {
                 })
             );
 
-            userSessionManager.reset(ctx.state.userId);
+            userSessionManager.clear(ctx.state.userId);
             await ctx.reply(ctx.state.localize('command.templates.add.added'));
         }),
         // Handle message

@@ -46,7 +46,8 @@
         },
         "info": {
             "response": [
-                "🇺🇦 {language} \\| 🕚 {timezone} \\| Введи */start*, щоб відредагувати\\.",
+                "🇺🇦 {language} \\| 🕚 {timezone}",
+                "Введи */start*, щоб змінити мову або часовий пояс\\.",
                 "",
                 "*/notion*",
                 "`{notionToken}`",

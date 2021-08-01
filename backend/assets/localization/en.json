@@ -46,7 +46,8 @@
         },
         "info": {
             "response": [
-                "🇬🇧 {language} \\| 🕚 {timezone} \\| Use */start* to change\\.",
+                "🇬🇧 {language} \\| 🕚 {timezone}",
+                "Use */start* to change your language or timezone\\.",
                 "",
                 "*/notion*",
                 "`{notionToken}`",

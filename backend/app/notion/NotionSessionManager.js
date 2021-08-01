@@ -24,4 +24,8 @@ export class NotionSessionManager {
         this._notions.set(userId, [notion, notionAccount]);
         return [notion, notionAccount];
     }
+
+    clear(userId) {
+        this._notions.delete(userId);
+    }
 }

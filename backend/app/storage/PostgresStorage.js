@@ -89,12 +89,13 @@ export class PostgresStorage {
     }
 
     /** @param {import('../notion/NotionAccount').NotionAccount} notionAccount */
-    async createNotionAccount(notionAccount) {
+    async upsertNotionAccount(notionAccount) {
         const response = await this._client.query(`
             INSERT INTO notion_accounts (user_id, token)
             VALUES ($1, $2)
             ON CONFLICT ON CONSTRAINT notion_accounts_pkey
-            DO NOTHING
+            DO UPDATE
+            SET token = $2
             RETURNING *;
         `, [notionAccount.userId, notionAccount.token]);
 
