@@ -8,8 +8,12 @@
     "notionNotConfigured": "First you need to configure /notion 🙇",
     "output": {
         "templates": {
-            "template": "{order}\\. {pattern}",
-            "none": "\\<none\\>"
+            "template": "{index}\\. `{pattern}`",
+            "templateWithDatabase": [
+                "{index}\\. `{pattern}`",
+                "\\- 🗃 *Database:* {database}"
+            ],
+            "none": "*\\<none\\>*"
         }
     },
     "command": {
@@ -36,19 +40,20 @@
         },
         "info": {
             "response": [
-                "Hi, {name}\\!",
+                "🇬🇧 {language} \\| 🕚 {timezone}",
                 "",
-                "Language: {language}",
-                "Timezone: {timezone}",
-                "Notion token: {notionToken}",
+                "*Notion token*",
+                "`{notionToken}`",
                 "",
-                "Databases: {databases}",
+                "*Databases*",
+                "{databases}",
                 "",
-                "Templates: {templates}"
+                "*Templates*",
+                "{templates}"
             ],
-            "database": "\\- {alias} \\([{notionDatabaseId}]({notionDatabaseUrl})\\)",
-            "notProvided": "\\<not provided\\>",
-            "none": "\\<none\\>"
+            "database": "{index}\\. {alias} \\([{notionDatabaseId}]({notionDatabaseUrl})\\)",
+            "notProvided": "*\\<not provided\\>*",
+            "none": "*\\<none\\>*"
         },
         "notion": {
             "yourToken": "Your Notion integration token:",
@@ -60,7 +65,11 @@
             ]
         },
         "databases": {
-            "chooseAction": "What do you want to do with your databases?",
+            "chooseAction": [
+                "{databases}",
+                "",
+                "What do you want to do with your databases?"
+            ],
             "actions": {
                 "add": "➕ Add",
                 "edit": "✏️ Edit",
@@ -80,7 +89,11 @@
             }
         },
         "templates": {
-            "chooseAction": "What do you want to do with your templates?",
+            "chooseAction": [
+                "{templates}",
+                "",
+                "What do you want to do with your templates?"
+            ],
             "actions": {
                 "add": "➕ Add",
                 "reorder": "🔃 Reorder",
@@ -116,14 +129,16 @@
                     "[{linkLabel}]({link})"
                 ],
                 "success": [
-                    "✅ The new order of your templates: {templates}",
+                    "✅ The new order of your templates:",
+                    "{templates}",
                     "",
                     "Use /templates command to edit your templates\\."
                 ],
                 "partialSuccess": [
                     "❗️ Could not find some templates\\.",
                     "",
-                    "The new order of your templates: {templates}",
+                    "The new order of your templates:",
+                    "{templates}",
                     "",
                     "Use /templates command to edit your templates\\."
                 ]

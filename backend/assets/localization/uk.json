@@ -8,8 +8,12 @@
     "notionNotConfigured": "Спочатку тобі потрібно налаштувати /notion 🙇",
     "output": {
         "templates": {
-            "template": "{order}\\. {pattern}",
-            "none": "\\<порожньо\\>"
+            "template": "{index}\\. `{pattern}`",
+            "templateWithDatabase": [
+                "{index}\\. `{pattern}`",
+                "\\- 🗃 *База даних:* {database}"
+            ],
+            "none": "*\\<порожньо\\>*"
         }
     },
     "command": {
@@ -36,19 +40,20 @@
         },
         "info": {
             "response": [
-                "Привіт, {name}\\!",
+                "🇺🇦 {language} \\| 🕚 {timezone}",
                 "",
-                "Мова: {language}",
-                "Часовий пояс: {timezone}",
-                "Токен Notion: {notionToken}",
+                "*Токен Notion*",
+                "`{notionToken}`",
                 "",
-                "Бази даних: {databases}",
+                "*Бази даних*",
+                "{databases}",
                 "",
-                "Шаблони: {templates}"
+                "*Шаблони*",
+                "{templates}"
             ],
-            "database": "\\- {alias} \\([{notionDatabaseId}]({notionDatabaseUrl})\\)",
-            "notProvided": "\\<не налаштовано\\>",
-            "none": "\\<порожньо\\>"
+            "database": "{index}\\. {alias} \\([{notionDatabaseId}]({notionDatabaseUrl})\\)",
+            "notProvided": "*\\<не налаштовано\\>*",
+            "none": "*\\<порожньо\\>*"
         },
         "notion": {
             "yourToken": "Твій токен інтеграції з Notion:",
@@ -60,7 +65,11 @@
             ]
         },
         "databases": {
-            "chooseAction": "Що ти хочеш зробити зі своїми базами даних?",
+            "chooseAction": [
+                "{databases}",
+                "",
+                "Що ти хочеш зробити зі своїми базами даних?"
+            ],
             "actions": {
                 "add": "➕ Додати",
                 "edit": "✏️ Редагувати",
@@ -80,7 +89,11 @@
             }
         },
         "templates": {
-            "chooseAction": "Що ти хочеш зробити зі своїми шаблонами?",
+            "chooseAction": [
+                "{templates}",
+                "",
+                "Що ти хочеш зробити зі своїми шаблонами?"
+            ],
             "actions": {
                 "add": "➕ Додати",
                 "reorder": "🔃 Змінити порядок",
@@ -116,14 +129,16 @@
                     "[{linkLabel}]({link})"
                 ],
                 "success": [
-                    "✅ Порядок шаблонів був оновлений: {templates}",
+                    "✅ Порядок шаблонів був оновлений:",
+                    "{templates}",
                     "",
                     "Використовуй /templates для редагування шаблонів\\."
                 ],
                 "partialSuccess": [
                     "❗️ Не всі шаблони вдалося знайти\\.",
                     "",
-                    "Порядок шаблонів був оновлений: {templates}",
+                    "Порядок шаблонів був оновлений:",
+                    "{templates}",
                     "",
                     "Використовуй /templates для редагування шаблонів\\."
                 ]

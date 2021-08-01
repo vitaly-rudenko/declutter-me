@@ -219,13 +219,7 @@ function encodeTemplates(templates) {
                     ? escapeMd(formatTimezone(ctx.state.user?.timezoneOffsetMinutes))
                     : ctx.state.localize('command.info.notProvided'),
                 notionToken: escapeMd(ctx.state.notionAccount?.token ?? ctx.state.localize('command.info.notProvided')),
-                databases: databases.length > 0
-                    ? '\n' + databases.map(list => ctx.state.localize('command.info.database', {
-                        notionDatabaseId: escapeMd(list.notionDatabaseId),
-                        notionDatabaseUrl: list.notionDatabaseUrl,
-                        alias: escapeMd(list.alias),
-                    })).join('\n')
-                    : ctx.state.localize('command.info.none'),
+                databases: formatDatabases(databases, ctx.state.localize),
                 templates: formatTemplates(templates, ctx.state.localize),
             }),
             { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
@@ -247,13 +241,20 @@ function encodeTemplates(templates) {
     });
 
     bot.command('databases', withUser(), withNotion(), async (ctx) => {
+        const databases = await storage.findDatabasesByUserId(ctx.state.userId);
+
         await ctx.reply(
-            ctx.state.localize('command.databases.chooseAction'),
-            Markup.inlineKeyboard([
-                Markup.button.callback(ctx.state.localize('command.databases.actions.add'), 'databases:add'),
-                // Markup.button.callback(ctx.state.localize('command.databases.actions.edit'), 'databases:edit'),
-                Markup.button.callback(ctx.state.localize('command.databases.actions.delete'), 'databases:delete'),
-            ], { columns: 1 })
+            ctx.state.localize('command.databases.chooseAction', {
+                databases: formatDatabases(databases, ctx.state.localize),
+            }),
+            {
+                parse_mode: 'MarkdownV2',
+                reply_markup: Markup.inlineKeyboard([
+                    Markup.button.callback(ctx.state.localize('command.databases.actions.add'), 'databases:add'),
+                    // Markup.button.callback(ctx.state.localize('command.databases.actions.edit'), 'databases:edit'),
+                    Markup.button.callback(ctx.state.localize('command.databases.actions.delete'), 'databases:delete'),
+                ], { columns: 1 }).reply_markup,
+            }
         );
     });
 
@@ -363,14 +364,21 @@ function encodeTemplates(templates) {
             return;
         }
 
+        const templates = await storage.findTemplatesByUserId(ctx.state.userId);
+
         await ctx.reply(
-            ctx.state.localize('command.templates.chooseAction'),
-            Markup.inlineKeyboard([
-                Markup.button.callback(ctx.state.localize('command.templates.actions.add'), 'templates:add'),
-                Markup.button.callback(ctx.state.localize('command.templates.actions.reorder'), 'templates:reorder'),
-                // Markup.button.callback(ctx.state.localize('command.templates.actions.edit'), 'templates:edit'),
-                Markup.button.callback(ctx.state.localize('command.templates.actions.delete'), 'templates:delete'),
-            ], { columns: 1 })
+            ctx.state.localize('command.templates.chooseAction', {
+                templates: formatTemplates(templates, ctx.state.localize),
+            }),
+            {
+                parse_mode: 'MarkdownV2',
+                reply_markup: Markup.inlineKeyboard([
+                    Markup.button.callback(ctx.state.localize('command.templates.actions.add'), 'templates:add'),
+                    Markup.button.callback(ctx.state.localize('command.templates.actions.reorder'), 'templates:reorder'),
+                    // Markup.button.callback(ctx.state.localize('command.templates.actions.edit'), 'templates:edit'),
+                    Markup.button.callback(ctx.state.localize('command.templates.actions.delete'), 'templates:delete'),
+                ], { columns: 1 }).reply_markup
+            }
         );
     });
 
@@ -761,15 +769,37 @@ function encodeTemplates(templates) {
         await logError(error);
     });
 
+    /** @param {Template[]} templates */
     function formatTemplates(templates, localize) {
         return templates.length > 0
-            ? '\n' + templates.map(
-                template => localize('output.templates.template', {
-                    order: template.order,
-                    pattern: escapeMd(formatPattern(template.pattern))
-                })
+            ? templates.map(
+                (template, i) => {
+                    const database = template.defaultFields.find(f => f.inputType === InputType.DATABASE);
+                    const index = i + 1;
+                    const pattern = escapeMd(formatPattern(template.pattern));
+
+                    if (database) {
+                        return localize(
+                            'output.templates.templateWithDatabase',
+                            { index, pattern, database: database.value }
+                        );    
+                    }
+                    
+                    return localize('output.templates.template', { index, pattern });
+                }
             ).join('\n')
             : localize('output.templates.none');
+    }
+
+    function formatDatabases(databases, localize) {
+        return databases.length > 0
+            ? databases.map((database, i) => localize('command.info.database', {
+                index: i + 1,
+                notionDatabaseId: escapeMd(database.notionDatabaseId),
+                notionDatabaseUrl: database.notionDatabaseUrl,
+                alias: escapeMd(database.alias),
+            })).join('\n')
+            : localize('command.info.none')
     }
 
     function formatPattern(pattern) {
