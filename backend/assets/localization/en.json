@@ -61,7 +61,7 @@
                 "💡 Templates on the top of the list have higher priority\\."
             ],
             "database": "{index}\\. [{alias}]({notionDatabaseUrl})",
-            "notProvided": "*\\<not provided\\>*",
+            "notProvided": "<not provided>",
             "none": "*\\<none\\>*"
         },
         "notion": {

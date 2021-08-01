@@ -61,7 +61,7 @@
                 "💡 Чем выше шаблон в списке, тем больше у него приоритет\\."
             ],
             "database": "{index}\\. [{alias}]({notionDatabaseUrl})",
-            "notProvided": "*\\<не настроено\\>*",
+            "notProvided": "<не настроено>",
             "none": "*\\<пусто\\>*"
         },
         "notion": {

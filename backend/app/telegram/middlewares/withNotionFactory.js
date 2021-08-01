@@ -17,9 +17,9 @@ export const withNotionFactory = (notionSessionManager) => {
                         await ctx.reply(ctx.state.localize('notionNotConfigured'));
                         return;
                     }
+                } else {
+                    throw error;
                 }
-                
-                throw error;
             }
 
             await next();
