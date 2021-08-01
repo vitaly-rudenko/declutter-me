@@ -1,5 +1,7 @@
 import { Field } from './fields/Field.js';
 import { TokenType } from './TokenType.js';
+import { generateCombinations } from './utils/generateCombinations.js';
+import { squashCombinations } from './utils/squashCombinations.js';
 
 export class PatternMatcher {
     /**
@@ -151,6 +153,14 @@ export class PatternMatcher {
             for (const variation of token.value) {
                 combinations.push(...this.getPatternCombinations(variation, matchers));
             }
+        }
+        
+        if (token.type === TokenType.ANY_ORDER) {
+            combinations.push(
+                ...squashCombinations(token.value.map(part => this.getPatternCombinations(part, matchers)))
+                    .map(c => generateCombinations(c).map(c => c.flat()))
+                    .flat()
+            )
         }
 
         return combinations.map(this.simplifyPattern);

@@ -3,7 +3,7 @@ import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 import { stripIndent } from 'common-tags';
 import { InputType, PatternBuilder, TokenType } from '../index.js';
 
-const { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } = TokenType;
+const { TEXT, VARIABLE, OPTIONAL, VARIATIONAL, ANY_ORDER } = TokenType;
 
 chai.use(deepEqualInAnyOrder);
 
@@ -297,7 +297,28 @@ describe('PatternBuilder', () => {
                         ] }
                     ]
                 ] }
-            ])
-        })
+            ]);
+        });
+
+        it('should build patterns with any-order operator', () => {
+            expect(patternBuilder.build('<a |b |c >')).to.deep.eq([
+                { type: ANY_ORDER, value: [
+                    [{ type: TEXT, value: 'a ' }],
+                    [{ type: TEXT, value: 'b ' }],
+                    [{ type: TEXT, value: 'c ' }],
+                ] }
+            ]);
+
+            expect(patternBuilder.build('<a |<b |c >|d >')).to.deep.eq([
+                { type: ANY_ORDER, value: [
+                    [{ type: TEXT, value: 'a ' }],
+                    [{ type: ANY_ORDER, value: [
+                        [{ type: TEXT, value: 'b ' }],
+                        [{ type: TEXT, value: 'c ' }],
+                    ] }],
+                    [{ type: TEXT, value: 'd ' }],
+                ] }
+            ]);
+        });
     });
 });

@@ -3,4 +3,5 @@ export const TokenType = {
     VARIABLE: 'variable',
     OPTIONAL: 'optional',
     VARIATIONAL: 'variational',
+    ANY_ORDER: 'anyOrder',
 };

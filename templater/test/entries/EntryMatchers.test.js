@@ -833,7 +833,6 @@ describe('EntryMatchers', () => {
         it('should match numbers without separators', () => {
             const pattern = patternBuilder.build('buy {kg:number}kg of {item:text}');
 
-
             expect(patternMatcher.match('buy 5kg of potatoes', pattern, matchers))
                 .to.deep.eq({
                     fields: [
@@ -842,5 +841,50 @@ describe('EntryMatchers', () => {
                     ]
                 });
         })
+
+        it('should match any-order operator', () => {
+            const pattern = patternBuilder.build('contact {Name:word}<[ {Phone:phone}]|[ {E-mail:email}]>');
+
+            expect(patternMatcher.match('contact Jon', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Name', inputType: InputType.WORD, value: 'Jon' }),
+                    ]
+                });
+
+            expect(patternMatcher.match('contact Jon +1234567890', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Name', inputType: InputType.WORD, value: 'Jon' }),
+                        new Field({ name: 'Phone', inputType: InputType.PHONE, value: '+1234567890' }),
+                    ]
+                });
+
+            expect(patternMatcher.match('contact Jon jon.snow@example.com', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Name', inputType: InputType.WORD, value: 'Jon' }),
+                        new Field({ name: 'E-mail', inputType: InputType.EMAIL, value: 'jon.snow@example.com' }),
+                    ]
+                });
+
+            expect(patternMatcher.match('contact Jon +1234567890 jon.snow@example.com', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Name', inputType: InputType.WORD, value: 'Jon' }),
+                        new Field({ name: 'Phone', inputType: InputType.PHONE, value: '+1234567890' }),
+                        new Field({ name: 'E-mail', inputType: InputType.EMAIL, value: 'jon.snow@example.com' }),
+                    ]
+                });
+
+            expect(patternMatcher.match('contact Jon jon.snow@example.com +1234567890', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Name', inputType: InputType.WORD, value: 'Jon' }),
+                        new Field({ name: 'E-mail', inputType: InputType.EMAIL, value: 'jon.snow@example.com' }),
+                        new Field({ name: 'Phone', inputType: InputType.PHONE, value: '+1234567890' }),
+                    ]
+                });
+        });
     });
 });
