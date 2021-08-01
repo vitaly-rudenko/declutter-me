@@ -818,7 +818,7 @@ function encodeTemplates(templates) {
 
         if (handledUpdates.has(updateId)) {
             console.log('Update is already handled:', req.body);
-            res.sendStatus(500);
+            res.sendStatus(200);
             return;
         }
 

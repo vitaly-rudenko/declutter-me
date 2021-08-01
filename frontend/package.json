@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.11.4",
@@ -25,7 +25,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "predeploy": "npm run build",
+    "predeploy": "npm install && npm run build",
     "deploy": "gh-pages -d build"
   },
   "homepage": "https://vitaly-rudenko.github.io/declutter-me/",
