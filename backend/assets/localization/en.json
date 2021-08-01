@@ -11,14 +11,20 @@
             "template": "{index}\\. `{pattern}`",
             "templateWithDatabase": [
                 "{index}\\. `{pattern}`",
-                "\\- 🗃 *Database:* {database}"
+                "    → *{database}*"
             ],
             "none": "*\\<none\\>*"
         }
     },
     "command": {
         "help": [
-            "Hi\\! Use /notion to setup Notion integration\\.",
+            "Hi\\! 👋",
+            "",
+            "Use */start* to change your language or timezone\\.",
+            "Use */notion* to setup your Notion account\\.",
+            "Use */database* to add or remove your databases\\.",
+            "Use */templates* to add, remove or reorder your templates\\.",
+            "Use */info* to view your information\\.",
             "",
             "📚 It is recommended to read [Complete guide]({guideLink})\\."
         ],
@@ -40,18 +46,20 @@
         },
         "info": {
             "response": [
-                "🇬🇧 {language} \\| 🕚 {timezone}",
+                "🇬🇧 {language} \\| 🕚 {timezone} \\| Use */start* to change\\.",
                 "",
-                "*Notion token*",
+                "*/notion*",
                 "`{notionToken}`",
                 "",
-                "*Databases*",
+                "*/databases*",
                 "{databases}",
                 "",
-                "*Templates*",
-                "{templates}"
+                "*/templates*",
+                "{templates}",
+                "",
+                "💡 Templates on the top of the list have higher priority\\."
             ],
-            "database": "{index}\\. {alias} \\([{notionDatabaseId}]({notionDatabaseUrl})\\)",
+            "database": "{index}\\. [{alias}]({notionDatabaseUrl})",
             "notProvided": "*\\<not provided\\>*",
             "none": "*\\<none\\>*"
         },

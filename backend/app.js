@@ -795,7 +795,6 @@ function encodeTemplates(templates) {
         return databases.length > 0
             ? databases.map((database, i) => localize('command.info.database', {
                 index: i + 1,
-                notionDatabaseId: escapeMd(database.notionDatabaseId),
                 notionDatabaseUrl: database.notionDatabaseUrl,
                 alias: escapeMd(database.alias),
             })).join('\n')
