@@ -172,22 +172,40 @@ export class PostgresStorage {
 
     /** @param {import('../templates/Template').Template} template */
     async storeTemplate(template) {
-        const order = template.order ?? (await this.getMaximumTemplateOrder(template.userId) + 1)
+        const order = template.order ?? 1;
         const defaultFields = JSON.stringify(template.defaultFields.map(item => this.serializeField(item)))
 
-        const response = await this._client.query(`
-            INSERT INTO templates (user_id, pattern, "order", default_fields)
-            VALUES ($1, $2, $3, $4)
-            ON CONFLICT ON CONSTRAINT templates_pkey
-            DO UPDATE
-            SET ("order", default_fields) = ($3, $4)
-            RETURNING *;
-        `, [
-            template.userId,
-            template.pattern,
-            order,
-            defaultFields,
-        ]);
+        let response;
+        try {
+            await this._client.query('BEGIN;');
+
+            if (template.order === null) {
+                await this._client.query(`
+                    UPDATE templates
+                    SET "order" = "order" + 1
+                    WHERE user_id = $1;
+                `, [template.userId]);
+            }
+
+            response = await this._client.query(`
+                INSERT INTO templates (user_id, pattern, "order", default_fields)
+                VALUES ($1, $2, $3, $4)
+                ON CONFLICT ON CONSTRAINT templates_pkey
+                DO UPDATE
+                SET ("order", default_fields) = ($3, $4)
+                RETURNING *;
+            `, [
+                template.userId,
+                template.pattern,
+                order,
+                defaultFields,
+            ]);
+
+            await this._client.query('BEGIN;');
+        } catch (error) {
+            await this._client.query('ROLLBACK;');
+            throw error;
+        }
 
         return this.deserializeTemplate(response.rows[0]);
     }

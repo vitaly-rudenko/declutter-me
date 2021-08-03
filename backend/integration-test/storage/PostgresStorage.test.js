@@ -7,7 +7,7 @@ import { TelegramAccount } from '../../app/telegram/TelegramAccount.js';
 import { NotionAccount } from '../../app/notion/NotionAccount.js';
 import { NotionDatabase } from '../../app/notion/NotionDatabase.js';
 import { Template } from '../../app/templates/Template.js';
-import { Field } from '../../app/fields/Field.js';
+import { Field } from '@vitalyrudenko/templater';
 import { PostgresStorage } from '../../app/storage/PostgresStorage.js';
 import { Language } from '../../app/Language.js';
 
@@ -28,14 +28,9 @@ describe('PostgresStorage', () => {
     /** @type {PostgresStorage} */
     let postgresStorage;
 
-    before(() => {
-        postgresStorage = new PostgresStorage({
-            host: process.env.POSTGRES_HOST,
-            port: Number(process.env.POSTGRES_PORT),
-            database: process.env.POSTGRES_DB,
-            user: process.env.POSTGRES_USER,
-            password: process.env.POSTGRES_PASSWORD,
-        });
+    before(async () => {
+        postgresStorage = new PostgresStorage(process.env.DATABASE_URL);
+        await postgresStorage.connect();
     });
 
     it('should implement User flow', async () => {
@@ -88,7 +83,7 @@ describe('PostgresStorage', () => {
         expect(await postgresStorage.findNotionAccountByUserId(userId))
             .to.be.null;
 
-        const notionAccount = await postgresStorage.createNotionAccount(
+        const notionAccount = await postgresStorage.upsertNotionAccount(
             new NotionAccount({ userId, token })
         );
 
@@ -180,11 +175,18 @@ describe('PostgresStorage', () => {
 
         expect((await postgresStorage.storeTemplate(
             new Template({ userId: userId1, pattern: 'fake-pattern-2' })
-        )).order).to.equal(2);
+        )).order).to.equal(1);
 
         expect((await postgresStorage.storeTemplate(
             new Template({ userId: userId1, pattern: 'fake-pattern-3' })
-        )).order).to.equal(3);
+        )).order).to.equal(1);
+
+        expect(await postgresStorage.findTemplatesByUserId(userId1))
+            .to.deep.eq([
+                new Template({ userId: userId1, pattern: 'fake-pattern-3', order: 1 }),
+                new Template({ userId: userId1, pattern: 'fake-pattern-2', order: 2 }),
+                new Template({ userId: userId1, pattern: 'fake-pattern-1', order: 3 }),
+            ]);
 
         expect((await postgresStorage.storeTemplate(
             new Template({ userId: userId2, pattern: 'fake-pattern-1' })
@@ -192,7 +194,13 @@ describe('PostgresStorage', () => {
 
         expect((await postgresStorage.storeTemplate(
             new Template({ userId: userId2, pattern: 'fake-pattern-2' })
-        )).order).to.equal(2);
+        )).order).to.equal(1);
+
+        expect(await postgresStorage.findTemplatesByUserId(userId2))
+            .to.deep.eq([
+                new Template({ userId: userId2, pattern: 'fake-pattern-2', order: 1 }),
+                new Template({ userId: userId2, pattern: 'fake-pattern-1', order: 2 }),
+            ]);
     });
 
     it('should update templates by their pattern', async () => {
