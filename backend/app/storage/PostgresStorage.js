@@ -236,7 +236,20 @@ export class PostgresStorage {
             ORDER BY "order" ASC;
         `, [userId]);
 
-        return response.rows.map(row => this.deserializeTemplate(row))
+        return response.rows.map(row => this.deserializeTemplate(row));
+    }
+
+    async findTemplateByHash(userId, hash) {
+        const response = await this._client.query(`
+            SELECT *
+            FROM templates
+            WHERE user_id = $1 AND MD5(pattern) = $2
+            LIMIT 1;
+        `, [userId, hash]);
+
+    return response.rows.length > 0
+        ? this.deserializeTemplate(response.rows[0])
+        : null;
     }
 
     deserializeTemplate(row) {

@@ -107,7 +107,7 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
     bot.action(/databases:delete:database-alias:(.+)/, withUser(), withPhase(null, deleteDatabaseByAliasAction({ storage })));
 
     bot.command('templates', withUser(), withNotion(), manageTemplatesCommand({ storage }));
-    bot.action('templates:add', addTemplateAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager, storage }));
+    bot.action('templates:add', withUser(), withNotion(), addTemplateAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager, storage }));
     bot.action('templates:delete', withUser(), withNotion(), deleteTemplateAction({ storage }));
     bot.action(/templates:delete:template:(.+)/, withUser(), withPhase(null, deleteTemplateByIndexAction({ storage })));
     bot.action('templates:delete:cancel', withUser(), withNotion(), cancelDeleteTemplateAction());
@@ -132,9 +132,7 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
     );
     bot.action(/undo:notion:(.+)/, withUser(), withNotion(), withPhase(null, undoNotionAction()));
 
-    bot.catch(async (error) => {
-        await logError(error);
-    });
+    bot.catch((error) => logError(error));
 
     await bot.telegram.deleteWebhook();
 

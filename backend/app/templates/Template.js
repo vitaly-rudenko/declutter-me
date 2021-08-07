@@ -39,5 +39,4 @@ export class Template {
     get defaultFields() {
         return this._defaultFields;
     }
-
 }

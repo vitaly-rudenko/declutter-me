@@ -7,6 +7,7 @@ import { phases } from '../phases.js';
 import { escapeMd } from '../utils/escapeMd.js';
 import { formatPattern } from '../utils/formatPattern.js';
 import { createGuideLink } from '../utils/createGuideLink.js';
+import { linkLanguageMap } from '../linkLanguageMap.js';
 
 export function addTemplateAction({ frontendDomain, userSessionManager, storage }) {
     return async (context) => {
@@ -163,12 +164,6 @@ export function addTemplateWithoutDatabase({ frontendDomain, userSessionManager 
         userSessionManager.setPhase(context.state.userId, phases.template.pattern);
     };
 }
-
-const linkLanguageMap = {
-    [Language.ENGLISH]: 'en',
-    [Language.RUSSIAN]: 'ru',
-    [Language.UKRAINIAN]: 'uk',
-};
 
 export function createTemplateBuilderLink({ frontendDomain, pattern = null, test = null, language }) {
     const linkLanguage = linkLanguageMap[language] ?? 'en';

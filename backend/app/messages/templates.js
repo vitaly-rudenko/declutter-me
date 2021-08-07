@@ -6,9 +6,11 @@ export function templatePatternMessage({ storage, userSessionManager }) {
 
         const { defaultFields } = userSessionManager.context(context.state.userId);
 
+        const pattern = context.message.text.replace(/\\n/g, '\n');
+
         await storage.storeTemplate(
             new Template({
-                pattern: context.message.text.replace(/\\n/g, '\n'),
+                pattern,
                 defaultFields,
                 userId: context.state.userId,
             })

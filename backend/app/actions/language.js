@@ -1,4 +1,5 @@
 import { Language } from '../Language.js';
+import { linkLanguageMap } from '../linkLanguageMap.js';
 import { localize } from '../localize.js';
 import { phases } from '../phases.js';
 
@@ -21,12 +22,6 @@ export function languageAction({ frontendDomain, userSessionManager }) {
         userSessionManager.setPhase(context.state.userId || context.from.id, phases.start.timezone);
     };
 }
-
-const linkLanguageMap = {
-    [Language.ENGLISH]: 'en',
-    [Language.RUSSIAN]: 'ru',
-    [Language.UKRAINIAN]: 'uk',
-};
 
 export function createTimezoneCheckerLink({ frontendDomain, language }) {
     const linkLanguage = linkLanguageMap[language] ?? 'en';
