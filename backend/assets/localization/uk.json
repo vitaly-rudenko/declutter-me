@@ -155,7 +155,7 @@
         }
     },
     "match": {
-        "checking": "Хм, хвилинку... ⏳",
+        "checking": "⏳ Хм, хвилинку...",
         "noDatabaseSpecified": "Я не знаю в яку базу даних це записати 😔",
         "databaseNotFound": "Я не знайшов базу даних \"{database}\"",
         "failed": [
@@ -165,18 +165,15 @@
             "Помилка: {error}"
         ],
         "patternMatched": [
-            "Добре, я зберіг! 🎉",
+            "✅ {match}",
+            "    → *{database}*",
             "",
-            "Поля:",
             "{fields}"
         ],
-        "patternMatchDatabaseFieldName": "База даних",
-        "patternMatchField": "- {name}: {value}",
-        "undo": "Видалити",
-        "undoSuccessful": [
-            "",
-            "❌ Запис було видалено"
-        ],
+        "patternMatchField": "*{name}:* {value}",
+        "undo": "🗑 Видалити",
+        "undoInProcess": "⏳ Видаляємо...",
+        "undoSuccessful": "🗑 Запис було видалено.",
         "noPatternMatched": "Що-що? 🤔"
     },
     "help": {

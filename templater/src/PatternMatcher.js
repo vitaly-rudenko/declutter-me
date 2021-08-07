@@ -10,9 +10,10 @@ export class PatternMatcher {
      * @param {string} input
      * @param {any[]} pattern
      * @param {import('./entries/EntryMatchers').EntryMatchers} matchers
-     * @returns {{ fields: Field[] } | null}
+     * @param {{ returnCombination?: boolean }} [options]
+     * @returns {{ fields: Field[], combination?: any[] } | null}
      */
-    match(input, pattern, matchers) {
+    match(input, pattern, matchers, { returnCombination } = {}) {
         const combinations = this.getPatternCombinations(pattern, matchers);
 
         for (const combination of combinations) {
@@ -87,6 +88,10 @@ export class PatternMatcher {
 
             if (match && remainingInput.length === 0) {
                 const fields = Object.values(fieldMap);
+
+                if (returnCombination) {
+                    return { fields, combination };
+                }
 
                 return { fields };
             }

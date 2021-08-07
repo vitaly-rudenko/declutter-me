@@ -201,7 +201,7 @@ export class PostgresStorage {
                 defaultFields,
             ]);
 
-            await this._client.query('BEGIN;');
+            await this._client.query('COMMIT;');
         } catch (error) {
             await this._client.query('ROLLBACK;');
             throw error;

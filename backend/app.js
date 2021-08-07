@@ -13,7 +13,7 @@ import pako from 'pako';
 import base64url from 'base64url';
 
 import { phases } from './app/phases.js';
-import { PatternBuilder, Field, InputType, RussianDateParser, PatternMatcher, EntryMatchers } from '@vitalyrudenko/templater';
+import { PatternBuilder, Field, InputType, RussianDateParser, PatternMatcher, EntryMatchers, TokenType } from '@vitalyrudenko/templater';
 import { Template } from './app/templates/Template.js';
 import { NotionSessionManager } from './app/notion/NotionSessionManager.js';
 import { UserSessionManager } from './app/users/UserSessionManager.js';
@@ -185,25 +185,32 @@ function encodeTemplates(templates) {
         }),
     );
 
-    // TODO: uncomment when Notion supports deletion
-    // bot.action(
-    //     /undo:notion:(.+)/,
-    //     withUser(),
-    //     withPhase(null, async (ctx) => {
-    //         await ctx.answerCbQuery();
+    bot.action(
+        /undo:notion:(.+)/,
+        withUser(),
+        withNotion(),
+        withPhase(null, async (ctx) => {
+            await ctx.answerCbQuery();
 
-    //         /** @type {import('@notionhq/client').Client} */
-    //         const notion = ctx.state.notion;
-    //         const pageId = ctx.match[1];
+            ctx.editMessageReplyMarkup(
+                Markup.inlineKeyboard([
+                    Markup.button.callback(ctx.state.localize('match.undoInProcess'), 'fake-button'),
+                ]).reply_markup,
+            ).catch(() => {});
 
-    //         notion.pages.delete(pageId)
+            /** @type {import('@notionhq/client').Client} */
+            const notion = ctx.state.notion;
+            const pageId = ctx.match[1];
 
-    //         await ctx.editMessageText(
-    //             ctx.callbackQuery.message.text
-    //                 + '\n' + ctx.state.localize('match.undoSuccessful'),
-    //         );
-    //     }),
-    // )
+            await notion.pages.update({
+                page_id: pageId,
+                archived: true,
+                properties: {},
+            });
+
+            await ctx.editMessageText(ctx.state.localize('match.undoSuccessful'));
+        }),
+    );
 
     bot.command('info', withUser({ required: false }), withNotion({ required: false }), async (ctx) => {
         const databases = ctx.state.userId ? await storage.findDatabasesByUserId(ctx.state.userId) : [];
@@ -651,6 +658,7 @@ function encodeTemplates(templates) {
                     ctx.message.text,
                     new PatternBuilder().build(template.pattern),
                     entryMatchers,
+                    { returnCombination: true }
                 );
 
                 if (!result) continue;
@@ -746,20 +754,24 @@ function encodeTemplates(templates) {
                     message.message_id,
                     null,
                     ctx.state.localize('match.patternMatched', {
-                        fields: fields.map(field => ctx.state.localize(
-                            'match.patternMatchField',
-                            {
-                                name: field.inputType === InputType.DATABASE
-                                    ? ctx.state.localize('match.patternMatchDatabaseFieldName')
-                                    : field.name,
-                                value: Array.isArray(field.value) ? field.value.join(', '): field.value
-                            }
-                        )).join('\n')
+                        match: formatCombination(result.combination, fields),
+                        database: escapeMd(databaseAlias),
+                        fields: fields
+                            .filter(field => field.inputType !== InputType.DATABASE)
+                            .map((field) => ctx.state.localize(
+                                'match.patternMatchField',
+                                {
+                                    name: escapeMd(field.name),
+                                    value: escapeMd(Array.isArray(field.value) ? field.value.join(', '): field.value)
+                                }
+                            )).join('\n')
                     }),
-                    // TODO: uncomment when Notion supports deletion
-                    // Markup.inlineKeyboard([
-                    //     Markup.button.callback(ctx.state.localize('match.undo'), `undo:notion:${pageId}`)
-                    // ]),
+                    {
+                        parse_mode: 'MarkdownV2',
+                        reply_markup: Markup.inlineKeyboard([
+                            Markup.button.callback(ctx.state.localize('match.undo'), `undo:notion:${pageId}`)
+                        ]).reply_markup,
+                    }
                 );
                 return;
             }
@@ -792,6 +804,30 @@ function encodeTemplates(templates) {
                 }
             ).join('\n')
             : localize('output.templates.none');
+    }
+
+    function formatCombination(combination, fields) {
+        const fieldIndex = new Map();
+        
+        return combination.map((token) => {
+            if (token.type === TokenType.VARIABLE) {
+                const field = fields.find(f => f.name === token.value);
+
+                if (Array.isArray(field.value)) {
+                    if (!fieldIndex.has(field)) {
+                        fieldIndex.set(field, 0);
+                    } else {
+                        fieldIndex.set(field, fieldIndex.get(field) + 1);
+                    }
+
+                    return `__*${escapeMd(field.value[fieldIndex.get(field)])}*__`;
+                }
+
+                return `__*${escapeMd(field.value)}*__`;
+            }
+
+            return escapeMd(token.value);
+        }).join('');
     }
 
     function formatDatabases(databases, localize) {

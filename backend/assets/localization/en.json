@@ -155,7 +155,7 @@
         }
     },
     "match": {
-        "checking": "Hm, wait a minute... ⏳",
+        "checking": "⏳ Hm, wait a minute...",
         "noDatabaseSpecified": "I don't know which database to use 😔",
         "databaseNotFound": "Could not find the database: \"{database}\"",
         "failed": [
@@ -165,18 +165,15 @@
             "Error: {error}"
         ],
         "patternMatched": [
-            "Got it, saved! 🎉",
+            "✅ {match}",
+            "    → *{database}*",
             "",
-            "Fields:",
             "{fields}"
         ],
-        "patternMatchDatabaseFieldName": "Database",
-        "patternMatchField": "- {name}: {value}",
-        "undo": "Undo",
-        "undoSuccessful": [
-            "",
-            "❌ Entry has been removed"
-        ],
+        "patternMatchField": "*{name}:* {value}",
+        "undo": "🗑 Delete",
+        "undoInProcess": "⏳ Deleting...",
+        "undoSuccessful": "🗑 Entry has been deleted.",
         "noPatternMatched": "What was it? 🤔"
     },
     "help": {
