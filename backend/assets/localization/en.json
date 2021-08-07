@@ -8,13 +8,23 @@
     "notionNotConfigured": "First you need to configure /notion 🙇",
     "output": {
         "templates": {
-            "template": "{order}\\. {pattern}",
-            "none": "\\<none\\>"
+            "template": "{index}\\. `{pattern}`",
+            "templateWithDatabase": [
+                "{index}\\. `{pattern}`",
+                "    → *{database}*"
+            ],
+            "none": "*\\<none\\>*"
         }
     },
     "command": {
         "help": [
-            "Hi\\! Use /notion to setup Notion integration\\.",
+            "Hi\\! 👋",
+            "",
+            "Use */start* to change your language or timezone\\.",
+            "Use */notion* to setup your Notion account\\.",
+            "Use */database* to add or remove your databases\\.",
+            "Use */templates* to add, remove or reorder your templates\\.",
+            "Use */info* to view your information\\.",
             "",
             "📚 It is recommended to read [Complete guide]({guideLink})\\."
         ],
@@ -36,19 +46,23 @@
         },
         "info": {
             "response": [
-                "Hi, {name}\\!",
+                "🇬🇧 {language} \\| 🕚 {timezone}",
+                "Use */start* to change your language or timezone\\.",
                 "",
-                "Language: {language}",
-                "Timezone: {timezone}",
-                "Notion token: {notionToken}",
+                "*/notion*",
+                "`{notionToken}`",
                 "",
-                "Databases: {databases}",
+                "*/databases*",
+                "{databases}",
                 "",
-                "Templates: {templates}"
+                "*/templates*",
+                "{templates}",
+                "",
+                "💡 Templates on the top of the list have higher priority\\."
             ],
-            "database": "\\- {alias} \\([{notionDatabaseId}]({notionDatabaseUrl})\\)",
-            "notProvided": "\\<not provided\\>",
-            "none": "\\<none\\>"
+            "database": "{index}\\. [{alias}]({notionDatabaseUrl})",
+            "notProvided": "<not provided>",
+            "none": "*\\<none\\>*"
         },
         "notion": {
             "yourToken": "Your Notion integration token:",
@@ -60,7 +74,11 @@
             ]
         },
         "databases": {
-            "chooseAction": "What do you want to do with your databases?",
+            "chooseAction": [
+                "{databases}",
+                "",
+                "What do you want to do with your databases?"
+            ],
             "actions": {
                 "add": "➕ Add",
                 "edit": "✏️ Edit",
@@ -80,7 +98,11 @@
             }
         },
         "templates": {
-            "chooseAction": "What do you want to do with your templates?",
+            "chooseAction": [
+                "{templates}",
+                "",
+                "What do you want to do with your templates?"
+            ],
             "actions": {
                 "add": "➕ Add",
                 "reorder": "🔃 Reorder",
@@ -116,14 +138,16 @@
                     "[{linkLabel}]({link})"
                 ],
                 "success": [
-                    "✅ The new order of your templates: {templates}",
+                    "✅ The new order of your templates:",
+                    "{templates}",
                     "",
                     "Use /templates command to edit your templates\\."
                 ],
                 "partialSuccess": [
                     "❗️ Could not find some templates\\.",
                     "",
-                    "The new order of your templates: {templates}",
+                    "The new order of your templates:",
+                    "{templates}",
                     "",
                     "Use /templates command to edit your templates\\."
                 ]
@@ -131,7 +155,7 @@
         }
     },
     "match": {
-        "checking": "Hm, wait a minute... ⏳",
+        "checking": "⏳ Hm, wait a minute...",
         "noDatabaseSpecified": "I don't know which database to use 😔",
         "databaseNotFound": "Could not find the database: \"{database}\"",
         "failed": [
@@ -141,18 +165,15 @@
             "Error: {error}"
         ],
         "patternMatched": [
-            "Got it, saved! 🎉",
+            "✅ {match}",
+            "    → *{database}*",
             "",
-            "Fields:",
             "{fields}"
         ],
-        "patternMatchDatabaseFieldName": "Database",
-        "patternMatchField": "- {name}: {value}",
-        "undo": "Undo",
-        "undoSuccessful": [
-            "",
-            "❌ Entry has been removed"
-        ],
+        "patternMatchField": "*{name}:* {value}",
+        "undo": "🗑 Delete",
+        "undoInProcess": "⏳ Deleting...",
+        "undoSuccessful": "🗑 Entry has been deleted.",
         "noPatternMatched": "What was it? 🤔"
     },
     "help": {

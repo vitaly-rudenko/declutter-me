@@ -1,5 +1,8 @@
 import { Field } from './fields/Field.js';
+import { InputType } from './InputType.js';
 import { TokenType } from './TokenType.js';
+import { generateCombinations } from './utils/generateCombinations.js';
+import { squashCombinations } from './utils/squashCombinations.js';
 
 export class PatternMatcher {
     /**
@@ -7,9 +10,10 @@ export class PatternMatcher {
      * @param {string} input
      * @param {any[]} pattern
      * @param {import('./entries/EntryMatchers').EntryMatchers} matchers
-     * @returns {{ fields: Field[] } | null}
+     * @param {{ returnCombination?: boolean }} [options]
+     * @returns {{ fields: Field[], combination?: any[] } | null}
      */
-    match(input, pattern, matchers) {
+    match(input, pattern, matchers, { returnCombination } = {}) {
         const combinations = this.getPatternCombinations(pattern, matchers);
 
         for (const combination of combinations) {
@@ -34,7 +38,12 @@ export class PatternMatcher {
                     }
 
                     const nextTokens = combination.slice(i + 1);
-                    value = matcher(remainingInput, { nextTokens });
+                    value = matcher(remainingInput, {
+                        token,
+                        nextTokens,
+                        match: (input, pattern) => this.match(input, pattern, matchers),
+                    });
+                    
                     if (Array.isArray(value)) {
                         for (const valueVariation of value) {
                             const matchResult = this.match(remainingInput.slice(valueVariation.length), nextTokens, matchers);
@@ -49,21 +58,23 @@ export class PatternMatcher {
                         }
                     }
 
-                    if (value !== undefined && value !== null) {
-                        const existingValue = fieldMap[name]?.value;
-
-                        fieldMap[name] = new Field({
-                            name,
-                            inputType,
-                            value: Array.isArray(existingValue)
-                                ? [...existingValue, value]
-                                : existingValue
-                                    ? [existingValue, value]
-                                    : value,
-                            bang,
-                        })
-                    } else {
-                        fieldMap[name] = undefined;
+                    if (name !== undefined || inputType === InputType.DATABASE) {
+                        if (value !== undefined && value !== null) {
+                            const existingValue = fieldMap[name] && fieldMap[name].value;
+    
+                            fieldMap[name] = new Field({
+                                name,
+                                inputType,
+                                value: Array.isArray(existingValue)
+                                    ? [...existingValue, value]
+                                    : existingValue
+                                        ? [existingValue, value]
+                                        : value,
+                                bang,
+                            })
+                        } else {
+                            fieldMap[name] = undefined;
+                        }
                     }
                 }
 
@@ -77,6 +88,10 @@ export class PatternMatcher {
 
             if (match && remainingInput.length === 0) {
                 const fields = Object.values(fieldMap);
+
+                if (returnCombination) {
+                    return { fields, combination };
+                }
 
                 return { fields };
             }
@@ -108,8 +123,8 @@ export class PatternMatcher {
             .map(this.simplifyPattern)
             .filter((combination) => (
                 !combination.some((_, i) => (
-                    combination[i]?.type === TokenType.VARIABLE &&
-                    combination[i - 1]?.type === TokenType.VARIABLE
+                    (combination[i] && combination[i].type) === TokenType.VARIABLE &&
+                    (combination[i - 1] && combination[i - 1].type) === TokenType.VARIABLE
                 ))
             ));
 
@@ -131,7 +146,8 @@ export class PatternMatcher {
     }
 
     scoreCombination(combination, matchers) {
-        return combination.reduce((acc, curr) => acc + (matchers?.score?.(curr) ?? 1), 0);
+        const score = matchers && matchers.score || (() => 1);
+        return combination.reduce((acc, curr) => acc + score(curr), 0);
     }
 
     getTokenCombinations(token, matchers) {
@@ -151,6 +167,14 @@ export class PatternMatcher {
                 combinations.push(...this.getPatternCombinations(variation, matchers));
             }
         }
+        
+        if (token.type === TokenType.ANY_ORDER) {
+            combinations.push(
+                ...squashCombinations(token.value.map(part => this.getPatternCombinations(part, matchers)))
+                    .map(c => generateCombinations(c).map(c => c.flat()))
+                    .flat()
+            )
+        }
 
         return combinations.map(this.simplifyPattern);
     }
@@ -159,7 +183,7 @@ export class PatternMatcher {
         return pattern.reduce((result, token, i) => {
             const latestToken = result[result.length - 1];
 
-            if (latestToken?.type === TokenType.TEXT && token.type === TokenType.TEXT) {
+            if ((latestToken && latestToken.type) === TokenType.TEXT && token.type === TokenType.TEXT) {
                 latestToken.value += token.value;
             } else {
                 result.push({ ...token });

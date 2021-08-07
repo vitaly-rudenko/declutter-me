@@ -1,6 +1,7 @@
 import { stripIndent } from 'common-tags';
 import { expect } from 'chai';
 import { PatternMatcher, PatternBuilder, RussianDateParser, EntryMatchers, Field, InputType } from '../../index.js';
+import { TokenType } from '../../src/TokenType.js';
 
 describe('EntryMatchers', () => {
     /** @type {PatternMatcher} */
@@ -42,7 +43,7 @@ describe('EntryMatchers', () => {
             expect(patternMatcher.match('Write HTML parser', pattern, matchers))
                 .to.be.null;
             
-            expect(patternMatcher.match('# Write HTML parser', pattern, matchers))
+            expect(patternMatcher.match('# Write HTML parser', pattern, matchers, { returnCombination: true }))
                 .to.be.null;
         });
     
@@ -235,7 +236,7 @@ describe('EntryMatchers', () => {
         });
         
         it('should allow matching multiple tags (from the end)', () => {
-            const pattern = patternBuilder.build('save {note:text}[ #{tag:word}][ #{tag:word}][ #{tag:word}]');
+            const pattern = patternBuilder.build('Save {note:text}[ #{tag:word}][ #{tag:word}][ #{tag:word}]');
     
             expect(patternMatcher.match('Save my note', pattern, matchers))
                 .to.deep.eq({
@@ -281,6 +282,22 @@ describe('EntryMatchers', () => {
                     fields: [
                         new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note #my-tag-1 #my-tag-2' }),
                         new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-3', 'my-tag-4', 'my-tag-5'] }),
+                    ]
+                });
+
+            expect(patternMatcher.match('Save my note #my-tag-1 #my-tag-2', pattern, matchers, { returnCombination: true }))
+                .to.deep.eq({
+                    combination: [
+                        { type: TokenType.TEXT, value: 'Save ' },
+                        { type: TokenType.VARIABLE, value: 'note', inputType: InputType.TEXT },
+                        { type: TokenType.TEXT, value: ' #' },
+                        { type: TokenType.VARIABLE, value: 'tag', inputType: InputType.WORD },
+                        { type: TokenType.TEXT, value: ' #' },
+                        { type: TokenType.VARIABLE, value: 'tag', inputType: InputType.WORD },
+                    ],
+                    fields: [
+                        new Field({ name: 'note', inputType: InputType.TEXT, value: 'my note' }),
+                        new Field({ name: 'tag', inputType: InputType.WORD, value: ['my-tag-1', 'my-tag-2'] }),
                     ]
                 });
         });
@@ -555,7 +572,7 @@ describe('EntryMatchers', () => {
             });
 
             it('should match complex multiline patterns', () => {
-                const pattern = patternBuilder.build('[#{:database}( |\n)][заметка( |\n)]{заметка:text}[( |\n)#{теги:word}][( |\n)#{теги:word}][( |\n)#{теги:word}]');
+                const pattern = patternBuilder.build('[#{database}( |\n)][заметка( |\n)]{заметка:text}[( |\n)#{теги:word}][( |\n)#{теги:word}][( |\n)#{теги:word}]');
 
                 expect(
                     patternMatcher.match(stripIndent`
@@ -567,7 +584,7 @@ describe('EntryMatchers', () => {
                     `, pattern, matchers)
                 ).to.deep.eq({
                     fields: [
-                        new Field({ name: '', inputType: InputType.DATABASE, value: 'notes' }),
+                        new Field({ inputType: InputType.DATABASE, value: 'notes' }),
                         new Field({ name: 'заметка', inputType: InputType.TEXT, value: 'Привет мир.\nКак дела?' }),
                         new Field({ name: 'теги', inputType: InputType.WORD, value: ['tag1', 'tag2', 'tag3'] }),
                     ]
@@ -833,7 +850,6 @@ describe('EntryMatchers', () => {
         it('should match numbers without separators', () => {
             const pattern = patternBuilder.build('buy {kg:number}kg of {item:text}');
 
-
             expect(patternMatcher.match('buy 5kg of potatoes', pattern, matchers))
                 .to.deep.eq({
                     fields: [
@@ -842,5 +858,163 @@ describe('EntryMatchers', () => {
                     ]
                 });
         })
+
+        it('should match any-order operator', () => {
+            const pattern = patternBuilder.build('contact {Name:word}<[ {Phone:phone}]|[ {E-mail:email}]>');
+
+            expect(patternMatcher.match('contact Jon', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Name', inputType: InputType.WORD, value: 'Jon' }),
+                    ]
+                });
+
+            expect(patternMatcher.match('contact Jon +1234567890', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Name', inputType: InputType.WORD, value: 'Jon' }),
+                        new Field({ name: 'Phone', inputType: InputType.PHONE, value: '+1234567890' }),
+                    ]
+                });
+
+            expect(patternMatcher.match('contact Jon jon.snow@example.com', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Name', inputType: InputType.WORD, value: 'Jon' }),
+                        new Field({ name: 'E-mail', inputType: InputType.EMAIL, value: 'jon.snow@example.com' }),
+                    ]
+                });
+
+            expect(patternMatcher.match('contact Jon +1234567890 jon.snow@example.com', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Name', inputType: InputType.WORD, value: 'Jon' }),
+                        new Field({ name: 'Phone', inputType: InputType.PHONE, value: '+1234567890' }),
+                        new Field({ name: 'E-mail', inputType: InputType.EMAIL, value: 'jon.snow@example.com' }),
+                    ]
+                });
+
+            expect(patternMatcher.match('contact Jon jon.snow@example.com +1234567890', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Name', inputType: InputType.WORD, value: 'Jon' }),
+                        new Field({ name: 'E-mail', inputType: InputType.EMAIL, value: 'jon.snow@example.com' }),
+                        new Field({ name: 'Phone', inputType: InputType.PHONE, value: '+1234567890' }),
+                    ]
+                });
+        });
+
+        it('should match variables with custom matchers', () => {
+            const pattern = patternBuilder.build('buy [{Amount:number} {Unit:(kg|g|pcs)} of ]{Item:text}');
+
+            expect(patternMatcher.match('buy fresh potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
+                    ]
+                });
+
+            expect(patternMatcher.match('buy 5 kg of fresh potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Amount', inputType: InputType.NUMBER, value: '5' }),
+                        new Field({ name: 'Unit', inputType: InputType.MATCH, value: 'kg' }),
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
+                    ]
+                });
+        });
+
+        it('should match variables with complex custom matchers', () => {
+            const pattern = patternBuilder.build('Buy [{Amount:{:number}[ ][(kg|g|pcs)]}[ of] ]{Item:text}');
+
+            expect(patternMatcher.match('buy fresh potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
+                    ]
+                });
+
+            expect(patternMatcher.match('buy 5 fresh potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Amount', inputType: InputType.MATCH, value: '5' }),
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
+                    ]
+                });
+            
+            expect(patternMatcher.match('buy 5 kg of Fresh Potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Amount', inputType: InputType.MATCH, value: '5 kg' }),
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'Fresh Potatoes' }),
+                    ]
+                });
+            
+            expect(patternMatcher.match('BUY 100g of fresh potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Amount', inputType: InputType.MATCH, value: '100g' }),
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
+                    ]
+                });
+            
+            expect(patternMatcher.match('buy 123 pcs OF fresh potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Amount', inputType: InputType.MATCH, value: '123 pcs' }),
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
+                    ]
+                });
+            
+            
+            expect(patternMatcher.match('Buy 123 PCS of Fresh potatoes', pattern, matchers, { returnCombination: true }))
+                .to.deep.eq({
+                    combination: [
+                        { type: TokenType.TEXT, value: 'Buy ' },
+                        { type: TokenType.VARIABLE, value: 'Amount', inputType: InputType.MATCH, match: [
+                            { type: TokenType.VARIABLE, inputType: InputType.NUMBER },
+                            { type: TokenType.OPTIONAL, value: [
+                                { type: TokenType.TEXT, value: ' ' },
+                            ] },
+                            { type: TokenType.OPTIONAL, value: [
+                                { type: TokenType.VARIATIONAL, value: [
+                                    [{ type: TokenType.TEXT, value: 'kg' }],
+                                    [{ type: TokenType.TEXT, value: 'g' }],
+                                    [{ type: TokenType.TEXT, value: 'pcs' }],
+                                ] },
+                            ] },
+                        ] },
+                        { type: TokenType.TEXT, value: ' of ' },
+                        { type: TokenType.VARIABLE, value: 'Item', inputType: InputType.TEXT },
+                    ],
+                    fields: [
+                        new Field({ name: 'Amount', inputType: InputType.MATCH, value: '123 PCS' }),
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'Fresh potatoes' }),
+                    ]
+                });
+        });
+
+        it('should match simple variables with custom matchers', () => {
+            const pattern = patternBuilder.build('{a:{:number}[ a]} {b:text}');
+
+            expect(patternMatcher.match('123 a b', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'a', inputType: InputType.MATCH, value: '123 a' }),
+                        new Field({ name: 'b', inputType: InputType.TEXT, value: 'b' }),
+                    ]
+                });
+        });
+
+        it('should ignore variables without names', () => {
+            const pattern = patternBuilder.build('buy {:number} kg of {Item:text}');
+
+            expect(patternMatcher.match('buy 5 kg of fresh potatoes', pattern, matchers))
+                .to.deep.eq({
+                    fields: [
+                        new Field({ name: 'Item', inputType: InputType.TEXT, value: 'fresh potatoes' }),
+                    ]
+                });
+        });
     });
 });

@@ -1,17 +1,19 @@
 import {
-    TextFields, TextFormat, LooksOne, Link as LinkIcon,
+    TextFields, TextFormat, LooksOne, Link,
     Storage, Phone, CalendarToday, AlternateEmail, Schedule,
+    Code, LinkOff,
 } from '@material-ui/icons'
+import { InputType } from '@vitalyrudenko/templater';
 
 export const InputTypeIcons = {
-    'text': TextFields,
-    'url': LinkIcon,
-    'email': AlternateEmail,
-    'phone': Phone,
-    'number': LooksOne,
-    'date': CalendarToday,
-    // ---
-    'database': Storage,
-    'word': TextFormat,
-    'future_date': Schedule,
+    [InputType.TEXT]: TextFields,
+    [InputType.URL]: LinkOff,
+    [InputType.EMAIL]: AlternateEmail,
+    [InputType.PHONE]: Phone,
+    [InputType.NUMBER]: LooksOne,
+    [InputType.DATE]: CalendarToday,
+    [InputType.DATABASE]: Storage,
+    [InputType.WORD]: TextFormat,
+    [InputType.FUTURE_DATE]: Schedule,
+    [InputType.MATCH]: Code,
 };

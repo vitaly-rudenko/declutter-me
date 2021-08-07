@@ -1,15 +1,17 @@
 {
   "name": "@vitalyrudenko/templater",
-  "version": "0.0.4",
+  "version": "0.0.12",
   "description": "Text pattern matcher",
   "main": "index.js",
   "type": "module",
   "directories": {
-    "test": "test"
+    "test": "test",
+    "prepublish": "npm run test"
   },
   "scripts": {
     "test": "mocha --recursive",
-    "test:watch": "npm run test -- --watch --parallel"
+    "test:watch": "npm run test -- --watch --parallel",
+    "test:watch:debug": "nodemon --exec 'npm run test'"
   },
   "repository": {
     "type": "git",

@@ -8,13 +8,23 @@
     "notionNotConfigured": "Спочатку тобі потрібно налаштувати /notion 🙇",
     "output": {
         "templates": {
-            "template": "{order}\\. {pattern}",
-            "none": "\\<порожньо\\>"
+            "template": "{index}\\. `{pattern}`",
+            "templateWithDatabase": [
+                "{index}\\. `{pattern}`",
+                "    → *{database}*"
+            ],
+            "none": "*\\<порожньо\\>*"
         }
     },
     "command": {
         "help": [
-            "Привіт\\! Скористайся командою /notion щоб підключити Notion\\.",
+            "Привіт\\! 👋",
+            "",
+            "Використовуй */start* для зміни мови або часового поясу\\.",
+            "Використовуй */notion* для підключення свого Notion аккаунта\\.",
+            "Використовуй */database* для додавання або видалення баз даних\\.",
+            "Використовуй */templates* для додавання, видалення або зміни порядку шаблонів\\.",
+            "Використовуй */info* для перегляду всієї інформації про акаунт\\.",
             "",
             "📚 Рекомендую прочитати [Посібник]({guideLink})\\."
         ],
@@ -36,19 +46,23 @@
         },
         "info": {
             "response": [
-                "Привіт, {name}\\!",
+                "🇺🇦 {language} \\| 🕚 {timezone}",
+                "Введи */start*, щоб змінити мову або часовий пояс\\.",
                 "",
-                "Мова: {language}",
-                "Часовий пояс: {timezone}",
-                "Токен Notion: {notionToken}",
+                "*/notion*",
+                "`{notionToken}`",
                 "",
-                "Бази даних: {databases}",
+                "*/databases* \\(бази даних\\)",
+                "{databases}",
                 "",
-                "Шаблони: {templates}"
+                "*/templates* \\(шаблони\\)",
+                "{templates}",
+                "",
+                "💡 Чим вище шаблон в списку, тим більше у нього пріоритет\\."
             ],
-            "database": "\\- {alias} \\([{notionDatabaseId}]({notionDatabaseUrl})\\)",
-            "notProvided": "\\<не налаштовано\\>",
-            "none": "\\<порожньо\\>"
+            "database": "{index}\\. [{alias}]({notionDatabaseUrl})",
+            "notProvided": "<не налаштовано>",
+            "none": "*\\<порожньо\\>*"
         },
         "notion": {
             "yourToken": "Твій токен інтеграції з Notion:",
@@ -60,7 +74,11 @@
             ]
         },
         "databases": {
-            "chooseAction": "Що ти хочеш зробити зі своїми базами даних?",
+            "chooseAction": [
+                "{databases}",
+                "",
+                "Що ти хочеш зробити зі своїми базами даних?"
+            ],
             "actions": {
                 "add": "➕ Додати",
                 "edit": "✏️ Редагувати",
@@ -80,7 +98,11 @@
             }
         },
         "templates": {
-            "chooseAction": "Що ти хочеш зробити зі своїми шаблонами?",
+            "chooseAction": [
+                "{templates}",
+                "",
+                "Що ти хочеш зробити зі своїми шаблонами?"
+            ],
             "actions": {
                 "add": "➕ Додати",
                 "reorder": "🔃 Змінити порядок",
@@ -116,14 +138,16 @@
                     "[{linkLabel}]({link})"
                 ],
                 "success": [
-                    "✅ Порядок шаблонів був оновлений: {templates}",
+                    "✅ Порядок шаблонів був оновлений:",
+                    "{templates}",
                     "",
                     "Використовуй /templates для редагування шаблонів\\."
                 ],
                 "partialSuccess": [
                     "❗️ Не всі шаблони вдалося знайти\\.",
                     "",
-                    "Порядок шаблонів був оновлений: {templates}",
+                    "Порядок шаблонів був оновлений:",
+                    "{templates}",
                     "",
                     "Використовуй /templates для редагування шаблонів\\."
                 ]
@@ -131,7 +155,7 @@
         }
     },
     "match": {
-        "checking": "Хм, хвилинку... ⏳",
+        "checking": "⏳ Хм, хвилинку...",
         "noDatabaseSpecified": "Я не знаю в яку базу даних це записати 😔",
         "databaseNotFound": "Я не знайшов базу даних \"{database}\"",
         "failed": [
@@ -141,18 +165,15 @@
             "Помилка: {error}"
         ],
         "patternMatched": [
-            "Добре, я зберіг! 🎉",
+            "✅ {match}",
+            "    → *{database}*",
             "",
-            "Поля:",
             "{fields}"
         ],
-        "patternMatchDatabaseFieldName": "База даних",
-        "patternMatchField": "- {name}: {value}",
-        "undo": "Видалити",
-        "undoSuccessful": [
-            "",
-            "❌ Запис було видалено"
-        ],
+        "patternMatchField": "*{name}:* {value}",
+        "undo": "🗑 Видалити",
+        "undoInProcess": "⏳ Видаляємо...",
+        "undoSuccessful": "🗑 Запис було видалено.",
         "noPatternMatched": "Що-що? 🤔"
     },
     "help": {

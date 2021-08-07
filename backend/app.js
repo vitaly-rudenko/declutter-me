@@ -8,11 +8,12 @@ if (process.env.USE_NATIVE_ENV !== 'true') {
 import { Telegraf, Markup } from 'telegraf';
 import { URL } from 'url';
 import { promises as fs } from 'fs';
+import express from 'express';
 import pako from 'pako';
 import base64url from 'base64url';
 
 import { phases } from './app/phases.js';
-import { PatternBuilder, Field, InputType, RussianDateParser, PatternMatcher, EntryMatchers } from '@vitalyrudenko/templater';
+import { PatternBuilder, Field, InputType, RussianDateParser, PatternMatcher, EntryMatchers, TokenType } from '@vitalyrudenko/templater';
 import { Template } from './app/templates/Template.js';
 import { NotionSessionManager } from './app/notion/NotionSessionManager.js';
 import { UserSessionManager } from './app/users/UserSessionManager.js';
@@ -35,6 +36,7 @@ import { User } from './app/users/User.js';
 import { TelegramAccount } from './app/telegram/TelegramAccount.js';
 import { NotionAccount } from './app/notion/NotionAccount.js';
 import { escapeMd } from './app/utils/escapeMd.js';
+import { Cache } from './app/storage/Cache.js';
 
 const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
 
@@ -95,14 +97,9 @@ function encodeTemplates(templates) {
     await storage.connect();
 
     const debugChatId = process.env.DEBUG_CHAT_ID;
-    const useWebhooks = process.env.USE_WEBHOOKS === 'true'
-    const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN
+    const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
 
-    const bot = new Telegraf(telegramBotToken, {
-        telegram: {
-            webhookReply: false,
-        }
-    });
+    const bot = new Telegraf(telegramBotToken);
 
     process.on('unhandledRejection', async (error) => {
         await logError(error);
@@ -142,7 +139,7 @@ function encodeTemplates(templates) {
 
     bot.use(async (context, next) => {
         if (context.chat.type === 'private') {
-            next();
+            await next();
         }
     });
 
@@ -188,25 +185,32 @@ function encodeTemplates(templates) {
         }),
     );
 
-    // TODO: uncomment when Notion supports deletion
-    // bot.action(
-    //     /undo:notion:(.+)/,
-    //     withUser(),
-    //     withPhase(null, async (ctx) => {
-    //         await ctx.answerCbQuery();
+    bot.action(
+        /undo:notion:(.+)/,
+        withUser(),
+        withNotion(),
+        withPhase(null, async (ctx) => {
+            await ctx.answerCbQuery();
 
-    //         /** @type {import('@notionhq/client').Client} */
-    //         const notion = ctx.state.notion;
-    //         const pageId = ctx.match[1];
+            ctx.editMessageReplyMarkup(
+                Markup.inlineKeyboard([
+                    Markup.button.callback(ctx.state.localize('match.undoInProcess'), 'fake-button'),
+                ]).reply_markup,
+            ).catch(() => {});
 
-    //         notion.pages.delete(pageId)
+            /** @type {import('@notionhq/client').Client} */
+            const notion = ctx.state.notion;
+            const pageId = ctx.match[1];
 
-    //         await ctx.editMessageText(
-    //             ctx.callbackQuery.message.text
-    //                 + '\n' + ctx.state.localize('match.undoSuccessful'),
-    //         );
-    //     }),
-    // )
+            await notion.pages.update({
+                page_id: pageId,
+                archived: true,
+                properties: {},
+            });
+
+            await ctx.editMessageText(ctx.state.localize('match.undoSuccessful'));
+        }),
+    );
 
     bot.command('info', withUser({ required: false }), withNotion({ required: false }), async (ctx) => {
         const databases = ctx.state.userId ? await storage.findDatabasesByUserId(ctx.state.userId) : [];
@@ -222,13 +226,7 @@ function encodeTemplates(templates) {
                     ? escapeMd(formatTimezone(ctx.state.user?.timezoneOffsetMinutes))
                     : ctx.state.localize('command.info.notProvided'),
                 notionToken: escapeMd(ctx.state.notionAccount?.token ?? ctx.state.localize('command.info.notProvided')),
-                databases: databases.length > 0
-                    ? '\n' + databases.map(list => ctx.state.localize('command.info.database', {
-                        notionDatabaseId: escapeMd(list.notionDatabaseId),
-                        notionDatabaseUrl: list.notionDatabaseUrl,
-                        alias: escapeMd(list.alias),
-                    })).join('\n')
-                    : ctx.state.localize('command.info.none'),
+                databases: formatDatabases(databases, ctx.state.localize),
                 templates: formatTemplates(templates, ctx.state.localize),
             }),
             { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
@@ -250,13 +248,20 @@ function encodeTemplates(templates) {
     });
 
     bot.command('databases', withUser(), withNotion(), async (ctx) => {
+        const databases = await storage.findDatabasesByUserId(ctx.state.userId);
+
         await ctx.reply(
-            ctx.state.localize('command.databases.chooseAction'),
-            Markup.inlineKeyboard([
-                Markup.button.callback(ctx.state.localize('command.databases.actions.add'), 'databases:add'),
-                // Markup.button.callback(ctx.state.localize('command.databases.actions.edit'), 'databases:edit'),
-                Markup.button.callback(ctx.state.localize('command.databases.actions.delete'), 'databases:delete'),
-            ], { columns: 1 })
+            ctx.state.localize('command.databases.chooseAction', {
+                databases: formatDatabases(databases, ctx.state.localize),
+            }),
+            {
+                parse_mode: 'MarkdownV2',
+                reply_markup: Markup.inlineKeyboard([
+                    Markup.button.callback(ctx.state.localize('command.databases.actions.add'), 'databases:add'),
+                    // Markup.button.callback(ctx.state.localize('command.databases.actions.edit'), 'databases:edit'),
+                    Markup.button.callback(ctx.state.localize('command.databases.actions.delete'), 'databases:delete'),
+                ], { columns: 1 }).reply_markup,
+            }
         );
     });
 
@@ -307,7 +312,7 @@ function encodeTemplates(templates) {
         await ctx.answerCbQuery();
         
         const databaseAlias = ctx.match[1];
-        await storage.deleteDatabaseByAlias(databaseAlias);
+        await storage.deleteDatabaseByAlias(ctx.state.userId, databaseAlias);
 
         await Promise.all([
             ctx.deleteMessage(),
@@ -366,14 +371,21 @@ function encodeTemplates(templates) {
             return;
         }
 
+        const templates = await storage.findTemplatesByUserId(ctx.state.userId);
+
         await ctx.reply(
-            ctx.state.localize('command.templates.chooseAction'),
-            Markup.inlineKeyboard([
-                Markup.button.callback(ctx.state.localize('command.templates.actions.add'), 'templates:add'),
-                Markup.button.callback(ctx.state.localize('command.templates.actions.reorder'), 'templates:reorder'),
-                // Markup.button.callback(ctx.state.localize('command.templates.actions.edit'), 'templates:edit'),
-                Markup.button.callback(ctx.state.localize('command.templates.actions.delete'), 'templates:delete'),
-            ], { columns: 1 })
+            ctx.state.localize('command.templates.chooseAction', {
+                templates: formatTemplates(templates, ctx.state.localize),
+            }),
+            {
+                parse_mode: 'MarkdownV2',
+                reply_markup: Markup.inlineKeyboard([
+                    Markup.button.callback(ctx.state.localize('command.templates.actions.add'), 'templates:add'),
+                    Markup.button.callback(ctx.state.localize('command.templates.actions.reorder'), 'templates:reorder'),
+                    // Markup.button.callback(ctx.state.localize('command.templates.actions.edit'), 'templates:edit'),
+                    Markup.button.callback(ctx.state.localize('command.templates.actions.delete'), 'templates:delete'),
+                ], { columns: 1 }).reply_markup
+            }
         );
     });
 
@@ -394,7 +406,15 @@ function encodeTemplates(templates) {
             );
             userSessionManager.setPhase(ctx.state.userId, phases.template.database);
         } else {
-            await ctx.reply(ctx.state.localize('command.templates.add.sendTemplate'));
+            const templateBuilderLink = createTemplateBuilderLink({ language: ctx.state.user?.language });
+            await ctx.reply(
+                ctx.state.localize('command.templates.add.sendTemplate', {
+                    templateBuilderLink,
+                    guideLink: getGuideLink({ language: ctx.state.user?.language }),
+                }),
+                { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
+            );
+
             userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
         }
     });
@@ -515,8 +535,9 @@ function encodeTemplates(templates) {
         // Start
         withPhase(phases.start.timezone, async (ctx) => {
             if (!('text' in ctx.message)) return;
-
-            const { language } = userSessionManager.context(ctx.state.userId || ctx.from.id);
+            
+            const userId = ctx.state.userId || ctx.from.id;
+            const { language } = userSessionManager.context(userId);
 
             const timezoneOffsetMinutes = parseTimezoneOffsetMinutes(ctx.message.text);
             if (timezoneOffsetMinutes === null) {
@@ -531,7 +552,8 @@ function encodeTemplates(templates) {
                 await storage.updateUser(new User({ id: ctx.state.userId, language, timezoneOffsetMinutes }));
             }
 
-            userSessionManager.reset(ctx.state.userId || ctx.from.id);
+            notionSessionManager.clear(userId)
+            userSessionManager.clear(userId);
 
             await ctx.reply(localize(
                 'command.start.finished',
@@ -556,10 +578,11 @@ function encodeTemplates(templates) {
 
             const token = ctx.message.text;
 
-            await storage.createNotionAccount(new NotionAccount({ userId: ctx.state.userId, token }));
+            await storage.upsertNotionAccount(new NotionAccount({ userId: ctx.state.userId, token }));
             await ctx.reply(ctx.state.localize('command.notion.allSet', { token }));
 
-            userSessionManager.reset(ctx.state.userId);
+            userSessionManager.clear(ctx.state.userId);
+            notionSessionManager.clear(ctx.state.userId);
         }),
         // Databases
         withPhase(phases.addDatabase.link, async (ctx) => {
@@ -593,7 +616,7 @@ function encodeTemplates(templates) {
                 })
             );
 
-            userSessionManager.reset(ctx.state.userId);
+            userSessionManager.clear(ctx.state.userId);
             await ctx.reply(ctx.state.localize('command.databases.add.added', { alias }));
         }),
         // Patterns
@@ -610,7 +633,7 @@ function encodeTemplates(templates) {
                 })
             );
 
-            userSessionManager.reset(ctx.state.userId);
+            userSessionManager.clear(ctx.state.userId);
             await ctx.reply(ctx.state.localize('command.templates.add.added'));
         }),
         // Handle message
@@ -635,6 +658,7 @@ function encodeTemplates(templates) {
                     ctx.message.text,
                     new PatternBuilder().build(template.pattern),
                     entryMatchers,
+                    { returnCombination: true }
                 );
 
                 if (!result) continue;
@@ -693,7 +717,7 @@ function encodeTemplates(templates) {
                 try {
                     const notionDatabase = await notion.databases.retrieve({ database_id: database.notionDatabaseId });
                     const entry = new NotionEntry({
-                        databaseId: database.notionDatabaseId,
+                        databaseId: notionDatabase.id,
                         fields,
                         properties: Object.entries(notionDatabase.properties)
                             .map(([name, options]) => new NotionProperty({
@@ -730,20 +754,24 @@ function encodeTemplates(templates) {
                     message.message_id,
                     null,
                     ctx.state.localize('match.patternMatched', {
-                        fields: fields.map(field => ctx.state.localize(
-                            'match.patternMatchField',
-                            {
-                                name: field.inputType === InputType.DATABASE
-                                    ? ctx.state.localize('match.patternMatchDatabaseFieldName')
-                                    : field.name,
-                                value: Array.isArray(field.value) ? field.value.join(', '): field.value
-                            }
-                        )).join('\n')
+                        match: formatCombination(result.combination, fields),
+                        database: escapeMd(databaseAlias),
+                        fields: fields
+                            .filter(field => field.inputType !== InputType.DATABASE)
+                            .map((field) => ctx.state.localize(
+                                'match.patternMatchField',
+                                {
+                                    name: escapeMd(field.name),
+                                    value: escapeMd(Array.isArray(field.value) ? field.value.join(', '): field.value)
+                                }
+                            )).join('\n')
                     }),
-                    // TODO: uncomment when Notion supports deletion
-                    // Markup.inlineKeyboard([
-                    //     Markup.button.callback(ctx.state.localize('match.undo'), `undo:notion:${pageId}`)
-                    // ]),
+                    {
+                        parse_mode: 'MarkdownV2',
+                        reply_markup: Markup.inlineKeyboard([
+                            Markup.button.callback(ctx.state.localize('match.undo'), `undo:notion:${pageId}`)
+                        ]).reply_markup,
+                    }
                 );
                 return;
             }
@@ -756,15 +784,60 @@ function encodeTemplates(templates) {
         await logError(error);
     });
 
+    /** @param {Template[]} templates */
     function formatTemplates(templates, localize) {
         return templates.length > 0
-            ? '\n' + templates.map(
-                template => localize('output.templates.template', {
-                    order: template.order,
-                    pattern: escapeMd(formatPattern(template.pattern))
-                })
+            ? templates.map(
+                (template, i) => {
+                    const database = template.defaultFields.find(f => f.inputType === InputType.DATABASE);
+                    const index = i + 1;
+                    const pattern = escapeMd(formatPattern(template.pattern));
+
+                    if (database) {
+                        return localize(
+                            'output.templates.templateWithDatabase',
+                            { index, pattern, database: escapeMd(database.value) }
+                        );    
+                    }
+                    
+                    return localize('output.templates.template', { index, pattern });
+                }
             ).join('\n')
             : localize('output.templates.none');
+    }
+
+    function formatCombination(combination, fields) {
+        const fieldIndex = new Map();
+        
+        return combination.map((token) => {
+            if (token.type === TokenType.VARIABLE) {
+                const field = fields.find(f => f.name === token.value);
+
+                if (Array.isArray(field.value)) {
+                    if (!fieldIndex.has(field)) {
+                        fieldIndex.set(field, 0);
+                    } else {
+                        fieldIndex.set(field, fieldIndex.get(field) + 1);
+                    }
+
+                    return `__*${escapeMd(field.value[fieldIndex.get(field)])}*__`;
+                }
+
+                return `__*${escapeMd(field.value)}*__`;
+            }
+
+            return escapeMd(token.value);
+        }).join('');
+    }
+
+    function formatDatabases(databases, localize) {
+        return databases.length > 0
+            ? databases.map((database, i) => localize('command.info.database', {
+                index: i + 1,
+                notionDatabaseUrl: database.notionDatabaseUrl,
+                alias: escapeMd(database.alias),
+            })).join('\n')
+            : localize('command.info.none')
     }
 
     function formatPattern(pattern) {
@@ -773,7 +846,8 @@ function encodeTemplates(templates) {
 
     function isValidNotionDatabaseUrl(link) {
         try {
-            return new URL(link).pathname.slice(1);
+            const databaseId = new URL(link).pathname.slice(1).split('/').pop().split('-').pop();
+            return (/^[a-z0-9]+$/i).test(databaseId);
         } catch (error) {
             return null;
         }
@@ -800,24 +874,44 @@ function encodeTemplates(templates) {
 
     await bot.telegram.deleteWebhook();
 
-    if (useWebhooks) {
-        const domain = process.env.DOMAIN;
-        const port = Number(process.env.PORT) || 3001;
+    const domain = process.env.DOMAIN;
+    const port = Number(process.env.PORT) || 3001;
+    const webhookUrl = `${domain}/bot${telegramBotToken}`;
 
-        console.log('Connecting webhook:', `0.0.0.0:${port} => ${domain}`);
+    await bot.telegram.setWebhook(webhookUrl, { allowed_updates: ['message', 'callback_query'] });
 
-        await bot.launch({
-            webhook: {
-                domain,
-                port,
-            },
-        })
-    } else {
-        await bot.launch({
-            allowedUpdates: ['callback_query', 'message'],
-            dropPendingUpdates: true,
-        });
-    }
-})()
-    .then(() => console.log('Started!'));
+    const handledUpdates = new Cache(60_000);
 
+    const app = express();
+    app.use(express.json());
+    app.post(`/bot${telegramBotToken}`, async (req, res, next) => {
+        const updateId = req.body['update_id']
+        if (!updateId) {
+            console.log('Invalid update:', req.body);
+            res.sendStatus(500);
+            return;
+        }
+
+        if (handledUpdates.has(updateId)) {
+            console.log('Update is already handled:', req.body);
+            res.sendStatus(200);
+            return;
+        }
+
+        handledUpdates.set(updateId);
+        console.log('Update received:', req.body);
+
+        try {
+            await bot.handleUpdate(req.body, res);
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    await new Promise(resolve => app.listen(port, () => resolve()));
+
+    console.log(
+        `Webhook 0.0.0.0:${port} is listening at ${webhookUrl}:`,
+        await bot.telegram.getWebhookInfo()
+    );
+})();

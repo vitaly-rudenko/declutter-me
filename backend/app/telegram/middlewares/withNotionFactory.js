@@ -17,12 +17,12 @@ export const withNotionFactory = (notionSessionManager) => {
                         await ctx.reply(ctx.state.localize('notionNotConfigured'));
                         return;
                     }
+                } else {
+                    throw error;
                 }
-                
-                throw error;
             }
 
-            next();
+            await next();
         };
     };
 };

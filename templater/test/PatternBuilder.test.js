@@ -1,8 +1,11 @@
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
+import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 import { stripIndent } from 'common-tags';
 import { InputType, PatternBuilder, TokenType } from '../index.js';
 
-const { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } = TokenType;
+const { TEXT, VARIABLE, OPTIONAL, VARIATIONAL, ANY_ORDER } = TokenType;
+
+chai.use(deepEqualInAnyOrder);
 
 describe('PatternBuilder', () => {
     /** @type {PatternBuilder} */
@@ -16,12 +19,12 @@ describe('PatternBuilder', () => {
         it('should parse simple text', () => {
             expect(patternBuilder.build('Hello'))
                 .to.deep.eq([
-                    { type: TEXT, value: 'hello' },
+                    { type: TEXT, value: 'Hello' },
                 ]);
 
             expect(patternBuilder.build('Buy chicken'))
                 .to.deep.eq([
-                    { type: TEXT, value: 'buy chicken' },
+                    { type: TEXT, value: 'Buy chicken' },
                 ]);
         });
 
@@ -46,7 +49,7 @@ describe('PatternBuilder', () => {
 
             expect(patternBuilder.build('Buy {note}, please'))
                 .to.deep.eq([
-                    { type: TEXT, value: 'buy ' },
+                    { type: TEXT, value: 'Buy ' },
                     { type: VARIABLE, value: 'note' },
                     { type: TEXT, value: ', please' },
                 ]);
@@ -55,7 +58,7 @@ describe('PatternBuilder', () => {
                 .to.deep.eq([
                     { type: TEXT, value: '#' },
                     { type: VARIABLE, value: 'tag' },
-                    { type: TEXT, value: ' buy ' },
+                    { type: TEXT, value: ' Buy ' },
                     { type: VARIABLE, value: 'note' },
                     { type: TEXT, value: ', please' },
                 ]);
@@ -66,7 +69,7 @@ describe('PatternBuilder', () => {
                 .to.deep.eq([
                     { type: TEXT, value: '#' },
                     { type: VARIABLE, value: 'tag', bang: true },
-                    { type: TEXT, value: ' buy ' },
+                    { type: TEXT, value: ' Buy ' },
                     { type: VARIABLE, value: 'note' },
                     { type: TEXT, value: ', please' },
                 ]);
@@ -159,8 +162,8 @@ describe('PatternBuilder', () => {
                     {
                         type: VARIATIONAL,
                         value: [
-                            [{ type: TEXT, value: 'buy' }],
-                            [{ type: TEXT, value: 'purchase' }],
+                            [{ type: TEXT, value: 'Buy' }],
+                            [{ type: TEXT, value: 'Purchase' }],
                         ]
                     },
                     { type: TEXT, value: ' ' },
@@ -230,7 +233,7 @@ describe('PatternBuilder', () => {
             expect(patternBuilder.build('#{database!} buy {Note:text}, please[ {when:future_date}][ #{My Tag:word}]'))
                 .to.deep.eq([
                     { type: TEXT, value: '#' },
-                    { type: VARIABLE, value: 'database', bang: true },
+                    { type: VARIABLE, inputType: InputType.DATABASE, bang: true },
                     { type: TEXT, value: ' buy ' },
                     { type: VARIABLE, value: 'Note', inputType: TEXT },
                     { type: TEXT, value: ', please' },
@@ -251,17 +254,17 @@ describe('PatternBuilder', () => {
                 Phone: {Phone:phone}]
                 Email: {Email:email}
             `)).to.deep.eq([
-                { type: TEXT, value: 'contact: ' },
+                { type: TEXT, value: 'Contact: ' },
                 { type: VARIABLE, value: 'Name', inputType: InputType.WORD },
                 { type: OPTIONAL, value: [
                     { type: TEXT, value: ' ' },
                     { type: VARIABLE, value: 'Surname', inputType: InputType.WORD },
                 ] },
                 { type: OPTIONAL, value: [
-                    { type: TEXT, value: '\nphone: ' },
+                    { type: TEXT, value: '\nPhone: ' },
                     { type: VARIABLE, value: 'Phone', inputType: InputType.PHONE },
                 ] },
-                { type: TEXT, value: '\nemail: ' },
+                { type: TEXT, value: '\nEmail: ' },
                 { type: VARIABLE, value: 'Email', inputType: InputType.EMAIL },
             ]);
 
@@ -269,11 +272,77 @@ describe('PatternBuilder', () => {
                 Hello( world|
                 world)
             `)).to.deep.eq([
-                { type: TEXT, value: 'hello' },
+                { type: TEXT, value: 'Hello' },
                 { type: VARIATIONAL, value: [
                     [{ type: TEXT, value: ' world' }],
                     [{ type: TEXT, value: '\nworld' }],
                 ] },
+            ]);
+        });
+
+        it('should build patterns for complex nested variational and optional tokens', () => {
+            expect(patternBuilder.build('(кг|кило[грам[(а|ов)]])')).to.deep.equalInAnyOrder([
+                { type: VARIATIONAL, value: [
+                    [{ type: TEXT, value: 'кг' }],
+                    [
+                        { type: TEXT, value: 'кило' },
+                        { type: OPTIONAL, value: [
+                            { type: TEXT, value: 'грам' },
+                            { type: OPTIONAL, value: [
+                                { type: VARIATIONAL, value: [
+                                    [{ type: TEXT, value: 'а' }],
+                                    [{ type: TEXT, value: 'ов' }],
+                                ] }
+                            ] }
+                        ] }
+                    ]
+                ] }
+            ]);
+        });
+
+        it('should build patterns with any-order operator', () => {
+            expect(patternBuilder.build('<a |b |c >')).to.deep.eq([
+                { type: ANY_ORDER, value: [
+                    [{ type: TEXT, value: 'a ' }],
+                    [{ type: TEXT, value: 'b ' }],
+                    [{ type: TEXT, value: 'c ' }],
+                ] }
+            ]);
+
+            expect(patternBuilder.build('<a |<b |c >|d >')).to.deep.eq([
+                { type: ANY_ORDER, value: [
+                    [{ type: TEXT, value: 'a ' }],
+                    [{ type: ANY_ORDER, value: [
+                        [{ type: TEXT, value: 'b ' }],
+                        [{ type: TEXT, value: 'c ' }],
+                    ] }],
+                    [{ type: TEXT, value: 'd ' }],
+                ] }
+            ]);
+        });
+
+        it('should build patterns for custom input types', () => {
+            expect(patternBuilder.build('{Unit:(kg|g|pcs)}')).to.deep.eq([
+                { type: VARIABLE, inputType: InputType.MATCH, value: 'Unit', match: [
+                    { type: VARIATIONAL, value: [
+                        [{ type: TEXT, value: 'kg' }],
+                        [{ type: TEXT, value: 'g' }],
+                        [{ type: TEXT, value: 'pcs' }],
+                    ] }
+                ] }
+            ]);
+
+            expect(patternBuilder.build('{Amount:{:number} kg}')).to.deep.eq([
+                { type: VARIABLE, inputType: InputType.MATCH, value: 'Amount', match: [
+                    { type: VARIABLE, inputType: InputType.NUMBER },
+                    { type: TEXT, value: ' kg' },
+                ] }
+            ]);
+        });
+
+        it('should parse {database} variable properly', () => {
+            expect(patternBuilder.build('{database}')).to.deep.eq([
+                { type: VARIABLE, inputType: InputType.DATABASE }
             ]);
         });
     });

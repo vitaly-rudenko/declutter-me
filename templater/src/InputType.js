@@ -8,4 +8,5 @@ export const InputType = {
     EMAIL: 'email',
     PHONE: 'phone',
     NUMBER: 'number',
+    MATCH: 'match',
 };

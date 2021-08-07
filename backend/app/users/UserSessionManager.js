@@ -22,7 +22,7 @@ export class UserSessionManager {
         return this._contexts.get(userId);
     }
 
-    reset(userId) {
+    clear(userId) {
         this._phases.delete(userId);
         this._contexts.delete(userId);
     }

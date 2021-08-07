@@ -8,13 +8,23 @@
     "notionNotConfigured": "Сначала тебе нужно настроить /notion 🙇",
     "output": {
         "templates": {
-            "template": "{order}\\. {pattern}",
-            "none": "\\<пусто\\>"
+            "template": "{index}\\. `{pattern}`",
+            "templateWithDatabase": [
+                "{index}\\. `{pattern}`",
+                "    → *{database}*"
+            ],
+            "none": "*\\<пусто\\>*"
         }
     },
     "command": {
         "help": [
-            "Привет\\! Используй команду /notion чтобы подключить Notion\\.",
+            "Привет\\! 👋",
+            "",
+            "Используй */start* для изменения языка или часового пояса\\.",
+            "Используй */notion* для подключения своего Notion аккаунта\\.",
+            "Используй */database* для добавления или удаления баз данных\\.",
+            "Используй */templates* для добавления, удаления или изменения порядка шаблонов\\.",
+            "Используй */info* для просмотра всей информации об аккаунте\\.",
             "",
             "📚 Рекомендую прочесть [Руководство]({guideLink})\\."
         ],
@@ -36,19 +46,23 @@
         },
         "info": {
             "response": [
-                "Привет, {name}\\!",
+                "🇷🇺 {language} \\| 🕚 {timezone}",
+                "Введи */start*, чтобы изменить язык или часовой пояс\\.",
                 "",
-                "Язык: {language}",
-                "Часовой пояс: {timezone}",
-                "Токен Notion: {notionToken}",
+                "*/notion*",
+                "`{notionToken}`",
                 "",
-                "Базы данных: {databases}",
+                "*/databases* \\(базы данных\\)",
+                "{databases}",
                 "",
-                "Шаблоны: {templates}"
+                "*/templates* \\(шаблоны\\)",
+                "{templates}",
+                "",
+                "💡 Чем выше шаблон в списке, тем больше у него приоритет\\."
             ],
-            "database": "\\- {alias} \\([{notionDatabaseId}]({notionDatabaseUrl})\\)",
-            "notProvided": "\\<не настроено\\>",
-            "none": "\\<пусто\\>"
+            "database": "{index}\\. [{alias}]({notionDatabaseUrl})",
+            "notProvided": "<не настроено>",
+            "none": "*\\<пусто\\>*"
         },
         "notion": {
             "yourToken": "Твой токен интеграции с Notion:",
@@ -60,7 +74,11 @@
             ]
         },
         "databases": {
-            "chooseAction": "Что ты хочешь сделать со своими базами данных?",
+            "chooseAction": [
+                "{databases}",
+                "",
+                "Что ты хочешь сделать со своими базами данных?"
+            ],
             "actions": {
                 "add": "➕ Добавить",
                 "edit": "✏️ Редактировать",
@@ -80,7 +98,11 @@
             }
         },
         "templates": {
-            "chooseAction": "Что ты хочешь сделать со своими шаблонами?",
+            "chooseAction": [
+                "{templates}",
+                "",
+                "Что ты хочешь сделать со своими шаблонами?"
+            ],
             "actions": {
                 "add": "➕ Добавить",
                 "reorder": "🔃 Изменить порядок",
@@ -116,14 +138,16 @@
                     "[{linkLabel}]({link})"
                 ],
                 "success": [
-                    "✅ Порядок шаблонов был обновлен: {templates}",
+                    "✅ Порядок шаблонов был обновлен:",
+                    "{templates}",
                     "",
                     "Используй /templates для редактирования шаблонов\\."
                 ],
                 "partialSuccess": [
                     "❗️ Не все шаблоны удалось найти\\.",
                     "",
-                    "Порядок шаблонов был обновлен: {templates}",
+                    "Порядок шаблонов был обновлен:",
+                    "{templates}",
                     "",
                     "Используй /templates для редактирования шаблонов\\."
                 ]
@@ -131,7 +155,7 @@
         }
     },
     "match": {
-        "checking": "Хм, минутку... ⏳",
+        "checking": "⏳ Хм, минутку...",
         "noDatabaseSpecified": "Я не знаю в какую базу данных это записать 😔",
         "databaseNotFound": "Я не нашел базу данных \"{database}\"",
         "failed": [
@@ -141,18 +165,15 @@
             "Ошибка: {error}"
         ],
         "patternMatched": [
-            "Хорошо, я сохранил! 🎉",
+            "✅ {match}",
+            "    → *{database}*",
             "",
-            "Поля:",
             "{fields}"
         ],
-        "patternMatchDatabaseFieldName": "База данных",
-        "patternMatchField": "- {name}: {value}",
-        "undo": "Удалить",
-        "undoSuccessful": [
-            "",
-            "❌ Запись была удалена"
-        ],
+        "patternMatchField": "*{name}:* {value}",
+        "undo": "🗑 Удалить",
+        "undoInProcess": "⏳ Удаляю...",
+        "undoSuccessful": "🗑 Запись была удалена.",
         "noPatternMatched": "Что-что? 🤔"
     },
     "help": {

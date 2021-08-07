@@ -5,7 +5,7 @@ import {
     List, ListItem, Divider, ListItemText, Button
 } from '@material-ui/core'
 import { HelpOutline } from '@material-ui/icons'
-import { PatternBuilder, PatternMatcher } from '@vitalyrudenko/templater';
+import { InputType, PatternBuilder, PatternMatcher } from '@vitalyrudenko/templater';
 import copyToClipboard from 'copy-to-clipboard';
 import { TemplateTester } from '../shared/TemplateTester';
 import { InputTypeIcons } from '../shared/InputTypeIcons';
@@ -169,32 +169,36 @@ const Combination = ({ combination }) => {
 };
 
 function getExampleFor(inputType, get) {
-    if (inputType === 'database') {
+    if (inputType === InputType.DATABASE) {
         return getNextItem(get('builder.databaseNames'));
     }
 
-    if (inputType === 'text') {
+    if (inputType === InputType.TEXT) {
         return generateText(get);
     }
 
-    if (inputType === 'word') {
+    if (inputType === InputType.WORD) {
         return getNextItem(get('builder.nouns'));
     }
 
-    if (inputType === 'url') {
+    if (inputType === InputType.URL) {
         return 'https://example.com/jon-snow';
     }
 
-    if (inputType === 'email') {
+    if (inputType === InputType.EMAIL) {
         return 'jon.snow@example.com';
     }
 
-    if (inputType === 'phone') {
+    if (inputType === InputType.PHONE) {
         return '+380123456789';
     }
 
-    if (inputType === 'number') {
+    if (inputType === InputType.NUMBER) {
         return String(getNextNumber());
+    }
+
+    if (inputType === InputType.MATCH) {
+        return '<not supported>';
     }
 
     return inputType;

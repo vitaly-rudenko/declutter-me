@@ -16,6 +16,7 @@ const InputTypeScore = {
     [InputType.EMAIL]: 3,
     [InputType.PHONE]: 3,
     [InputType.NUMBER]: 3,
+    [InputType.MATCH]: 3,
 };
 
 export class EntryMatchers {
@@ -35,6 +36,8 @@ export class EntryMatchers {
         this[InputType.EMAIL] = this._email.bind(this);
         this[InputType.PHONE] = this._phone.bind(this);
         this[InputType.NUMBER] = this._number.bind(this);
+
+        this[InputType.MATCH] = this._match.bind(this);
     }
 
     score(token) {
@@ -143,7 +146,11 @@ export class EntryMatchers {
 
     // TODO: add support for natural language numbers
     _number(input, { nextTokens: [nextToken] }) {
-        return this._select(input, nextToken, value => Number.isFinite(Number(value)))
+        return this._select(input, nextToken, value => Number.isFinite(Number(value)));
+    }
+
+    _match(input, { token, nextTokens: [nextToken], match }) {
+        return this._select(input, nextToken, value => match(value, token.match));
     }
 
     _date(input, futureOnly) {
@@ -165,22 +172,20 @@ export class EntryMatchers {
 
     _select(input, nextToken, matcher) {
         if (nextToken && nextToken.type === TokenType.TEXT) {
-            let start = 0
-
-            const parts = split(input, nextToken.value)
-            const variants = []
-            let value = parts.shift()
+            const parts = split(input, nextToken.value);
+            const variants = [];
+            let value = parts.shift();
 
             for (const part of parts) {
                 if (matcher(value)) {
-                    variants.push(value)
+                    variants.push(value);
                 }
 
-                value += nextToken.value + part
+                value += nextToken.value + part;
             }
 
-            if (variants.length === 0) return null
-            return variants
+            if (variants.length === 0) return null;
+            return variants.reverse();
         }
 
         if (matcher(input)) {

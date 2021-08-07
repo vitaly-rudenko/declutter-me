@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.1.0",
+  "version": "1.0.0-beta.8",
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.11.4",
@@ -8,7 +8,7 @@
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
-    "@vitalyrudenko/templater": "^0.0.4",
+    "@vitalyrudenko/templater": "^0.0.12",
     "base64url": "^3.0.1",
     "classnames": "^2.3.1",
     "copy-to-clipboard": "^3.3.1",
@@ -25,7 +25,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "predeploy": "npm run build",
+    "predeploy": "npm install && npm run build",
     "deploy": "gh-pages -d build"
   },
   "homepage": "https://vitaly-rudenko.github.io/declutter-me/",

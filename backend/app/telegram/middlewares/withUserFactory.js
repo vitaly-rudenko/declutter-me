@@ -15,7 +15,7 @@ export const withUserFactory = (storage) => {
                 return;
             }
         
-            next();
+            await next();
         };
     };
 };

@@ -25,6 +25,6 @@ export class NotionDatabase {
     }
 
     get notionDatabaseId() {
-        return new URL(this._notionDatabaseUrl).pathname.slice(1);
+        return new URL(this._notionDatabaseUrl).pathname.slice(1).split('/').pop().split('-').pop();
     }
 }
