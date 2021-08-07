@@ -124,9 +124,7 @@ export class PatternBuilder {
                         ? this.build(value)
                         : (currentType === TokenType.VARIATIONAL || currentType === TokenType.ANY_ORDER)
                             ? value.split(/(?<!\\)\|/g).map(v => this.build(v))
-                            : currentType === TokenType.VARIABLE
-                                ? value
-                                : value.toLowerCase() },
+                            : value },
                     ...metadata,
                 });
                 value = '';

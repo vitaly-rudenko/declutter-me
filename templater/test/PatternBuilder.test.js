@@ -19,12 +19,12 @@ describe('PatternBuilder', () => {
         it('should parse simple text', () => {
             expect(patternBuilder.build('Hello'))
                 .to.deep.eq([
-                    { type: TEXT, value: 'hello' },
+                    { type: TEXT, value: 'Hello' },
                 ]);
 
             expect(patternBuilder.build('Buy chicken'))
                 .to.deep.eq([
-                    { type: TEXT, value: 'buy chicken' },
+                    { type: TEXT, value: 'Buy chicken' },
                 ]);
         });
 
@@ -49,7 +49,7 @@ describe('PatternBuilder', () => {
 
             expect(patternBuilder.build('Buy {note}, please'))
                 .to.deep.eq([
-                    { type: TEXT, value: 'buy ' },
+                    { type: TEXT, value: 'Buy ' },
                     { type: VARIABLE, value: 'note' },
                     { type: TEXT, value: ', please' },
                 ]);
@@ -58,7 +58,7 @@ describe('PatternBuilder', () => {
                 .to.deep.eq([
                     { type: TEXT, value: '#' },
                     { type: VARIABLE, value: 'tag' },
-                    { type: TEXT, value: ' buy ' },
+                    { type: TEXT, value: ' Buy ' },
                     { type: VARIABLE, value: 'note' },
                     { type: TEXT, value: ', please' },
                 ]);
@@ -69,7 +69,7 @@ describe('PatternBuilder', () => {
                 .to.deep.eq([
                     { type: TEXT, value: '#' },
                     { type: VARIABLE, value: 'tag', bang: true },
-                    { type: TEXT, value: ' buy ' },
+                    { type: TEXT, value: ' Buy ' },
                     { type: VARIABLE, value: 'note' },
                     { type: TEXT, value: ', please' },
                 ]);
@@ -162,8 +162,8 @@ describe('PatternBuilder', () => {
                     {
                         type: VARIATIONAL,
                         value: [
-                            [{ type: TEXT, value: 'buy' }],
-                            [{ type: TEXT, value: 'purchase' }],
+                            [{ type: TEXT, value: 'Buy' }],
+                            [{ type: TEXT, value: 'Purchase' }],
                         ]
                     },
                     { type: TEXT, value: ' ' },
@@ -254,17 +254,17 @@ describe('PatternBuilder', () => {
                 Phone: {Phone:phone}]
                 Email: {Email:email}
             `)).to.deep.eq([
-                { type: TEXT, value: 'contact: ' },
+                { type: TEXT, value: 'Contact: ' },
                 { type: VARIABLE, value: 'Name', inputType: InputType.WORD },
                 { type: OPTIONAL, value: [
                     { type: TEXT, value: ' ' },
                     { type: VARIABLE, value: 'Surname', inputType: InputType.WORD },
                 ] },
                 { type: OPTIONAL, value: [
-                    { type: TEXT, value: '\nphone: ' },
+                    { type: TEXT, value: '\nPhone: ' },
                     { type: VARIABLE, value: 'Phone', inputType: InputType.PHONE },
                 ] },
-                { type: TEXT, value: '\nemail: ' },
+                { type: TEXT, value: '\nEmail: ' },
                 { type: VARIABLE, value: 'Email', inputType: InputType.EMAIL },
             ]);
 
@@ -272,7 +272,7 @@ describe('PatternBuilder', () => {
                 Hello( world|
                 world)
             `)).to.deep.eq([
-                { type: TEXT, value: 'hello' },
+                { type: TEXT, value: 'Hello' },
                 { type: VARIATIONAL, value: [
                     [{ type: TEXT, value: ' world' }],
                     [{ type: TEXT, value: '\nworld' }],
