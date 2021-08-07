@@ -11,7 +11,7 @@
             "template": "{index}\\. `{pattern}`",
             "templateWithDatabase": [
                 "{index}\\. `{pattern}`",
-                "    → *{database}*"
+                "    → [*{databaseAlias}*]({databaseUrl})"
             ],
             "none": "*\\<пусто\\>*"
         }
@@ -22,7 +22,7 @@
             "",
             "Используй */start* для изменения языка или часового пояса\\.",
             "Используй */notion* для подключения своего Notion аккаунта\\.",
-            "Используй */database* для добавления или удаления баз данных\\.",
+            "Используй */databases* для добавления или удаления баз данных\\.",
             "Используй */templates* для добавления, удаления или изменения порядка шаблонов\\.",
             "Используй */info* для просмотра всей информации об аккаунте\\.",
             "",
@@ -166,11 +166,12 @@
         ],
         "patternMatched": [
             "✅ {match}",
-            "    → *{database}*",
+            "    → [*{databaseAlias}*]({databaseUrl})",
             "",
             "{fields}"
         ],
         "patternMatchField": "*{name}:* {value}",
+        "open": "🔗 Открыть",
         "undo": "🗑 Удалить",
         "undoInProcess": "⏳ Удаляю...",
         "undoSuccessful": "🗑 Запись была удалена.",

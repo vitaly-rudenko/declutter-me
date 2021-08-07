@@ -3,19 +3,29 @@ import { escapeMd } from './escapeMd.js';
 import { formatPattern } from './formatPattern.js';
 
 /** @param {import('../templates/Template').Template[]} templates */
-export function formatTemplates(templates, localize) {
+export function formatTemplates(templates, databases, localize) {
     return templates.length > 0
         ? templates.map(
             (template, i) => {
-                const database = template.defaultFields.find(f => f.inputType === InputType.DATABASE);
+                const databaseAlias = template.defaultFields.find(f => f.inputType === InputType.DATABASE)?.value;
                 const index = i + 1;
                 const pattern = escapeMd(formatPattern(template.pattern));
 
-                if (database) {
-                    return localize(
-                        'output.templates.templateWithDatabase',
-                        { index, pattern, database: escapeMd(database.value) }
-                    );    
+                if (databaseAlias) {
+                    const database = databases.find(database => database.alias === databaseAlias);
+                    
+                    console.log(databaseAlias, '=>', database)
+                    if (database) {
+                        return localize(
+                            'output.templates.templateWithDatabase',
+                            {
+                                index,
+                                pattern,
+                                databaseAlias: escapeMd(database.alias),
+                                databaseUrl: database.notionDatabaseUrl,
+                            }
+                        );
+                    } // TODO: add some icon for missing database
                 }
                 
                 return localize('output.templates.template', { index, pattern });

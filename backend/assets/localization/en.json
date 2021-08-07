@@ -11,7 +11,7 @@
             "template": "{index}\\. `{pattern}`",
             "templateWithDatabase": [
                 "{index}\\. `{pattern}`",
-                "    → *{database}*"
+                "    → [*{databaseAlias}*]({databaseUrl})"
             ],
             "none": "*\\<none\\>*"
         }
@@ -22,7 +22,7 @@
             "",
             "Use */start* to change your language or timezone\\.",
             "Use */notion* to setup your Notion account\\.",
-            "Use */database* to add or remove your databases\\.",
+            "Use */databases* to add or remove your databases\\.",
             "Use */templates* to add, remove or reorder your templates\\.",
             "Use */info* to view your information\\.",
             "",
@@ -166,11 +166,12 @@
         ],
         "patternMatched": [
             "✅ {match}",
-            "    → *{database}*",
+            "    → [*{databaseAlias}*]({databaseUrl})",
             "",
             "{fields}"
         ],
         "patternMatchField": "*{name}:* {value}",
+        "open": "🔗 Open",
         "undo": "🗑 Delete",
         "undoInProcess": "⏳ Deleting...",
         "undoSuccessful": "🗑 Entry has been deleted.",

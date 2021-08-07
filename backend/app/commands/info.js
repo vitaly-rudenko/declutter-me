@@ -19,7 +19,7 @@ export function infoCommand({ storage }) {
                     : context.state.localize('command.info.notProvided'),
                 notionToken: escapeMd(context.state.notionAccount?.token ?? context.state.localize('command.info.notProvided')),
                 databases: formatDatabases(databases, context.state.localize),
-                templates: formatTemplates(templates, context.state.localize),
+                templates: formatTemplates(templates, databases, context.state.localize),
             }),
             { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
         );

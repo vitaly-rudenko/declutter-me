@@ -66,17 +66,13 @@ export function deleteTemplateAction({ storage }) {
     };
 }
 
-export function deleteTemplateByIndexAction({ storage }) {
+export function deleteTemplateByHashAction({ storage }) {
     return async (context) => {
         await context.answerCbQuery();
         
-        const index = Number(context.match[1]);
-        const templates = await storage.findTemplatesByUserId(context.state.userId);
-        const template = templates[index];
-
-        if (!template) {
-            return;
-        }
+        const hash = context.match[1];
+        const template = await storage.findTemplateByHash(context.state.userId, hash);
+        if (!template) return;
 
         await storage.deleteTemplateByPattern(context.state.userId, template.pattern);
 

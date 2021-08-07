@@ -83,7 +83,7 @@ export function matchMessage({ bot, storage }) {
                 return;
             }
 
-            let pageId;
+            let pageId, pageUrl;
             try {
                 const notionDatabase = await notion.databases.retrieve({ database_id: database.notionDatabaseId });
                 const entry = new NotionEntry({
@@ -106,6 +106,7 @@ export function matchMessage({ bot, storage }) {
                 );
 
                 pageId = page.id;
+                pageUrl = page.url;
             } catch (error) {
                 try {
                     await bot.telegram.editMessageText(
@@ -125,7 +126,8 @@ export function matchMessage({ bot, storage }) {
                 null,
                 context.state.localize('match.patternMatched', {
                     match: formatCombination(result.combination, fields),
-                    database: escapeMd(databaseAlias),
+                    databaseAlias: escapeMd(database.alias),
+                    databaseUrl: database.notionDatabaseUrl,
                     fields: fields
                         .filter(field => field.inputType !== InputType.DATABASE)
                         .map((field) => context.state.localize(
@@ -139,8 +141,9 @@ export function matchMessage({ bot, storage }) {
                 {
                     parse_mode: 'MarkdownV2',
                     reply_markup: Markup.inlineKeyboard([
+                        Markup.button.url(context.state.localize('match.open'), pageUrl),
                         Markup.button.callback(context.state.localize('match.undo'), `undo:notion:${pageId}`)
-                    ]).reply_markup,
+                    ], { columns: 2 }).reply_markup,
                 }
             );
             return;

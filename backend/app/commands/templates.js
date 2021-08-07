@@ -1,9 +1,11 @@
 import { Markup } from 'telegraf';
 import { formatTemplates } from '../utils/formatTemplates.js';
 
+const TEMPLATES_REORDER_REGEX = /\/templates reorder\n(.+)/s;
+
 export function manageTemplatesCommand({ storage }) {
     return async (context) => {
-        const TEMPLATES_REORDER_REGEX = /\/templates reorder\n(.+)/s;
+        const databases = await storage.findDatabasesByUserId(context.state.userId);
 
         if (TEMPLATES_REORDER_REGEX.test(context.message.text)) {
             const [_, match] = context.message.text.match(TEMPLATES_REORDER_REGEX);
@@ -37,14 +39,14 @@ export function manageTemplatesCommand({ storage }) {
             if (partialSuccess) {
                 await context.reply(
                     context.state.localize('command.templates.reorder.partialSuccess', {
-                        templates: formatTemplates(updatedTemplates, context.state.localize)
+                        templates: formatTemplates(updatedTemplates, databases, context.state.localize)
                     }),
                     { parse_mode: 'MarkdownV2' }
                 );
             } else {
                 await context.reply(
                     context.state.localize('command.templates.reorder.success', {
-                        templates: formatTemplates(updatedTemplates, context.state.localize)
+                        templates: formatTemplates(updatedTemplates, databases, context.state.localize)
                     }),
                     { parse_mode: 'MarkdownV2' }
                 );
@@ -57,7 +59,7 @@ export function manageTemplatesCommand({ storage }) {
 
         await context.reply(
             context.state.localize('command.templates.chooseAction', {
-                templates: formatTemplates(templates, context.state.localize),
+                templates: formatTemplates(templates, databases, context.state.localize),
             }),
             {
                 parse_mode: 'MarkdownV2',
