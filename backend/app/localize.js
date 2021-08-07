@@ -26,7 +26,7 @@ function getMessages(language) {
     throw new Error('Invalid language: ' + language);
 }
 
-export const get = (messageKey, language) => {
+export function get(messageKey, language) {
     const path = messageKey.split('.');
 
     let result = getMessages(language);
@@ -37,7 +37,7 @@ export const get = (messageKey, language) => {
     return result ?? messageKey;
 };
 
-export const localize = (messageKey, replacements = null, language) => {
+export function localize(messageKey, replacements = null, language) {
     let result = get(messageKey, language);
 
     if (Array.isArray(result)) {

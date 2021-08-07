@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { Language } from './Language';
+import { Language } from './Language.js';
 
-import { get, localize } from './localize';
+import { get, localize } from './localize.js';
 
 const languageMap = {
     'en': Language.ENGLISH,

@@ -2,12 +2,12 @@ import { Button, Container, Divider, Link, List, ListItem, ListItemText, Paper, 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import copyToClipboard from 'copy-to-clipboard';
-import { TemplateTester } from '../shared/TemplateTester';
+import { TemplateTester } from '../shared/TemplateTester.js';
 import { useHistory, useLocation } from 'react-router-dom';
-import { useLocalize } from '../useLocalize';
+import { useLocalize } from '../useLocalize.js';
 import pako from 'pako';
 import base64url from 'base64url';
-import './TemplateManager.css';
+import './TemplateManager.css.js';
 
 const reorder = (list, startIndex, endIndex) => {
     const result = Array.from(list);

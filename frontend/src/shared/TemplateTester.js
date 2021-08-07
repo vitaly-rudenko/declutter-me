@@ -1,9 +1,9 @@
 import React, { useCallback, useMemo } from 'react';
 import { Button, Chip, Link, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@material-ui/core';
-import { InputTypeIcons } from './InputTypeIcons';
+import { InputTypeIcons } from './InputTypeIcons.js';
 import { RussianDateParser, EntryMatchers, PatternMatcher, PatternBuilder } from '@vitalyrudenko/templater';
-import { useLocalize } from '../useLocalize';
-import './TemplateTester.css';
+import { useLocalize } from '../useLocalize.js';
+import './TemplateTester.css.js';
 
 function useMemoUnlessFailed(callback, dependencies) {
     return useMemo(() => {

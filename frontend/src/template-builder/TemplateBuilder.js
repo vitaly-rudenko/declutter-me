@@ -7,11 +7,11 @@ import {
 import { HelpOutline } from '@material-ui/icons'
 import { InputType, PatternBuilder, PatternMatcher } from '@vitalyrudenko/templater';
 import copyToClipboard from 'copy-to-clipboard';
-import { TemplateTester } from '../shared/TemplateTester';
-import { InputTypeIcons } from '../shared/InputTypeIcons';
+import { TemplateTester } from '../shared/TemplateTester.js';
+import { InputTypeIcons } from '../shared/InputTypeIcons.js';
 import { useHistory, useLocation } from 'react-router-dom';
-import { useLocalize } from '../useLocalize';
-import './TemplateBuilder.css';
+import { useLocalize } from '../useLocalize.js';
+import './TemplateBuilder.css.js';
 
 const COLORS = ['orange', 'yellow', 'green', 'blue', 'purple'];
 
