@@ -4,25 +4,10 @@ import { escapeMd } from '../utils/escapeMd.js';
 export function exportCommand({ storage }) {
     /** @param {import('telegraf').Context} context */
     return async (context) => {
-        const user = context.state.user;
-        const telegramAccount = context.state.telegramAccount;
-        const notionAccount = context.state.notionAccount;
-
-        const databases = await storage.findDatabasesByUserId(user.id);
-        const templates = await storage.findTemplatesByUserId(user.id);
+        const databases = await storage.findDatabasesByUserId(context.state.userId);
+        const templates = await storage.findTemplatesByUserId(context.state.userId);
 
         const exportedData = {
-            user: {
-                id: user.id,
-                language: user.language,
-                timezoneOffsetMinutes: user.timezoneOffsetMinutes,
-            },
-            notionAccount: notionAccount && {
-                token: notionAccount.token,
-            },
-            telegramAccount: telegramAccount && {
-                telegramUserId: telegramAccount.telegramUserId,
-            },
             databases: databases.map((database) => ({
                 alias: database.alias,
                 notionDatabaseUrl: database.notionDatabaseUrl,

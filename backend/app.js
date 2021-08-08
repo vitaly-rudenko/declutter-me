@@ -39,6 +39,7 @@ import { undoNotionAction } from './app/actions/notion.js';
 import { startCommand } from './app/commands/start.js';
 import { versionCommand } from './app/commands/version.js';
 import { exportCommand } from './app/commands/export.js';
+import { importMessage } from './app/messages/import.js';
 
 const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
 
@@ -118,7 +119,7 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
     bot.action('template:add-default-fields:cancel', withUser(), cancelAddDefaultFieldsToTemplateAction({ userSessionManager }));
     bot.action(/template:add-default-fields:(.+)/, withUser(), addDefaultFieldsToTemplateAction({ userSessionManager }));
 
-    bot.command('export', withUser(), withNotion({ required: false }), exportCommand({ storage }));
+    bot.command('export', withUser(), withNotion(), exportCommand({ storage }));
 
     bot.on('message',
         // Start
@@ -132,9 +133,11 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
         // Templates
         withPhase(phases.template.pattern, templatePatternMessage({ storage, userSessionManager })),
         withPhase(phases.template.addDefaultFields, templateDefaultFieldsMessage({ storage, userSessionManager })),
+        // Import
+        importMessage({ bot, storage }),
         // Handle message
         withNotion(),
-        withPhase(null, matchMessage({ bot, storage }))
+        withPhase(null, matchMessage({ bot, storage })),
     );
     bot.action(/undo:notion:(.+)/, withUser(), withNotion(), withPhase(null, undoNotionAction()));
 

@@ -140,6 +140,13 @@ export class PostgresStorage {
         `, [alias, userId]);
     }
 
+    async deleteDatabasesByUserId(userId) {
+        await this._client.query(`
+            DELETE FROM notion_databases
+            WHERE user_id = $1;
+        `, [userId]);
+    }
+
     async findDatabasesByUserId(userId) {
         const response = await this._client.query(`
             SELECT *
@@ -226,6 +233,13 @@ export class PostgresStorage {
             WHERE pattern = $1
             AND user_id = $2;
         `, [pattern, userId]);
+    }
+
+    async deleteTemplatesByUserId(userId) {
+        await this._client.query(`
+            DELETE FROM templates
+            WHERE user_id = $1;
+        `, [userId]);
     }
 
     async findTemplatesByUserId(userId) {
