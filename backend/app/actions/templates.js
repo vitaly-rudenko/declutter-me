@@ -20,7 +20,7 @@ export function addTemplateAction({ frontendDomain, userSessionManager, storage 
             await context.reply(
                 context.state.localize('command.templates.add.chooseDatabase'),
                 Markup.inlineKeyboard([
-                    ...databases.map(database => Markup.button.callback(database.alias, 'template:add:database-alias:' + database.alias)),
+                    ...databases.map(database => Markup.button.callback(database.alias, `template:add:database:${database.alias}`)),
                     Markup.button.callback(context.state.localize('command.templates.add.skipDatabase'), 'template:add:skip-database'),
                 ], { columns: 2 })
             );

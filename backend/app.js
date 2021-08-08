@@ -112,7 +112,7 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
     bot.action(/templates:delete:template:(.+)/, withUser(), withPhase(null, deleteTemplateByHashAction({ storage })));
     bot.action('templates:delete:cancel', withUser(), withNotion(), cancelDeleteTemplateAction());
     bot.action('templates:reorder', withUser(), withNotion(), reorderTemplatesAction({ frontendDomain: FRONTEND_DOMAIN, storage }));
-    bot.action(/template:add:database-alias:(.+)/, withUser(), withPhase(phases.template.database, addTemplateWithDatabaseAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
+    bot.action(/template:add:database:(.+)/, withUser(), withPhase(phases.template.database, addTemplateWithDatabaseAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
     bot.action('template:add:skip-database', withUser(), withPhase(phases.template.database, addTemplateWithoutDatabase({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
     bot.action('template:add-default-fields:cancel', withUser(), cancelAddDefaultFieldsToTemplateAction({ userSessionManager }));
     bot.action(/template:add-default-fields:(.+)/, withUser(), addDefaultFieldsToTemplateAction({ userSessionManager }));
