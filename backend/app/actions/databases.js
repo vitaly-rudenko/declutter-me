@@ -52,7 +52,7 @@ export function deleteDatabaseAction({ storage }) {
                 Markup.inlineKeyboard([
                     ...databases.map(database => Markup.button.callback(
                         database.alias,
-                        `databases:delete:database-alias:${database.alias}`
+                        `databases:delete:${database.alias}`
                     )),
                     Markup.button.callback(
                         context.state.localize('command.databases.delete.cancel'),

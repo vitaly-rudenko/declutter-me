@@ -103,8 +103,8 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
     bot.command('databases', withUser(), withNotion(), manageDatabasesCommand({ storage }));
     bot.action('databases:add', withUser(), withNotion(), addDatabaseAction({ userSessionManager }));
     bot.action('databases:delete', withUser(), withNotion(), deleteDatabaseAction({ storage }));
+    bot.action(/databases:delete:(.+)/, withUser(), withPhase(null, deleteDatabaseByAliasAction({ storage })));
     bot.action('databases:delete:cancel', withUser(), withNotion(), cancelDeleteDatabaseAction());
-    bot.action(/databases:delete:database-alias:(.+)/, withUser(), withPhase(null, deleteDatabaseByAliasAction({ storage })));
 
     bot.command('templates', withUser(), withNotion(), manageTemplatesCommand({ storage }));
     bot.action('templates:add', withUser(), withNotion(), addTemplateAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager, storage }));
