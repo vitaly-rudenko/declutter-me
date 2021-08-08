@@ -9,10 +9,8 @@
     "output": {
         "templates": {
             "template": "{index}\\. `{pattern}`",
-            "templateWithDatabase": [
-                "{index}\\. `{pattern}`",
-                "    → [*{databaseAlias}*]({databaseUrl})"
-            ],
+            "database": "    → [*{alias}*]({url})",
+            "field": "    → *{name}*: {value}",
             "none": "*\\<пусто\\>*"
         }
     },
@@ -132,6 +130,15 @@
                 "cancelled": "Окей, ничего не удаляем 😌",
                 "deleted": "🗑 Шаблон \"{template}\" был удален."
             },
+            "defaultFields": {
+                "add": "Додати поля за замовчуванням",
+                "send": [
+                    "Хорошо\\. Отправь поля в формате:",
+                    "",
+                    "*Поле 1:* значение 1",
+                    "*Поле 2:* значение 2, значение 3"
+                ]
+            },
             "reorder": {
                 "link": [
                     "🔗 Перейди по ссылке, чтобы изменить порядок шаблонов:",
@@ -167,10 +174,9 @@
         "patternMatched": [
             "✅ {match}",
             "    → [*{databaseAlias}*]({databaseUrl})",
-            "",
             "{fields}"
         ],
-        "patternMatchField": "*{name}:* {value}",
+        "patternMatchField": "    → *{name}:* {value}",
         "open": "🔗 Открыть",
         "undo": "🗑 Удалить",
         "undoInProcess": "⏳ Удаляю...",

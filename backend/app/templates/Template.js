@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 export class Template {
     /**
      * @param {{
@@ -22,6 +24,10 @@ export class Template {
             defaultFields: this._defaultFields,
             ...override,
         });
+    }
+
+    getHash() {
+        return crypto.createHash('md5').update(this._pattern).digest('hex');
     }
 
     get userId() {

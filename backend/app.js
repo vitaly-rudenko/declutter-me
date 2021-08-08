@@ -28,11 +28,11 @@ import { notionCommand } from './app/commands/notion.js';
 import { manageDatabasesCommand } from './app/commands/databases.js';
 import { addDatabaseAction, cancelDeleteDatabaseAction, deleteDatabaseAction, deleteDatabaseByAliasAction } from './app/actions/databases.js';
 import { manageTemplatesCommand } from './app/commands/templates.js';
-import { addTemplateAction, addTemplateWithDatabaseAction, addTemplateWithoutDatabase, cancelDeleteTemplateAction, deleteTemplateAction, deleteTemplateByHashAction, reorderTemplatesAction } from './app/actions/templates.js';
+import { addDefaultFieldsToTemplateAction, addTemplateAction, addTemplateWithDatabaseAction, addTemplateWithoutDatabase, cancelDeleteTemplateAction, deleteTemplateAction, deleteTemplateByHashAction, reorderTemplatesAction } from './app/actions/templates.js';
 import { timezoneMessage } from './app/messages/timezone.js';
 import { notionMessage } from './app/messages/notion.js';
 import { databaseAliasMessage, databaseLinkMessage } from './app/messages/databases.js';
-import { templatePatternMessage } from './app/messages/templates.js';
+import { templateDefaultFieldsMessage, templatePatternMessage } from './app/messages/templates.js';
 import { matchMessage } from './app/messages/match.js';
 import { languageAction } from './app/actions/language.js';
 import { undoNotionAction } from './app/actions/notion.js';
@@ -114,6 +114,7 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
     bot.action('templates:reorder', withUser(), withNotion(), reorderTemplatesAction({ frontendDomain: FRONTEND_DOMAIN, storage }));
     bot.action(/template:add:database-alias:(.+)/, withUser(), withPhase(phases.template.database, addTemplateWithDatabaseAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
     bot.action('template:add:skip-database', withUser(), withPhase(phases.template.database, addTemplateWithoutDatabase({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
+    bot.action(/template:add-default-fields:(.+)/, withUser(), addDefaultFieldsToTemplateAction({ userSessionManager }));
 
     bot.on('message',
         // Start
@@ -124,8 +125,9 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
         // Databases
         withPhase(phases.addDatabase.link, databaseLinkMessage({ userSessionManager })),
         withPhase(phases.addDatabase.alias, databaseAliasMessage({ storage, userSessionManager })),
-        // Patterns
+        // Templates
         withPhase(phases.template.pattern, templatePatternMessage({ storage, userSessionManager })),
+        withPhase(phases.template.addDefaultFields, templateDefaultFieldsMessage({ storage, userSessionManager })),
         // Handle message
         withNotion(),
         withPhase(null, matchMessage({ bot, storage }))

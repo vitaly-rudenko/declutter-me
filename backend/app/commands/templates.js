@@ -41,14 +41,14 @@ export function manageTemplatesCommand({ storage }) {
                     context.state.localize('command.templates.reorder.partialSuccess', {
                         templates: formatTemplates(updatedTemplates, databases, context.state.localize)
                     }),
-                    { parse_mode: 'MarkdownV2' }
+                    { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
                 );
             } else {
                 await context.reply(
                     context.state.localize('command.templates.reorder.success', {
                         templates: formatTemplates(updatedTemplates, databases, context.state.localize)
                     }),
-                    { parse_mode: 'MarkdownV2' }
+                    { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
                 );
             }
 
@@ -63,6 +63,7 @@ export function manageTemplatesCommand({ storage }) {
             }),
             {
                 parse_mode: 'MarkdownV2',
+                disable_web_page_preview: true,
                 reply_markup: Markup.inlineKeyboard([
                     Markup.button.callback(context.state.localize('command.templates.actions.add'), 'templates:add'),
                     Markup.button.callback(context.state.localize('command.templates.actions.reorder'), 'templates:reorder'),

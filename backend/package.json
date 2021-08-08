@@ -1,6 +1,6 @@
 {
   "name": "declutter-me",
-  "version": "1.0.0-pre.2",
+  "version": "1.0.0-pre.3",
   "description": "Smart & customizable organizer",
   "main": "app.js",
   "type": "module",

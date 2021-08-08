@@ -161,6 +161,26 @@ export function addTemplateWithoutDatabase({ frontendDomain, userSessionManager 
     };
 }
 
+export function addDefaultFieldsToTemplateAction({ userSessionManager }) {
+    return async (context) => {
+        await context.answerCbQuery();
+
+        const templateHash = context.match[1];
+
+        await Promise.all([
+            context.deleteMessage(),
+            context.reply(
+                context.state.localize('command.templates.defaultFields.send'),
+                { parse_mode: 'MarkdownV2' }
+            )
+        ]);
+
+        userSessionManager.setPhase(context.state.userId, phases.template.addDefaultFields);
+        userSessionManager.context(context.state.userId).templateHash = templateHash;
+    };
+}
+
+
 export function createTemplateBuilderLink({ frontendDomain, pattern = null, test = null, language }) {
     const linkLanguage = linkLanguageMap[language] ?? 'en';
     const searchParams = new URLSearchParams()

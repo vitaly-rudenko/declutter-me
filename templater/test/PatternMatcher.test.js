@@ -373,15 +373,6 @@ describe('PatternMatcher', () => {
         });
 
         it.skip('should create combinations for optional any-order operator', () => {
-            // console.log(JSON.stringify(patternMatcher.getTokenCombinations({
-            //     type: ANY_ORDER,
-            //     value: [
-            //         [{ type: OPTIONAL, value: [{ type: VARIABLE, value: 'phone' }] }],
-            //         [{ type: OPTIONAL, value: [{ type: VARIABLE, value: 'email' }] }],
-            //         [{ type: OPTIONAL, value: [{ type: VARIABLE, value: 'url' }] }],
-            //     ]
-            // }), null, 4))
-
             // <[{phone}]|[{email}]|[{url}]>
             expect(patternMatcher.getTokenCombinations({
                 type: ANY_ORDER,

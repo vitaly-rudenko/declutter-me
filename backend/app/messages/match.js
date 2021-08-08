@@ -1,11 +1,10 @@
-/** @typedef {import('@vitalyrudenko/templater').Field} Field */
-
 import { EntryMatchers, InputType, PatternBuilder, PatternMatcher, RussianDateParser, TokenType } from '@vitalyrudenko/templater';
 import { Markup } from 'telegraf';
 import { NotionEntry } from '../notion/NotionEntry.js';
 import { NotionEntrySerializer } from '../notion/NotionEntrySerializer.js';
 import { NotionProperty } from '../notion/NotionProperty.js';
 import { escapeMd } from '../utils/escapeMd.js';
+import { mergeFields } from '../utils/mergeFields.js';
 
 export function matchMessage({ bot, storage }) {
     return async (context) => {
@@ -33,29 +32,6 @@ export function matchMessage({ bot, storage }) {
 
             if (!result) continue;
             const message = await context.reply(context.state.localize('match.checking'));
-
-            /**
-             * @param {Field[]} fields1
-             * @param {Field[]} fields2
-             */
-            function mergeFields(fields1, fields2) {
-                const result = [...fields1];
-
-                for (const field of fields2) {
-                    const index = result.findIndex(f => (
-                        f.name === field.name ||
-                        (f.inputType === InputType.DATABASE && field.inputType === InputType.DATABASE)
-                    ));
-
-                    if (index !== -1) {
-                        result.splice(index, 1);
-                    }
-
-                    result.push(field)
-                }
-
-                return result;
-            }
 
             const fields = mergeFields(template.defaultFields, result.fields)
 
@@ -140,6 +116,7 @@ export function matchMessage({ bot, storage }) {
                 }),
                 {
                     parse_mode: 'MarkdownV2',
+                    disable_web_page_preview: true,
                     reply_markup: Markup.inlineKeyboard([
                         Markup.button.url(context.state.localize('match.open'), pageUrl),
                         Markup.button.callback(context.state.localize('match.undo'), `undo:notion:${pageId}`)

@@ -9,10 +9,8 @@
     "output": {
         "templates": {
             "template": "{index}\\. `{pattern}`",
-            "templateWithDatabase": [
-                "{index}\\. `{pattern}`",
-                "    → [*{databaseAlias}*]({databaseUrl})"
-            ],
+            "database": "    → [*{alias}*]({url})",
+            "field": "    → *{name}*: {value}",
             "none": "*\\<none\\>*"
         }
     },
@@ -132,6 +130,15 @@
                 "cancelled": "Okay, leaving your templates untouched 😌",
                 "deleted": "🗑 Template \"{template}\" has been deleted."
             },
+            "defaultFields": {
+                "add": "Add default fields",
+                "send": [
+                    "Good\\. Now send the fields in this format:",
+                    "",
+                    "*Field 1:* value 1",
+                    "*Field 2:* value 2, value 3"
+                ]
+            },
             "reorder": {
                 "link": [
                     "🔗 Follow the link to reorder your templates:",
@@ -167,10 +174,9 @@
         "patternMatched": [
             "✅ {match}",
             "    → [*{databaseAlias}*]({databaseUrl})",
-            "",
             "{fields}"
         ],
-        "patternMatchField": "*{name}:* {value}",
+        "patternMatchField": "    → *{name}:* {value}",
         "open": "🔗 Open",
         "undo": "🗑 Delete",
         "undoInProcess": "⏳ Deleting...",
