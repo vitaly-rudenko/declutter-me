@@ -38,6 +38,7 @@ import { languageAction } from './app/actions/language.js';
 import { undoNotionAction } from './app/actions/notion.js';
 import { startCommand } from './app/commands/start.js';
 import { versionCommand } from './app/commands/version.js';
+import { exportCommand } from './app/commands/export.js';
 
 const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
 
@@ -71,7 +72,7 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
     const notionSessionManager = new NotionSessionManager({ storage });
 
     bot.telegram.setMyCommands(
-        ['databases', 'templates', 'info', 'notion', 'help', 'start', 'version']
+        ['databases', 'templates', 'info', 'notion', 'help', 'start', 'export', 'version']
             .map(command => ({
                 command: `/${command}`,
                 description: localize(`help.command.${command}`, null, Language.ENGLISH)
@@ -96,7 +97,7 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
     bot.start(startCommand({ userSessionManager }));
     bot.action(/language:(.+)/, withPhase(phases.start.language, languageAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
 
-    bot.command('info', withUser({ required: false }), withNotion({ required: false }), infoCommand({ storage }));
+    bot.command('info', withUser(), withNotion({ required: false }), infoCommand({ storage }));
     bot.command('help', withUser(), helpCommand());
     bot.command('notion', withUser(), notionCommand({ userSessionManager }));
     
@@ -116,6 +117,8 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
     bot.action('template:add:skip-database', withUser(), withPhase(phases.template.database, addTemplateWithoutDatabase({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
     bot.action('template:add-default-fields:cancel', withUser(), cancelAddDefaultFieldsToTemplateAction({ userSessionManager }));
     bot.action(/template:add-default-fields:(.+)/, withUser(), addDefaultFieldsToTemplateAction({ userSessionManager }));
+
+    bot.command('export', withUser(), withNotion({ required: false }), exportCommand({ storage }));
 
     bot.on('message',
         // Start
