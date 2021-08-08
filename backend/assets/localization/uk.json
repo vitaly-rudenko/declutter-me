@@ -46,16 +46,18 @@
             ]
         },
         "info": {
-            "response": [
+            "main": [
                 "🇺🇦 {language} \\| 🕚 {timezone}",
                 "Введи */start*, щоб змінити мову або часовий пояс\\.",
                 "",
                 "*/notion*",
-                "`{notionToken}`",
-                "",
+                "`{notionToken}`"
+            ],
+            "databases": [
                 "*/databases* \\(бази даних\\)",
-                "{databases}",
-                "",
+                "{databases}"
+            ],
+            "templates": [
                 "*/templates* \\(шаблони\\)",
                 "{templates}",
                 "",
