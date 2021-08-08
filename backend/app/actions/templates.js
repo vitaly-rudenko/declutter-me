@@ -170,7 +170,15 @@ export function addDefaultFieldsToTemplateAction({ userSessionManager }) {
             context.deleteMessage(),
             context.reply(
                 context.state.localize('command.templates.defaultFields.send'),
-                { parse_mode: 'MarkdownV2' }
+                {
+                    parse_mode: 'MarkdownV2',
+                    reply_markup: Markup.inlineKeyboard([
+                        Markup.button.callback(
+                            context.state.localize('command.templates.defaultFields.cancel'),
+                            'template:add-default-fields:cancel'
+                        )
+                    ]).reply_markup
+                }
             )
         ]);
 
@@ -179,6 +187,14 @@ export function addDefaultFieldsToTemplateAction({ userSessionManager }) {
     };
 }
 
+export function cancelAddDefaultFieldsToTemplateAction({ userSessionManager }) {
+    return async (context) => {
+        await context.answerCbQuery();
+
+        userSessionManager.clear(context.state.userId);
+        await context.deleteMessage();
+    };
+}
 
 export function createTemplateBuilderLink({ frontendDomain, pattern = null, test = null, language }) {
     const linkLanguage = linkLanguageMap[language] ?? 'en';

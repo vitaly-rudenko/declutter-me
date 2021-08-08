@@ -137,7 +137,8 @@
                     "",
                     "*Field 1:* value 1",
                     "*Field 2:* value 2, value 3"
-                ]
+                ],
+                "cancel": "Cancel"
             },
             "reorder": {
                 "link": [

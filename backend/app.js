@@ -28,7 +28,7 @@ import { notionCommand } from './app/commands/notion.js';
 import { manageDatabasesCommand } from './app/commands/databases.js';
 import { addDatabaseAction, cancelDeleteDatabaseAction, deleteDatabaseAction, deleteDatabaseByAliasAction } from './app/actions/databases.js';
 import { manageTemplatesCommand } from './app/commands/templates.js';
-import { addDefaultFieldsToTemplateAction, addTemplateAction, addTemplateWithDatabaseAction, addTemplateWithoutDatabase, cancelDeleteTemplateAction, deleteTemplateAction, deleteTemplateByHashAction, reorderTemplatesAction } from './app/actions/templates.js';
+import { addDefaultFieldsToTemplateAction, addTemplateAction, addTemplateWithDatabaseAction, addTemplateWithoutDatabase, cancelAddDefaultFieldsToTemplateAction, cancelDeleteTemplateAction, deleteTemplateAction, deleteTemplateByHashAction, reorderTemplatesAction } from './app/actions/templates.js';
 import { timezoneMessage } from './app/messages/timezone.js';
 import { notionMessage } from './app/messages/notion.js';
 import { databaseAliasMessage, databaseLinkMessage } from './app/messages/databases.js';
@@ -114,6 +114,7 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
     bot.action('templates:reorder', withUser(), withNotion(), reorderTemplatesAction({ frontendDomain: FRONTEND_DOMAIN, storage }));
     bot.action(/template:add:database-alias:(.+)/, withUser(), withPhase(phases.template.database, addTemplateWithDatabaseAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
     bot.action('template:add:skip-database', withUser(), withPhase(phases.template.database, addTemplateWithoutDatabase({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
+    bot.action('template:add-default-fields:cancel', withUser(), cancelAddDefaultFieldsToTemplateAction({ userSessionManager }));
     bot.action(/template:add-default-fields:(.+)/, withUser(), addDefaultFieldsToTemplateAction({ userSessionManager }));
 
     bot.on('message',
