@@ -24,6 +24,9 @@
             "Use */templates* to add, remove or reorder your templates\\.",
             "Use */info* to view your information\\.",
             "",
+            "Use */export* to export your templates and databases\\.",
+            "Send file, created with */export*, to import templates and databases\\.",
+            "",
             "📚 It is recommended to read [Complete guide]({guideLink})\\."
         ],
         "start": {
@@ -160,6 +163,9 @@
                     "Use /templates command to edit your templates\\."
                 ]
             }
+        },
+        "import": {
+            "done": "Templates and databases have been successfully imported."
         }
     },
     "match": {
