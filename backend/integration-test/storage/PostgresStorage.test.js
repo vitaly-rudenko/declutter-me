@@ -149,7 +149,7 @@ describe('PostgresStorage', () => {
                     new Field({ value: 'my-field-1' }),
                     new Field({ value: 'my-field-2', name: 'my-name-1' }),
                     new Field({ value: 'my-field-3', name: 'my-name-2', inputType: 'my-input-type' }),
-                    new Field({ value: 'my-field-4', name: 'my-name-3', inputType: 'my-input-type', bang: true }),
+                    new Field({ value: 'my-field-4', name: 'my-name-3', inputType: 'my-input-type' }),
                 ]
             })
         );
@@ -161,7 +161,7 @@ describe('PostgresStorage', () => {
             new Field({ value: 'my-field-1' }),
             new Field({ value: 'my-field-2', name: 'my-name-1' }),
             new Field({ value: 'my-field-3', name: 'my-name-2', inputType: 'my-input-type' }),
-            new Field({ value: 'my-field-4', name: 'my-name-3', inputType: 'my-input-type', bang: true }),
+            new Field({ value: 'my-field-4', name: 'my-name-3', inputType: 'my-input-type' }),
         ]);
 
         expect(await postgresStorage.findTemplatesByUserId(userId))

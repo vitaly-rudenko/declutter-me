@@ -49,7 +49,6 @@ export function matchMessage({ bot, storage }) {
             const databaseAlias = databaseField.value;
             const database = await storage.findDatabaseByAlias(userId, databaseAlias);
             if (!database) {
-                if (databaseField.bang) continue;
                 await bot.telegram.editMessageText(
                     message.chat.id,
                     message.message_id,

@@ -268,7 +268,6 @@ export class PostgresStorage {
             value: field.value,
             name: field.name,
             inputType: field.inputType,
-            bang: field.bang,
         };
     }
 
@@ -277,7 +276,6 @@ export class PostgresStorage {
             value: serializedField.value,
             name: serializedField.name,
             inputType: serializedField.inputType,
-            bang: serializedField.bang,
         });
     }
 }

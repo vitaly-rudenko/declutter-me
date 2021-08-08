@@ -89,11 +89,6 @@ export class PatternBuilder {
                 const metadata = {};
 
                 if (currentType === TokenType.VARIABLE) {
-                    if (value.endsWith('!')) {
-                        metadata.bang = true;
-                        value = value.slice(0, -1);
-                    }
-
                     let inputType;
 
                     if (value === 'database') {
