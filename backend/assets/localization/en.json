@@ -10,7 +10,7 @@
         "templates": {
             "template": "{index}\\. `{pattern}`",
             "database": "    → [*{alias}*]({url})",
-            "field": "    → *{name}*: {value}",
+            "field": "    → *{name}:* {value}",
             "none": "*\\<none\\>*"
         }
     },

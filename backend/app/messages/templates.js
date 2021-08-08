@@ -40,9 +40,9 @@ export function templateDefaultFieldsMessage({ storage, userSessionManager }) {
 
         const defaultFields = context.message.text.split('\n')
             .map((field) => {
-                const parts = field.split(':');
+                const parts = field.split(': ');
                 const name = parts.shift();
-                const value = parts.join(':');
+                const value = parts.join(': ');
 
                 return new Field({
                     name,

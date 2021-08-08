@@ -10,7 +10,7 @@
         "templates": {
             "template": "{index}\\. `{pattern}`",
             "database": "    → [*{alias}*]({url})",
-            "field": "    → *{name}*: {value}",
+            "field": "    → *{name}:* {value}",
             "none": "*\\<пусто\\>*"
         }
     },
@@ -131,7 +131,7 @@
                 "deleted": "🗑 Шаблон \"{template}\" был удален."
             },
             "defaultFields": {
-                "add": "Додати поля за замовчуванням",
+                "add": "Добавить поля по-умолчанию",
                 "send": [
                     "Хорошо\\. Отправь поля в формате:",
                     "",
