@@ -13,9 +13,9 @@ export function manageDatabasesCommand({ storage }) {
                 parse_mode: 'MarkdownV2',
                 reply_markup: Markup.inlineKeyboard([
                     Markup.button.callback(context.state.localize('command.databases.actions.add'), 'databases:add'),
-                    // Markup.button.callback(ctx.state.localize('command.databases.actions.edit'), 'databases:edit'),
-                    Markup.button.callback(context.state.localize('command.databases.actions.delete'), 'databases:delete'),
-                ], { columns: 1 }).reply_markup,
+                    // databases.length > 0 && Markup.button.callback(ctx.state.localize('command.databases.actions.edit'), 'databases:edit'),
+                    databases.length > 0 && Markup.button.callback(context.state.localize('command.databases.actions.delete'), 'databases:delete'),
+                ].filter(Boolean), { columns: 1 }).reply_markup,
             }
         );
     };

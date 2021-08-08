@@ -2,7 +2,6 @@ import pako from 'pako';
 import base64url from 'base64url';
 import { Field, InputType } from '@vitalyrudenko/templater';
 import { Markup } from 'telegraf';
-import { Language } from '../Language.js';
 import { phases } from '../phases.js';
 import { escapeMd } from '../utils/escapeMd.js';
 import { formatPattern } from '../utils/formatPattern.js';
@@ -52,9 +51,9 @@ export function deleteTemplateAction({ storage }) {
             context.reply(
                 context.state.localize('command.templates.delete.chooseTemplate'),
                 Markup.inlineKeyboard([
-                    ...templates.map((template, i) => Markup.button.callback(
+                    ...templates.map((template) => Markup.button.callback(
                         formatPattern(template.pattern),
-                        `templates:delete:template:${i}`
+                        `templates:delete:template:${template.getHash()}`
                     )),
                     Markup.button.callback(
                         context.state.localize('command.templates.delete.cancel'),
@@ -70,8 +69,8 @@ export function deleteTemplateByHashAction({ storage }) {
     return async (context) => {
         await context.answerCbQuery();
         
-        const hash = context.match[1];
-        const template = await storage.findTemplateByHash(context.state.userId, hash);
+        const templateHash = context.match[1];
+        const template = await storage.findTemplateByHash(context.state.userId, templateHash);
         if (!template) return;
 
         await storage.deleteTemplateByPattern(context.state.userId, template.pattern);
