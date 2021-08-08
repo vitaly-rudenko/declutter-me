@@ -1,5 +1,5 @@
 import {
-    TextFields, TextFormat, LooksOne, Link,
+    TextFields, TextFormat, LooksOne,
     Storage, Phone, CalendarToday, AlternateEmail, Schedule,
     Code, LinkOff,
 } from '@material-ui/icons'

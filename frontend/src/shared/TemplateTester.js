@@ -3,7 +3,7 @@ import { Button, Chip, Link, Paper, Table, TableBody, TableCell, TableContainer,
 import { InputTypeIcons } from './InputTypeIcons.js';
 import { RussianDateParser, EntryMatchers, PatternMatcher, PatternBuilder } from '@vitalyrudenko/templater';
 import { useLocalize } from '../useLocalize.js';
-import './TemplateTester.css.js';
+import './TemplateTester.css';
 
 function useMemoUnlessFailed(callback, dependencies) {
     return useMemo(() => {

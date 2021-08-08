@@ -7,7 +7,7 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { useLocalize } from '../useLocalize.js';
 import pako from 'pako';
 import base64url from 'base64url';
-import './TemplateManager.css.js';
+import './TemplateManager.css';
 
 const reorder = (list, startIndex, endIndex) => {
     const result = Array.from(list);
