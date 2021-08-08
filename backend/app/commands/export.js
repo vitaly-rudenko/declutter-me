@@ -2,6 +2,7 @@ import yaml from 'js-yaml';
 import { escapeMd } from '../utils/escapeMd.js';
 
 export function exportCommand({ storage }) {
+    /** @param {import('telegraf').Context} context */
     return async (context) => {
         const user = context.state.user;
         const notionAccount = context.state.notionAccount;
@@ -33,9 +34,9 @@ export function exportCommand({ storage }) {
             }))
         };
 
-        await context.reply(
-            `\`${escapeMd(yaml.dump(exportedData))}\``,
-            { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
-        );
+        await context.replyWithDocument({
+            source: Buffer.from(yaml.dump(exportedData)),
+            filename: `declutter-me-${Date.now()}.yml`,
+        });
     };
 }

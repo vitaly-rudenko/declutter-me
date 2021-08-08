@@ -192,6 +192,7 @@
             "databases": "Manage your databases",
             "templates": "Manage your templates",
             "help": "Help",
+            "export": "Export your data",
             "version": "Version"
         }
     }
