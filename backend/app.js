@@ -5,16 +5,10 @@ if (process.env.USE_NATIVE_ENV !== 'true') {
     dotenv.config();
 }
 
-import { Telegraf, Markup } from 'telegraf';
-import { URL } from 'url';
-import { promises as fs } from 'fs';
+import { Telegraf } from 'telegraf';
 import express from 'express';
-import pako from 'pako';
-import base64url from 'base64url';
 
 import { phases } from './app/phases.js';
-import { PatternBuilder, Field, InputType, RussianDateParser, PatternMatcher, EntryMatchers, TokenType } from '@vitalyrudenko/templater';
-import { Template } from './app/templates/Template.js';
 import { NotionSessionManager } from './app/notion/NotionSessionManager.js';
 import { UserSessionManager } from './app/users/UserSessionManager.js';
 
@@ -24,75 +18,29 @@ import { withUserFactory } from './app/telegram/middlewares/withUserFactory.js';
 import { withNotionFactory } from './app/telegram/middlewares/withNotionFactory.js';
 import { withLocalization } from './app/telegram/middlewares/withLocalization.js';
 
-import { NotionDatabase } from './app/notion/NotionDatabase.js';
-import { NotionEntrySerializer } from './app/notion/NotionEntrySerializer.js';
 import { localize } from './app/localize.js';
 import { Language } from './app/Language.js';
-import { parseTimezoneOffsetMinutes } from './app/utils/parseTimezoneOffset.js';
-import { NotionEntry } from './app/notion/NotionEntry.js';
-import { NotionProperty } from './app/notion/NotionProperty.js';
 import { PostgresStorage } from './app/storage/PostgresStorage.js';
-import { User } from './app/users/User.js';
-import { TelegramAccount } from './app/telegram/TelegramAccount.js';
-import { NotionAccount } from './app/notion/NotionAccount.js';
-import { escapeMd } from './app/utils/escapeMd.js';
 import { Cache } from './app/storage/Cache.js';
+import { startLanguageAction, startCommand, startTimezoneMessage, startUpdateAction } from './app/flows/start.js';
+import { notionCommand, notionUpdateTokenAction, notionTokenMessage } from './app/flows/notion.js';
+import { databasesAddLinkMessage, databasesAddAliasMessage, databasesAddAction } from './app/flows/databases/add-database.js';
+import { databasesCommand } from './app/flows/databases/list-databases.js';
+import { databasesDeleteAction, databasesDeleteByAliasAction, databasesDeleteCancelAction } from './app/flows/databases/delete-database.js';
+import { templatesReorderAction, templatesReorderCommand } from './app/flows/templates/reorder-templates.js';
+import { templatesDeleteCancelAction, templatesDeleteAction, templatesDeleteByHashAction } from './app/flows/templates/delete-template.js';
+import { templatesAddDefaultFieldsCancelAction, templatesAddDefaultFieldsAction, templatesAddDefaultFieldsMessage } from './app/flows/templates/add-default-fields.js';
+import { templatesAddAction, templatesAddWithDatabaseAction, templatesAddWithoutDatabaseAction, templatesAddPatternMessage } from './app/flows/templates/add-template.js';
+import { templatesCommand } from './app/flows/templates/list-templates.js';
+import { matchMessage, matchNotionUndoAction } from './app/flows/match.js';
+import { exportCommand } from './app/flows/export.js';
+import { helpCommand } from './app/flows/help.js';
+import { importMessage } from './app/flows/import.js';
+import { versionCommand } from './app/flows/version.js';
 
 const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
 
-function encodeTemplates(templates) {
-    return base64url.fromBase64(
-        Buffer.from(
-            pako.deflate(
-                JSON.stringify(templates)
-            )
-        ).toString('base64')
-    );
-}
-
 (async () => {
-    const linkLanguageMap = {
-        [Language.ENGLISH]: 'en',
-        [Language.RUSSIAN]: 'ru',
-        [Language.UKRAINIAN]: 'uk',
-    };
-
-    const packageJson = JSON.parse(await fs.readFile('package.json', { encoding: 'utf-8' }));
-
-    function createTemplateManagerLink({ templates, language }) {
-        const linkLanguage = linkLanguageMap[language] ?? 'en';
-        const searchParams = new URLSearchParams()
-        searchParams.append('templates', encodeTemplates(templates.map(t => ({ pattern: t.pattern }))));
-        
-        return `${FRONTEND_DOMAIN}/#/${linkLanguage}/manager?${searchParams.toString()}`;
-    }
-
-    function createTemplateBuilderLink({ pattern = null, test = null, language }) {
-        const linkLanguage = linkLanguageMap[language] ?? 'en';
-        const searchParams = new URLSearchParams()
-        if (pattern) searchParams.append('pattern', pattern);
-        if (test) searchParams.append('test', test);
-
-        let queryParams = searchParams.toString();
-        if (queryParams) {
-            queryParams = '?' + queryParams;
-        }
-        
-        return `${FRONTEND_DOMAIN}/#/${linkLanguage}/builder${queryParams}`;
-    }
-
-    function createTimezoneCheckerLink({ language }) {
-        const linkLanguage = linkLanguageMap[language] ?? 'en';
-        return `${FRONTEND_DOMAIN}/#/${linkLanguage}/timezone`;
-    }
-
-    function getGuideLink({ language }) {
-        if (language === Language.ENGLISH) return process.env.GUIDE_LINK_EN;
-        if (language === Language.RUSSIAN) return process.env.GUIDE_LINK_RU;
-        if (language === Language.UKRAINIAN) return process.env.GUIDE_LINK_UK;
-        throw new Error(`Invalid language: ${language}`)
-    }
-
     const storage = new PostgresStorage(process.env.DATABASE_URL);
     await storage.connect();
 
@@ -122,7 +70,7 @@ function encodeTemplates(templates) {
     const notionSessionManager = new NotionSessionManager({ storage });
 
     bot.telegram.setMyCommands(
-        ['databases', 'templates', 'info', 'notion', 'help', 'start', 'version']
+        ['databases', 'templates', 'notion', 'help', 'start', 'export', 'version']
             .map(command => ({
                 command: `/${command}`,
                 description: localize(`help.command.${command}`, null, Language.ENGLISH)
@@ -133,744 +81,70 @@ function encodeTemplates(templates) {
     const withUser = withUserFactory(storage);
     const withNotion = withNotionFactory(notionSessionManager);
 
-    bot.command('version', async (ctx) => {
-        await ctx.reply(packageJson.version);
-    });
-
     bot.use(async (context, next) => {
         if (context.chat.type === 'private') {
             await next();
         }
     });
 
+    bot.command('version', versionCommand());
+
     bot.use(withTelegramAccount(storage));
     bot.use(withLocalization());
 
-    bot.start(async (ctx) => {
-        const languages = Object.values(Language).map(language => [
-            language,
-            localize('chooseLanguage', { language: localize(`language.${language}`, null, language) }, language)
-        ]);
+    bot.start(withUser({ required: false, skipAccountCheck: true }), startCommand({ userSessionManager }));
+    bot.action('start:update', withUser(), startUpdateAction({ userSessionManager }));
+    bot.action(/language:(.+)/, withPhase(phases.start.language, startLanguageAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
 
-        await ctx.reply('🇬🇧 🇺🇦 🇷🇺', {
-            reply_markup: Markup.inlineKeyboard(
-                languages.map(([language, label]) => (
-                    Markup.button.callback(label, `language:${language}`)
-                )),
-                { columns: 1 }
-            ).reply_markup
-        });
+    bot.command('help', withUser(), helpCommand());
 
-        userSessionManager.setPhase(ctx.state.userId || ctx.from.id, phases.start.language);
-    });
+    bot.command('notion', withUser(), withNotion({ required: false }), notionCommand({ userSessionManager }));
+    bot.action('notion:update', withUser(), notionUpdateTokenAction({ userSessionManager }));
+    
+    bot.command('databases', withUser(), withNotion(), databasesCommand({ storage }));
+    bot.action('databases:add', withUser(), withNotion(), databasesAddAction({ userSessionManager }));
+    bot.action('databases:delete', withUser(), withNotion(), databasesDeleteAction({ storage }));
+    bot.action(/databases:delete:(.+)/, withUser(), withPhase(null, databasesDeleteByAliasAction({ storage })));
+    bot.action('databases:delete:cancel', withUser(), withNotion(), databasesDeleteCancelAction());
 
-    bot.action(
-        /language:(.+)/,
-        withPhase(phases.start.language, async (ctx) => {
-            await ctx.answerCbQuery();
+    bot.command('templates', withUser(), withNotion(), templatesReorderCommand({ storage }), templatesCommand({ storage }));
+    bot.action('templates:add', withUser(), withNotion(), templatesAddAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager, storage }));
+    bot.action('templates:delete', withUser(), withNotion(), templatesDeleteAction({ storage }));
+    bot.action(/templates:delete:template:(.+)/, withUser(), withPhase(null, templatesDeleteByHashAction({ storage })));
+    bot.action('templates:delete:cancel', withUser(), withNotion(), templatesDeleteCancelAction());
+    bot.action('templates:reorder', withUser(), withNotion(), templatesReorderAction({ frontendDomain: FRONTEND_DOMAIN, storage }));
+    bot.action(/template:add:database:(.+)/, withUser(), withPhase(phases.template.database, templatesAddWithDatabaseAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
+    bot.action('template:add:skip-database', withUser(), withPhase(phases.template.database, templatesAddWithoutDatabaseAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
+    bot.action('template:add-default-fields:cancel', withUser(), templatesAddDefaultFieldsCancelAction({ userSessionManager }));
+    bot.action(/template:add-default-fields:(.+)/, withUser(), templatesAddDefaultFieldsAction({ userSessionManager }));
 
-            const language = ctx.match[1];
-
-            userSessionManager.context(ctx.state.userId || ctx.from.id).language = language;
-            userSessionManager.setPhase(ctx.state.userId || ctx.from.id, phases.start.timezone);
-
-            await ctx.reply(
-                localize('command.start.timezone', {
-                    timezoneCheckerLink: createTimezoneCheckerLink({ language }),
-                }, language),
-                { disable_web_page_preview: true }
-            );
-
-            userSessionManager.setPhase(ctx.state.userId || ctx.from.id, phases.start.timezone);
-        }),
-    );
-
-    bot.action(
-        /undo:notion:(.+)/,
-        withUser(),
-        withNotion(),
-        withPhase(null, async (ctx) => {
-            await ctx.answerCbQuery();
-
-            ctx.editMessageReplyMarkup(
-                Markup.inlineKeyboard([
-                    Markup.button.callback(ctx.state.localize('match.undoInProcess'), 'fake-button'),
-                ]).reply_markup,
-            ).catch(() => {});
-
-            /** @type {import('@notionhq/client').Client} */
-            const notion = ctx.state.notion;
-            const pageId = ctx.match[1];
-
-            await notion.pages.update({
-                page_id: pageId,
-                archived: true,
-                properties: {},
-            });
-
-            await ctx.editMessageText(ctx.state.localize('match.undoSuccessful'));
-        }),
-    );
-
-    bot.command('info', withUser({ required: false }), withNotion({ required: false }), async (ctx) => {
-        const databases = ctx.state.userId ? await storage.findDatabasesByUserId(ctx.state.userId) : [];
-        const templates = ctx.state.userId ? await storage.findTemplatesByUserId(ctx.state.userId) : [];
-
-        await ctx.reply(
-            ctx.state.localize('command.info.response', {
-                name: escapeMd(ctx.from.first_name),
-                language: ctx.state.user?.language
-                    ? ctx.state.localize(`language.${ctx.state.user.language}`)
-                    : ctx.state.localize('command.info.notProvided'),
-                timezone: ctx.state.user?.timezoneOffsetMinutes
-                    ? escapeMd(formatTimezone(ctx.state.user?.timezoneOffsetMinutes))
-                    : ctx.state.localize('command.info.notProvided'),
-                notionToken: escapeMd(ctx.state.notionAccount?.token ?? ctx.state.localize('command.info.notProvided')),
-                databases: formatDatabases(databases, ctx.state.localize),
-                templates: formatTemplates(templates, ctx.state.localize),
-            }),
-            { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
-        );
-    });
-
-    bot.command('help', withUser(), async (ctx) => {
-        await ctx.reply(
-            ctx.state.localize('command.help', {
-                guideLink: getGuideLink({ language: ctx.state.user?.language })
-            }),
-            { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
-        );
-    });
-
-    bot.command('notion', withUser(), async (ctx) => {
-        await ctx.reply(ctx.state.localize('command.notion.yourToken'));
-        userSessionManager.setPhase(ctx.state.userId, phases.notion.token);
-    });
-
-    bot.command('databases', withUser(), withNotion(), async (ctx) => {
-        const databases = await storage.findDatabasesByUserId(ctx.state.userId);
-
-        await ctx.reply(
-            ctx.state.localize('command.databases.chooseAction', {
-                databases: formatDatabases(databases, ctx.state.localize),
-            }),
-            {
-                parse_mode: 'MarkdownV2',
-                reply_markup: Markup.inlineKeyboard([
-                    Markup.button.callback(ctx.state.localize('command.databases.actions.add'), 'databases:add'),
-                    // Markup.button.callback(ctx.state.localize('command.databases.actions.edit'), 'databases:edit'),
-                    Markup.button.callback(ctx.state.localize('command.databases.actions.delete'), 'databases:delete'),
-                ], { columns: 1 }).reply_markup,
-            }
-        );
-    });
-
-    bot.action('databases:add', withUser(), withNotion(), async (ctx) => {
-        await ctx.answerCbQuery();
-
-        await Promise.all([
-            ctx.deleteMessage(),
-            ctx.reply(ctx.state.localize('command.databases.add.link'))
-        ]);
-
-        userSessionManager.setPhase(ctx.state.userId, phases.addDatabase.link);
-    });
-
-    bot.action('databases:delete', withUser(), withNotion(), async (ctx) => {
-        await ctx.answerCbQuery();
-
-        const databases = await storage.findDatabasesByUserId(ctx.state.userId);
-
-        await Promise.all([
-            ctx.deleteMessage(),
-            ctx.reply(
-                ctx.state.localize('command.databases.delete.chooseDatabase'),
-                Markup.inlineKeyboard([
-                    ...databases.map(database => Markup.button.callback(
-                        database.alias,
-                        `databases:delete:database-alias:${database.alias}`
-                    )),
-                    Markup.button.callback(
-                        ctx.state.localize('command.databases.delete.cancel'),
-                        'databases:delete:cancel'
-                    ),
-                ], { columns: 2 })
-            )
-        ]);
-    });
-
-    bot.action('databases:delete:cancel', withUser(), withNotion(), async (ctx) => {
-        await ctx.answerCbQuery();
-
-        await Promise.all([
-            ctx.deleteMessage(),
-            ctx.reply(ctx.state.localize('command.databases.delete.cancelled'))
-        ]);
-    });
-
-    bot.action(/databases:delete:database-alias:(.+)/, withUser(), withPhase(null, async (ctx) => {
-        await ctx.answerCbQuery();
-        
-        const databaseAlias = ctx.match[1];
-        await storage.deleteDatabaseByAlias(ctx.state.userId, databaseAlias);
-
-        await Promise.all([
-            ctx.deleteMessage(),
-            ctx.reply(ctx.state.localize('command.databases.delete.deleted', { database: databaseAlias })),
-        ]);
-    }));
-
-    bot.command('templates', withUser(), withNotion(), async (ctx) => {
-        const TEMPLATES_REORDER_REGEX = /\/templates reorder\n(.+)/s;
-
-        if (TEMPLATES_REORDER_REGEX.test(ctx.message.text)) {
-            const [_, match] = ctx.message.text.match(TEMPLATES_REORDER_REGEX);
-
-            const patterns = match.split('\n').filter(Boolean).map(p => p.replace(/\\n/g, '\n'));
-            const templates = await storage.findTemplatesByUserId(ctx.state.userId);
-
-            let partialSuccess = false;
-            let order = 0;
-            for (const pattern of patterns) {
-                const existingTemplate = templates.find(t => t.pattern === pattern);
-                if (!existingTemplate) {
-                    partialSuccess = true;
-                    continue;
-                }
-
-                order++;
-                await storage.storeTemplate(existingTemplate.clone({ order }))
-            }
-
-            for (const template of templates) {
-                if (patterns.includes(template.pattern)) continue;
-                partialSuccess = true;
-
-                order++;
-                await storage.storeTemplate(template.clone({ order }))
-            }
-
-            const updatedTemplates = await storage.findTemplatesByUserId(ctx.state.userId);
-
-            if (partialSuccess) {
-                await ctx.reply(
-                    ctx.state.localize('command.templates.reorder.partialSuccess', {
-                        templates: formatTemplates(updatedTemplates, ctx.state.localize)
-                    }),
-                    { parse_mode: 'MarkdownV2' }
-                );
-            } else {
-                await ctx.reply(
-                    ctx.state.localize('command.templates.reorder.success', {
-                        templates: formatTemplates(updatedTemplates, ctx.state.localize)
-                    }),
-                    { parse_mode: 'MarkdownV2' }
-                );
-            }
-
-            return;
-        }
-
-        const templates = await storage.findTemplatesByUserId(ctx.state.userId);
-
-        await ctx.reply(
-            ctx.state.localize('command.templates.chooseAction', {
-                templates: formatTemplates(templates, ctx.state.localize),
-            }),
-            {
-                parse_mode: 'MarkdownV2',
-                reply_markup: Markup.inlineKeyboard([
-                    Markup.button.callback(ctx.state.localize('command.templates.actions.add'), 'templates:add'),
-                    Markup.button.callback(ctx.state.localize('command.templates.actions.reorder'), 'templates:reorder'),
-                    // Markup.button.callback(ctx.state.localize('command.templates.actions.edit'), 'templates:edit'),
-                    Markup.button.callback(ctx.state.localize('command.templates.actions.delete'), 'templates:delete'),
-                ], { columns: 1 }).reply_markup
-            }
-        );
-    });
-
-    bot.action('templates:add', withUser(), withNotion(), async (ctx) => {
-        await ctx.answerCbQuery();
-        await ctx.deleteMessage();
-
-        userSessionManager.context(ctx.state.userId).defaultFields = [];
-        
-        const databases = await storage.findDatabasesByUserId(ctx.state.userId);
-        if (databases.length > 0) {
-            await ctx.reply(
-                ctx.state.localize('command.templates.add.chooseDatabase'),
-                Markup.inlineKeyboard([
-                    ...databases.map(database => Markup.button.callback(database.alias, 'template:add:database-alias:' + database.alias)),
-                    Markup.button.callback(ctx.state.localize('command.templates.add.skipDatabase'), 'template:add:skip-database'),
-                ], { columns: 2 })
-            );
-            userSessionManager.setPhase(ctx.state.userId, phases.template.database);
-        } else {
-            const templateBuilderLink = createTemplateBuilderLink({ language: ctx.state.user?.language });
-            await ctx.reply(
-                ctx.state.localize('command.templates.add.sendTemplate', {
-                    templateBuilderLink,
-                    guideLink: getGuideLink({ language: ctx.state.user?.language }),
-                }),
-                { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
-            );
-
-            userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
-        }
-    });
-
-    bot.action('templates:delete', withUser(), withNotion(), async (ctx) => {
-        await ctx.answerCbQuery();
-
-        const templates = await storage.findTemplatesByUserId(ctx.state.userId);
-
-        await Promise.all([
-            ctx.deleteMessage(),
-            ctx.reply(
-                ctx.state.localize('command.templates.delete.chooseTemplate'),
-                Markup.inlineKeyboard([
-                    ...templates.map((template, i) => Markup.button.callback(
-                        formatPattern(template.pattern),
-                        `templates:delete:template:${i}`
-                    )),
-                    Markup.button.callback(
-                        ctx.state.localize('command.templates.delete.cancel'),
-                        'templates:delete:cancel'
-                    ),
-                ], { columns: 1 })
-            )
-        ]);
-    });
-
-    bot.action(/templates:delete:template:(.+)/, withUser(), withPhase(null, async (ctx) => {
-        await ctx.answerCbQuery();
-        
-        const index = Number(ctx.match[1]);
-        const templates = await storage.findTemplatesByUserId(ctx.state.userId);
-        const template = templates[index];
-
-        if (!template) {
-            return;
-        }
-
-        await storage.deleteTemplateByPattern(ctx.state.userId, template.pattern);
-
-        await Promise.all([
-            ctx.deleteMessage(),
-            ctx.reply(ctx.state.localize('command.templates.delete.deleted', { template: formatPattern(template.pattern) })),
-        ]);
-    }));
-
-    bot.action('templates:delete:cancel', withUser(), withNotion(), async (ctx) => {
-        await ctx.answerCbQuery();
-
-        await Promise.all([
-            ctx.deleteMessage(),
-            ctx.reply(ctx.state.localize('command.templates.delete.cancelled'))
-        ]);
-    });
-
-    bot.action('templates:reorder', withUser(), withNotion(), async (ctx) => {
-        await ctx.answerCbQuery();
-
-        const templates = await storage.findTemplatesByUserId(ctx.state.userId);
-        const link = createTemplateManagerLink({ templates, language: ctx.state.user?.language });
-
-        await Promise.all([
-            ctx.deleteMessage(),
-            ctx.reply(
-                ctx.state.localize('command.templates.reorder.link', {
-                    link,
-                    linkLabel: escapeMd(link),
-                }),
-                { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
-            )
-        ]);
-    });
-
-    bot.action(/template:add:database-alias:(.+)/, withUser(), withPhase(phases.template.database, async (ctx) => {
-        await ctx.answerCbQuery();
-        
-        const databaseAlias = ctx.match[1];
-        userSessionManager.context(ctx.state.userId)
-            .defaultFields.push(new Field({ inputType: InputType.DATABASE, value: databaseAlias }));
-
-        const templateBuilderLink = createTemplateBuilderLink({ language: ctx.state.user?.language });
-        
-        await Promise.all([
-            ctx.deleteMessage(),
-            ctx.reply(
-                ctx.state.localize('command.templates.add.databaseChosen', {
-                    database: escapeMd(databaseAlias),
-                    templateBuilderLink,
-                    guideLink: getGuideLink({ language: ctx.state.user?.language }),
-                }),
-                { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
-            ),
-        ]);
-
-        userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
-    }));
-
-    bot.action('template:add:skip-database', withUser(), withPhase(phases.template.database, async (ctx) => {
-        await ctx.answerCbQuery();
-
-        const templateBuilderLink = createTemplateBuilderLink({ language: ctx.state.user?.language });
-
-        await Promise.all([
-            ctx.deleteMessage(),
-            ctx.reply(
-                ctx.state.localize('command.templates.add.sendTemplate', {
-                    templateBuilderLink,
-                    guideLink: getGuideLink({ language: ctx.state.user?.language }),
-                }),
-                { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
-            )
-        ]);
-
-        userSessionManager.setPhase(ctx.state.userId, phases.template.pattern);
-    }));
+    bot.command('export', withUser(), withNotion(), exportCommand({ storage }));
 
     bot.on('message',
+        async (context, next) => {
+            if ('text' in context.message && context.message.text.startsWith('/')) return;
+            await next();
+        },
         // Start
-        withPhase(phases.start.timezone, async (ctx) => {
-            if (!('text' in ctx.message)) return;
-            
-            const userId = ctx.state.userId || ctx.from.id;
-            const { language } = userSessionManager.context(userId);
-
-            const timezoneOffsetMinutes = parseTimezoneOffsetMinutes(ctx.message.text);
-            if (timezoneOffsetMinutes === null) {
-                await ctx.reply(localize('command.start.invalidTimezone', null, language));
-                return;
-            }
-
-            if (!ctx.state.telegramAccount) {
-                const user = await storage.createUser(new User({ language, timezoneOffsetMinutes }));
-                await storage.createTelegramAccount(new TelegramAccount({ userId: user.id, telegramUserId: ctx.from.id }));
-            } else {
-                await storage.updateUser(new User({ id: ctx.state.userId, language, timezoneOffsetMinutes }));
-            }
-
-            notionSessionManager.clear(userId)
-            userSessionManager.clear(userId);
-
-            await ctx.reply(localize(
-                'command.start.finished',
-                {
-                    language: localize(`language.${language}`, null, language),
-                    timezone: formatTimezone(timezoneOffsetMinutes),
-                },
-                language
-            ));
-
-            await ctx.reply(
-                localize('command.help', {
-                    guideLink: getGuideLink({ language })
-                }, language),
-                { parse_mode: 'MarkdownV2', disable_web_page_preview: true }
-            );
-        }),
+        withPhase(phases.start.timezone, startTimezoneMessage({ storage, userSessionManager, notionSessionManager })),
         withUser(),
         // Notion
-        withPhase(phases.notion.token, async (ctx) => {
-            if (!('text' in ctx.message)) return;
-
-            const token = ctx.message.text;
-
-            await storage.upsertNotionAccount(new NotionAccount({ userId: ctx.state.userId, token }));
-            await ctx.reply(ctx.state.localize('command.notion.allSet', { token }));
-
-            userSessionManager.clear(ctx.state.userId);
-            notionSessionManager.clear(ctx.state.userId);
-        }),
+        withPhase(phases.notion.sendToken, notionTokenMessage({ storage, userSessionManager, notionSessionManager })),
         // Databases
-        withPhase(phases.addDatabase.link, async (ctx) => {
-            if (!('text' in ctx.message)) return;
-
-            const notionDatabaseUrl = ctx.message.text;
-            if (!isValidNotionDatabaseUrl(notionDatabaseUrl)) {
-                await ctx.reply(ctx.state.localize('command.databases.add.invalidLink'));
-                return;
-            }
-
-            userSessionManager.context(ctx.state.userId).notionDatabaseUrl = notionDatabaseUrl;
-            userSessionManager.setPhase(ctx.state.userId, phases.addDatabase.alias);
-            await ctx.reply(ctx.state.localize('command.databases.add.alias'));
-        }),
-        withPhase(phases.addDatabase.alias, async (ctx) => {
-            if (!('text' in ctx.message)) return;
-
-            const alias = databaseAlias(ctx.message.text);
-            if (!alias) {
-                await ctx.reply(ctx.state.localize('command.databases.add.invalidAlias'));
-                return;
-            }
-
-            const { notionDatabaseUrl } = userSessionManager.context(ctx.state.userId);
-            await storage.storeDatabase(
-                new NotionDatabase({
-                    userId: ctx.state.userId,
-                    notionDatabaseUrl,
-                    alias,
-                })
-            );
-
-            userSessionManager.clear(ctx.state.userId);
-            await ctx.reply(ctx.state.localize('command.databases.add.added', { alias }));
-        }),
-        // Patterns
-        withPhase(phases.template.pattern, async (ctx) => {
-            if (!('text' in ctx.message)) return;
-
-            const { defaultFields } = userSessionManager.context(ctx.state.userId);
-
-            await storage.storeTemplate(
-                new Template({
-                    pattern: ctx.message.text.replace(/\\n/g, '\n'),
-                    defaultFields,
-                    userId: ctx.state.userId,
-                })
-            );
-
-            userSessionManager.clear(ctx.state.userId);
-            await ctx.reply(ctx.state.localize('command.templates.add.added'));
-        }),
+        withPhase(phases.addDatabase.link, databasesAddLinkMessage({ userSessionManager })),
+        withPhase(phases.addDatabase.alias, databasesAddAliasMessage({ storage, userSessionManager })),
+        // Templates
+        withPhase(phases.template.pattern, templatesAddPatternMessage({ storage, userSessionManager })),
+        withPhase(phases.template.addDefaultFields, templatesAddDefaultFieldsMessage({ storage, userSessionManager })),
+        // Import
+        importMessage({ bot, storage }),
         // Handle message
         withNotion(),
-        withPhase(null, async (ctx) => {
-            if (!('text' in ctx.message)) return;
-            if (ctx.message.text.startsWith('/')) return;
-
-            const { userId, user } = ctx.state;
-
-            /** @type {import('@notionhq/client').Client} */
-            const notion = ctx.state.notion;
-    
-            const templates = await storage.findTemplatesByUserId(userId);
-    
-            const dateParser = new RussianDateParser();
-            const patternMatcher = new PatternMatcher();
-            const entryMatchers = new EntryMatchers({ dateParser });
-
-            for (const template of templates) {
-                const result = patternMatcher.match(
-                    ctx.message.text,
-                    new PatternBuilder().build(template.pattern),
-                    entryMatchers,
-                    { returnCombination: true }
-                );
-
-                if (!result) continue;
-                const message = await ctx.reply(ctx.state.localize('match.checking'));
-
-                /**
-                 * @param {Field[]} fields1
-                 * @param {Field[]} fields2
-                 */
-                function mergeFields(fields1, fields2) {
-                    const result = [...fields1];
-
-                    for (const field of fields2) {
-                        const index = result.findIndex(f => (
-                            f.name === field.name ||
-                            (f.inputType === InputType.DATABASE && field.inputType === InputType.DATABASE)
-                        ));
-
-                        if (index !== -1) {
-                            result.splice(index, 1);
-                        }
-
-                        result.push(field)
-                    }
-
-                    return result;
-                }
-
-                const fields = mergeFields(template.defaultFields, result.fields)
-
-                const databaseField = fields.find(field => field.inputType === InputType.DATABASE)
-                if (!databaseField) {
-                    await bot.telegram.editMessageText(
-                        message.chat.id,
-                        message.message_id,
-                        null,
-                        ctx.state.localize('match.noDatabaseSpecified')
-                    );
-                    return;
-                }
-
-                const databaseAlias = databaseField.value;
-                const database = await storage.findDatabaseByAlias(userId, databaseAlias);
-                if (!database) {
-                    if (databaseField.bang) continue;
-                    await bot.telegram.editMessageText(
-                        message.chat.id,
-                        message.message_id,
-                        null,
-                        ctx.state.localize('match.databaseNotFound', { database: databaseAlias })
-                    );
-                    return;
-                }
-
-                let pageId;
-                try {
-                    const notionDatabase = await notion.databases.retrieve({ database_id: database.notionDatabaseId });
-                    const entry = new NotionEntry({
-                        databaseId: notionDatabase.id,
-                        fields,
-                        properties: Object.entries(notionDatabase.properties)
-                            .map(([name, options]) => new NotionProperty({
-                                type: options.type,
-                                name,
-                            }))
-                    });
-                    
-                    const page = await notion.pages.create(
-                        new NotionEntrySerializer({
-                            dateParser,
-                        }).serialize(
-                            entry,
-                            user,
-                        )
-                    );
-
-                    pageId = page.id;
-                } catch (error) {
-                    try {
-                        await bot.telegram.editMessageText(
-                            message.chat.id,
-                            message.message_id,
-                            null,
-                            ctx.state.localize('match.failed', { error: error.message })
-                        );
-                    } catch (error) {}
-
-                    throw error;
-                }
-
-                await bot.telegram.editMessageText(
-                    message.chat.id,
-                    message.message_id,
-                    null,
-                    ctx.state.localize('match.patternMatched', {
-                        match: formatCombination(result.combination, fields),
-                        database: escapeMd(databaseAlias),
-                        fields: fields
-                            .filter(field => field.inputType !== InputType.DATABASE)
-                            .map((field) => ctx.state.localize(
-                                'match.patternMatchField',
-                                {
-                                    name: escapeMd(field.name),
-                                    value: escapeMd(Array.isArray(field.value) ? field.value.join(', '): field.value)
-                                }
-                            )).join('\n')
-                    }),
-                    {
-                        parse_mode: 'MarkdownV2',
-                        reply_markup: Markup.inlineKeyboard([
-                            Markup.button.callback(ctx.state.localize('match.undo'), `undo:notion:${pageId}`)
-                        ]).reply_markup,
-                    }
-                );
-                return;
-            }
-    
-            await ctx.reply(ctx.state.localize('match.noPatternMatched'));
-        })
+        withPhase(null, matchMessage({ bot, storage })),
     );
+    bot.action(/undo:notion:(.+)/, withUser(), withNotion(), withPhase(null, matchNotionUndoAction()));
 
-    bot.catch(async (error) => {
-        await logError(error);
-    });
-
-    /** @param {Template[]} templates */
-    function formatTemplates(templates, localize) {
-        return templates.length > 0
-            ? templates.map(
-                (template, i) => {
-                    const database = template.defaultFields.find(f => f.inputType === InputType.DATABASE);
-                    const index = i + 1;
-                    const pattern = escapeMd(formatPattern(template.pattern));
-
-                    if (database) {
-                        return localize(
-                            'output.templates.templateWithDatabase',
-                            { index, pattern, database: escapeMd(database.value) }
-                        );    
-                    }
-                    
-                    return localize('output.templates.template', { index, pattern });
-                }
-            ).join('\n')
-            : localize('output.templates.none');
-    }
-
-    function formatCombination(combination, fields) {
-        const fieldIndex = new Map();
-        
-        return combination.map((token) => {
-            if (token.type === TokenType.VARIABLE) {
-                const field = fields.find(f => f.name === token.value);
-
-                if (Array.isArray(field.value)) {
-                    if (!fieldIndex.has(field)) {
-                        fieldIndex.set(field, 0);
-                    } else {
-                        fieldIndex.set(field, fieldIndex.get(field) + 1);
-                    }
-
-                    return `__*${escapeMd(field.value[fieldIndex.get(field)])}*__`;
-                }
-
-                return `__*${escapeMd(field.value)}*__`;
-            }
-
-            return escapeMd(token.value);
-        }).join('');
-    }
-
-    function formatDatabases(databases, localize) {
-        return databases.length > 0
-            ? databases.map((database, i) => localize('command.info.database', {
-                index: i + 1,
-                notionDatabaseUrl: database.notionDatabaseUrl,
-                alias: escapeMd(database.alias),
-            })).join('\n')
-            : localize('command.info.none')
-    }
-
-    function formatPattern(pattern) {
-        return pattern.replace(/\n/g, '\\n')
-    }
-
-    function isValidNotionDatabaseUrl(link) {
-        try {
-            const databaseId = new URL(link).pathname.slice(1).split('/').pop().split('-').pop();
-            return (/^[a-z0-9]+$/i).test(databaseId);
-        } catch (error) {
-            return null;
-        }
-    }
-
-    function databaseAlias(value) {
-        value = value.trim().toLowerCase();
-
-        if (!value || /\s/.test(value)) {
-            return null;
-        }
-
-        return value;
-    }
-
-    function formatTimezone(timezoneOffsetMinutes) {
-        const offset = Math.abs(timezoneOffsetMinutes);
-
-        const timezoneHours = Math.trunc(offset / 60);
-        const timezoneMinutes = (offset - timezoneHours * 60);
-
-        return (timezoneOffsetMinutes >= 0 ? '+' : '-') + String(timezoneHours).padStart(2, '0') + ':' + String(timezoneMinutes).padStart(2, '0');
-    }
+    bot.catch((error) => logError(error));
 
     await bot.telegram.deleteWebhook();
 

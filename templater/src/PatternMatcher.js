@@ -25,7 +25,7 @@ export class PatternMatcher {
 
             for (const [i, token] of combination.entries()) {
                 let value = token.value;
-                let { value: name, inputType, bang } = token;
+                let { value: name, inputType } = token;
 
                 if (token.type === TokenType.VARIABLE) {
                     if (!inputType) {
@@ -70,7 +70,6 @@ export class PatternMatcher {
                                     : existingValue
                                         ? [existingValue, value]
                                         : value,
-                                bang,
                             })
                         } else {
                             fieldMap[name] = undefined;

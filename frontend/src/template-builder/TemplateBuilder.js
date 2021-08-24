@@ -7,10 +7,10 @@ import {
 import { HelpOutline } from '@material-ui/icons'
 import { InputType, PatternBuilder, PatternMatcher } from '@vitalyrudenko/templater';
 import copyToClipboard from 'copy-to-clipboard';
-import { TemplateTester } from '../shared/TemplateTester';
-import { InputTypeIcons } from '../shared/InputTypeIcons';
+import { TemplateTester } from '../shared/TemplateTester.js';
+import { InputTypeIcons } from '../shared/InputTypeIcons.js';
 import { useHistory, useLocation } from 'react-router-dom';
-import { useLocalize } from '../useLocalize';
+import { useLocalize } from '../useLocalize.js';
 import './TemplateBuilder.css';
 
 const COLORS = ['orange', 'yellow', 'green', 'blue', 'purple'];
@@ -144,9 +144,10 @@ const Combination = ({ combination }) => {
                     const inputType = token.inputType || '';
                     const invalid = !InputTypeIcons[inputType];
                     const IconClass = InputTypeIcons[inputType] || HelpOutline;
+                    const value = token.value || '';
 
                     const example = getExampleFor(inputType, get);
-                    const space = ''.padEnd(Math.max(0, token.value.length - example.length + 2), ' ');
+                    const space = ''.padEnd(Math.max(0, value.length - example.length + 2), ' ');
 
                     return <span
                         className={'template-builder__token-example ' + (invalid
@@ -155,7 +156,7 @@ const Combination = ({ combination }) => {
                     >
                         <span className="template-builder__token-example-label">
                             <IconClass className="template-builder__token-example-icon" />
-                            {token.value}
+                            {value}
                         </span>
                         {example}
                         {space && <span className='template-builder__token-example-space'>{space}</span>}

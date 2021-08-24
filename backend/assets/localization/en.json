@@ -7,12 +7,14 @@
     },
     "notionNotConfigured": "First you need to configure /notion 🙇",
     "output": {
+        "databases": {
+            "database": "{index}\\. [{alias}]({notionDatabaseUrl})",
+            "none": "*\\<none\\>*"
+        },
         "templates": {
             "template": "{index}\\. `{pattern}`",
-            "templateWithDatabase": [
-                "{index}\\. `{pattern}`",
-                "    → *{database}*"
-            ],
+            "database": "    → [*{alias}*]({url})",
+            "field": "    → *{name}:* {value}",
             "none": "*\\<none\\>*"
         }
     },
@@ -22,56 +24,50 @@
             "",
             "Use */start* to change your language or timezone\\.",
             "Use */notion* to setup your Notion account\\.",
-            "Use */database* to add or remove your databases\\.",
+            "Use */databases* to add or remove your databases\\.",
             "Use */templates* to add, remove or reorder your templates\\.",
             "Use */info* to view your information\\.",
+            "",
+            "Use */export* to export your templates and databases\\.",
+            "Send file, created with */export*, to import templates and databases\\.",
             "",
             "📚 It is recommended to read [Complete guide]({guideLink})\\."
         ],
         "start": {
-            "invalidTimezone": "Invalid timezone! Should look something like \"GMT+3\"",
-            "timezone": [
-                "Hello! Now send your timezone offset.",
-                "Examples: +3:00, GMT-3, UTC",
-                "",
-                "If confused, try this:",
-                "{timezoneCheckerLink}"
+            "chooseAction": [
+                "🇬🇧 *Language:* {language}",
+                "🕚 *Timezone:* {timezone}"
             ],
-            "finished": [
-                "Thanks! 🚀",
-                "",
-                "Your language: {language}",
-                "Your timezone: {timezone}"
-            ]
-        },
-        "info": {
-            "response": [
-                "🇬🇧 {language} \\| 🕚 {timezone}",
-                "Use */start* to change your language or timezone\\.",
-                "",
-                "*/notion*",
-                "`{notionToken}`",
-                "",
-                "*/databases*",
-                "{databases}",
-                "",
-                "*/templates*",
-                "{templates}",
-                "",
-                "💡 Templates on the top of the list have higher priority\\."
-            ],
-            "database": "{index}\\. [{alias}]({notionDatabaseUrl})",
-            "notProvided": "<not provided>",
-            "none": "*\\<none\\>*"
+            "actions": {
+                "update": "✏️ Update"
+            },
+            "update": {
+                "sendTimezone": [
+                    "Hello! Send your timezone offset.",
+                    "Examples: +3:00, GMT-3, UTC",
+                    "",
+                    "If confused, try this:",
+                    "{timezoneCheckerLink}"
+                ],
+                "invalidTimezone": "❗️ Invalid timezone! It should look like \"GMT+3\"",
+                "done": "🚀 Done!"
+            }
         },
         "notion": {
-            "yourToken": "Your Notion integration token:",
-            "allSet": [
-                "It's \"{token}\".",
-                "",
-                "Great, your Notion integration is all set!",
-                "Start adding databases using /databases command."
-            ]
+            "chooseAction": [
+                "Notion token:",
+                "`{notionToken}`"
+            ],
+            "actions": {
+                "update": "✏️ Update"
+            },
+            "update": {
+                "sendToken": [
+                    "Okay, now send your *Notion integration token*\\.",
+                    "You can get it [here](https://www.notion.so/my-integrations)\\."
+                ],
+                "done": "🚀 Great, your Notion integration is all set!"
+            }
         },
         "databases": {
             "chooseAction": [
@@ -94,7 +90,7 @@
                 "chooseDatabase": "Got it, select a database to delete:",
                 "cancel": "[cancel]",
                 "cancelled": "Okay, leaving your databases untouched 😌",
-                "deleted": "🗑 Databases \"{database}\" has been deleted."
+                "deleted": "🗑 Database \"{database}\" has been deleted."
             }
         },
         "templates": {
@@ -132,6 +128,16 @@
                 "cancelled": "Okay, leaving your templates untouched 😌",
                 "deleted": "🗑 Template \"{template}\" has been deleted."
             },
+            "defaultFields": {
+                "add": "Add default fields",
+                "send": [
+                    "Good\\. Now send the fields in this format:",
+                    "",
+                    "*Field 1:* value 1",
+                    "*Field 2:* value 2, value 3"
+                ],
+                "cancel": "Cancel"
+            },
             "reorder": {
                 "link": [
                     "🔗 Follow the link to reorder your templates:",
@@ -152,29 +158,38 @@
                     "Use /templates command to edit your templates\\."
                 ]
             }
+        },
+        "import": {
+            "done": "Templates and databases have been successfully imported."
         }
     },
     "match": {
-        "checking": "⏳ Hm, wait a minute...",
         "noDatabaseSpecified": "I don't know which database to use 😔",
         "databaseNotFound": "Could not find the database: \"{database}\"",
-        "failed": [
-            "❌ Could not save the entry!",
-            "Please check your patterns and databases, or contact the administrator.",
-            "",
-            "Error: {error}"
-        ],
-        "patternMatched": [
-            "✅ {match}",
-            "    → *{database}*",
-            "",
+        "matched": [
+            "⏳ {match}",
+            "    → [*{databaseAlias}*]({databaseUrl})",
             "{fields}"
         ],
-        "patternMatchField": "*{name}:* {value}",
+        "saved": [
+            "✅ {match}",
+            "    → [*{databaseAlias}*]({databaseUrl})",
+            "{fields}"
+        ],
+        "failed": [
+            "❌ {match}",
+            "    → [*{databaseAlias}*]({databaseUrl})",
+            "{fields}",
+            "",
+            "Please check your patterns and databases, or contact the administrator\\.",
+            "Error: {error}"
+        ],
+        "field": "    → *{name}:* {value}",
+        "open": "🔗 Open",
         "undo": "🗑 Delete",
         "undoInProcess": "⏳ Deleting...",
-        "undoSuccessful": "🗑 Entry has been deleted.",
-        "noPatternMatched": "What was it? 🤔"
+        "undoSuccessful": "🗑 Entry has been deleted",
+        "notMatch": "What was it? 🤔"
     },
     "help": {
         "command": {
@@ -184,6 +199,7 @@
             "databases": "Manage your databases",
             "templates": "Manage your templates",
             "help": "Help",
+            "export": "Export your data",
             "version": "Version"
         }
     }

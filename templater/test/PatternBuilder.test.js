@@ -64,17 +64,6 @@ describe('PatternBuilder', () => {
                 ]);
         });
 
-        it('should parse bang variables', () => {
-            expect(patternBuilder.build('#{tag!} Buy {note}, please'))
-                .to.deep.eq([
-                    { type: TEXT, value: '#' },
-                    { type: VARIABLE, value: 'tag', bang: true },
-                    { type: TEXT, value: ' Buy ' },
-                    { type: VARIABLE, value: 'note' },
-                    { type: TEXT, value: ', please' },
-                ]);
-        });
-
         it('should parse optionals', () => {
             expect(patternBuilder.build('[hello]'))
                 .to.deep.eq([
@@ -157,7 +146,7 @@ describe('PatternBuilder', () => {
         });
 
         it('should build pattern from the input string (complex)', () => {
-            expect(patternBuilder.build('(Buy|Purchase) {body}[,] please[ #{tag!}][(!|.)]'))
+            expect(patternBuilder.build('(Buy|Purchase) {body}[,] please[ #{tag}][(!|.)]'))
                 .to.deep.eq([
                     {
                         type: VARIATIONAL,
@@ -177,7 +166,7 @@ describe('PatternBuilder', () => {
                         type: OPTIONAL,
                         value: [
                             { type: TEXT, value: ' #' },
-                            { type: VARIABLE, value: 'tag', bang: true }
+                            { type: VARIABLE, value: 'tag' }
                         ]
                     },
                     {
@@ -230,10 +219,10 @@ describe('PatternBuilder', () => {
         });
 
         it('should parse input types', () => {
-            expect(patternBuilder.build('#{database!} buy {Note:text}, please[ {when:future_date}][ #{My Tag:word}]'))
+            expect(patternBuilder.build('#{database} buy {Note:text}, please[ {when:future_date}][ #{My Tag:word}]'))
                 .to.deep.eq([
                     { type: TEXT, value: '#' },
-                    { type: VARIABLE, inputType: InputType.DATABASE, bang: true },
+                    { type: VARIABLE, inputType: InputType.DATABASE },
                     { type: TEXT, value: ' buy ' },
                     { type: VARIABLE, value: 'Note', inputType: TEXT },
                     { type: TEXT, value: ', please' },

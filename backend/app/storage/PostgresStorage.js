@@ -140,6 +140,13 @@ export class PostgresStorage {
         `, [alias, userId]);
     }
 
+    async deleteDatabasesByUserId(userId) {
+        await this._client.query(`
+            DELETE FROM notion_databases
+            WHERE user_id = $1;
+        `, [userId]);
+    }
+
     async findDatabasesByUserId(userId) {
         const response = await this._client.query(`
             SELECT *
@@ -228,6 +235,13 @@ export class PostgresStorage {
         `, [pattern, userId]);
     }
 
+    async deleteTemplatesByUserId(userId) {
+        await this._client.query(`
+            DELETE FROM templates
+            WHERE user_id = $1;
+        `, [userId]);
+    }
+
     async findTemplatesByUserId(userId) {
         const response = await this._client.query(`
             SELECT *
@@ -236,7 +250,20 @@ export class PostgresStorage {
             ORDER BY "order" ASC;
         `, [userId]);
 
-        return response.rows.map(row => this.deserializeTemplate(row))
+        return response.rows.map(row => this.deserializeTemplate(row));
+    }
+
+    async findTemplateByHash(userId, hash) {
+        const response = await this._client.query(`
+            SELECT *
+            FROM templates
+            WHERE user_id = $1 AND MD5(pattern) = $2
+            LIMIT 1;
+        `, [userId, hash]);
+
+    return response.rows.length > 0
+        ? this.deserializeTemplate(response.rows[0])
+        : null;
     }
 
     deserializeTemplate(row) {
@@ -255,7 +282,6 @@ export class PostgresStorage {
             value: field.value,
             name: field.name,
             inputType: field.inputType,
-            bang: field.bang,
         };
     }
 
@@ -264,7 +290,6 @@ export class PostgresStorage {
             value: serializedField.value,
             name: serializedField.name,
             inputType: serializedField.inputType,
-            bang: serializedField.bang,
         });
     }
 }

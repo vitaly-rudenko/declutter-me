@@ -1,7 +1,7 @@
 import { Button, Container, Paper, Typography } from '@material-ui/core';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import copyToClipboard from 'copy-to-clipboard';
-import { useLocalize } from '../useLocalize';
+import { useLocalize } from '../useLocalize.js';
 import './Timezone.css'
 
 function getTimezone() {

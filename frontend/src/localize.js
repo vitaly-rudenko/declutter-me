@@ -2,7 +2,7 @@ import en from './localization/en.json';
 import ru from './localization/ru.json';
 import uk from './localization/uk.json';
 
-import { Language } from './Language';
+import { Language } from './Language.js';
 
 function getMessages(language) {
     if (language === Language.ENGLISH) {

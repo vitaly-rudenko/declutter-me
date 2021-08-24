@@ -1,22 +1,23 @@
 export const phases = organizeValues({
     start: {
-        language: '1',
-        timezone: '1',
+        language: '',
+        timezone: '',
     },
     notion: {
-        token: '1',
+        sendToken: '',
     },
     addDatabase: {
-        link: '1',
-        alias: '2',
+        link: '',
+        alias: '',
     },
     deleteDatabase: {
-        choose: '1'
+        choose: ''
     },
     template: {
-        database: '1',
-        pattern: '2',
-    }
+        database: '',
+        pattern: '',
+        addDefaultFields: ''
+    },
 });
 
 /**
@@ -24,7 +25,7 @@ export const phases = organizeValues({
  * @returns {T}
  * @template T
  */
-function organizeValues(values, parents = []) {
+export function organizeValues(values, parents = []) {
     // @ts-ignore
     return Object.fromEntries(
         Object.entries(values).map(([key, value]) => {

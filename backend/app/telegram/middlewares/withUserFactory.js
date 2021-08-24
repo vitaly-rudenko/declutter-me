@@ -1,10 +1,10 @@
 /** @param {import('../../storage/PostgresStorage').PostgresStorage} storage */
 export const withUserFactory = (storage) => {
-    /** @param {{ required?: boolean }} [options] */
-    return ({ required = true } = {}) => {
+    /** @param {{ required?: boolean, skipAccountCheck?: boolean }} [options] */
+    return ({ required = true, skipAccountCheck = false } = {}) => {
         /** @param {import('telegraf').Context} context @param {Function} next */
         return async (context, next) => {
-            if (!context.state.userId) {
+            if (!context.state.userId && !skipAccountCheck) {
                 context.reply('Please use /start first 🙇');
                 return;
             }

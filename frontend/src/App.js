@@ -1,10 +1,10 @@
-import { createTheme, CssBaseline, Fab, ThemeProvider, Typography } from '@material-ui/core';
+import { createTheme, CssBaseline, Fab, ThemeProvider } from '@material-ui/core';
 import { Brightness4 } from '@material-ui/icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { HashRouter, Redirect, Route, Switch } from 'react-router-dom';
-import { TemplateManager } from './template-manager/TemplateManager';
-import { TemplateBuilder } from './template-builder/TemplateBuilder';
-import { Timezone } from './timezone/Timezone';
+import { TemplateManager } from './template-manager/TemplateManager.js';
+import { TemplateBuilder } from './template-builder/TemplateBuilder.js';
+import { Timezone } from './timezone/Timezone.js';
 import './App.css';
 
 const version = require('../package.json').version;

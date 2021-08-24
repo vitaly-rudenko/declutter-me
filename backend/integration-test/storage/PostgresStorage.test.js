@@ -24,6 +24,10 @@ const generateNotionToken = createStringGenerator('token-');
 const generateDatabaseAlias = createStringGenerator('alias-');
 const generateNotionDatabaseUrl = createStringGenerator('http://notion.example.com/');
 
+function md5(string) {
+    return crypto.createHash('md5').update(string).digest('hex');
+}
+
 describe('PostgresStorage', () => {
     /** @type {PostgresStorage} */
     let postgresStorage;
@@ -131,38 +135,54 @@ describe('PostgresStorage', () => {
 
     it('should implement Template flow', async () => {
         const userId = generateUserId()
-
+        
         expect(await postgresStorage.findTemplatesByUserId(userId))
             .to.deep.equal([]);
-
+        
+        const pattern = 'fake-pattern';
         const template = await postgresStorage.storeTemplate(
             new Template({
                 userId,
-                pattern: 'fake-pattern',
+                pattern,
                 order: 123,
                 defaultFields: [
                     new Field({ value: 'my-field-1' }),
                     new Field({ value: 'my-field-2', name: 'my-name-1' }),
                     new Field({ value: 'my-field-3', name: 'my-name-2', inputType: 'my-input-type' }),
-                    new Field({ value: 'my-field-4', name: 'my-name-3', inputType: 'my-input-type', bang: true }),
+                    new Field({ value: 'my-field-4', name: 'my-name-3', inputType: 'my-input-type' }),
                 ]
             })
         );
 
         expect(template.userId).to.equal(userId);
-        expect(template.pattern).to.equal('fake-pattern');
+        expect(template.pattern).to.equal(pattern);
         expect(template.order).to.equal(123);
         expect(template.defaultFields).to.deep.equal([
             new Field({ value: 'my-field-1' }),
             new Field({ value: 'my-field-2', name: 'my-name-1' }),
             new Field({ value: 'my-field-3', name: 'my-name-2', inputType: 'my-input-type' }),
-            new Field({ value: 'my-field-4', name: 'my-name-3', inputType: 'my-input-type', bang: true }),
+            new Field({ value: 'my-field-4', name: 'my-name-3', inputType: 'my-input-type' }),
         ]);
 
         expect(await postgresStorage.findTemplatesByUserId(userId))
             .to.deep.equal([template]);
 
-        await postgresStorage.deleteTemplateByPattern(userId, 'fake-pattern');
+        expect(await postgresStorage.findTemplateByHash(userId, md5(pattern)))
+            .to.deep.equal(template);
+        
+        expect(await postgresStorage.findTemplateByHash(userId, md5('other-pattern')))
+            .to.be.null;
+        
+        expect(await postgresStorage.findTemplateByHash('other-user-id', md5(pattern)))
+            .to.be.null;
+
+        await postgresStorage.deleteTemplateByPattern(userId, pattern);
+
+        expect(await postgresStorage.findTemplatesByUserId(userId))
+            .to.deep.equal([]);
+
+        expect(await postgresStorage.findTemplateByHash(userId, md5(pattern)))
+            .to.be.null;
     });
 
     it('should automatically assign order of the template when not provided', async () => {
@@ -248,5 +268,5 @@ describe('PostgresStorage', () => {
                 new Template({ userId, pattern: 'fake-pattern-7', order: 6 }),
                 new Template({ userId, pattern: 'fake-pattern-1', order: 7 }),
             ]);
-    })
+    });
 });
