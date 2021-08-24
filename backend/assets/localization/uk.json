@@ -7,6 +7,10 @@
     },
     "notionNotConfigured": "Спочатку тобі потрібно налаштувати /notion 🙇",
     "output": {
+        "databases": {
+            "database": "{index}\\. [{alias}]({notionDatabaseUrl})",
+            "none": "*\\<порожньо\\>*"
+        },
         "templates": {
             "template": "{index}\\. `{pattern}`",
             "database": "    → [*{alias}*]({url})",
@@ -30,51 +34,40 @@
             "📚 Рекомендую прочитати [Посібник]({guideLink})\\."
         ],
         "start": {
-            "invalidTimezone": "Неправильний часовий пояс! Має виглядати приблизно так: \"GMT+3\"",
-            "timezone": [
-                "Прийнято! Тепер відправ свій часовий пояс.",
-                "Приклади: +3:00, GMT-3, UTC",
-                "",
-                "Якщо не зрозуміло, спробуй це:",
-                "{timezoneCheckerLink}"
+            "chooseAction": [
+                "🇺🇦 *Мова:* {language}",
+                "🕚 *Часовий пояс:* {timezone}"
             ],
-            "finished": [
-                "Чудово! 🚀",
-                "",
-                "Мова: {language}",
-                "Часовий пояс: {timezone}"
-            ]
-        },
-        "info": {
-            "main": [
-                "🇺🇦 {language} \\| 🕚 {timezone}",
-                "Введи */start*, щоб змінити мову або часовий пояс\\.",
-                "",
-                "*/notion*",
-                "`{notionToken}`"
-            ],
-            "databases": [
-                "*/databases* \\(бази даних\\)",
-                "{databases}"
-            ],
-            "templates": [
-                "*/templates* \\(шаблони\\)",
-                "{templates}",
-                "",
-                "💡 Чим вище шаблон в списку, тим більше у нього пріоритет\\."
-            ],
-            "database": "{index}\\. [{alias}]({notionDatabaseUrl})",
-            "notProvided": "<не налаштовано>",
-            "none": "*\\<порожньо\\>*"
+            "actions": {
+                "update": "✏️ Редагувати"
+            },
+            "update": {
+                "sendTimezone": [
+                    "Привіт! Тепер відправ свій часовий пояс.",
+                    "Приклади: +3:00, GMT-3, UTC",
+                    "",
+                    "Якщо не зрозуміло, спробуй це:",
+                    "{timezoneCheckerLink}"
+                ],
+                "invalidTimezone": "❗️ Неправильний часовий пояс! Приклад: \"GMT+3\"",
+                "done": "🚀 Чудово!"
+            }
         },
         "notion": {
-            "yourToken": "Твій токен інтеграції з Notion:",
-            "allSet": [
-                "Зрозумів, це \"{token}\".",
-                "",
-                "Відмінно, ти підключив Notion!",
-                "Додай бази даних за допомогою команди /databases."
-            ]
+            "chooseAction": [
+                "Твій Notion токен:",
+                "`{notionToken}`"
+            ],
+            "actions": {
+                "update": "✏️ Редагувати"
+            },
+            "update": {
+                "sendToken": [
+                    "Гаразд, тепер надішли свій *Notion токен*\\.",
+                    "Ти можеш отримати його [тут](https://www.notion.so/my-integrations)\\."
+                ],
+                "done": "🚀 Чудово, ваш Notion акаунт тепер підключений!"
+            }
         },
         "databases": {
             "chooseAction": [
@@ -171,34 +164,40 @@
         }
     },
     "match": {
-        "checking": "⏳ Хм, хвилинку...",
         "noDatabaseSpecified": "Я не знаю в яку базу даних це записати 😔",
         "databaseNotFound": "Я не знайшов базу даних \"{database}\"",
-        "failed": [
-            "❌ Не вдалося зберегти запис!",
-            "Перевір свої шаблони і бази даних, або звернися до адміністратора.",
-            "",
-            "Помилка: {error}"
+        "matched": [
+            "⏳ {match}",
+            "    → [*{databaseAlias}*]({databaseUrl})",
+            "{fields}"
         ],
-        "patternMatched": [
+        "saved": [
             "✅ {match}",
             "    → [*{databaseAlias}*]({databaseUrl})",
             "{fields}"
         ],
-        "patternMatchField": "    → *{name}:* {value}",
+        "failed": [
+            "❌ {match}",
+            "    → [*{databaseAlias}*]({databaseUrl})",
+            "{fields}",
+            "",
+            "Перевірте свої шаблони та бази даних, або зверніться до адміністратора\\.",
+            "Помилка: {error}"
+        ],
+        "field": "    → *{name}:* {value}",
         "open": "🔗 Перейти",
         "undo": "🗑 Відкрити",
         "undoInProcess": "⏳ Видаляємо...",
-        "undoSuccessful": "🗑 Запис було видалено.",
-        "noPatternMatched": "Що-що? 🤔"
+        "undoSuccessful": "🗑 Запис було видалено",
+        "notMatch": "Що-що? 🤔"
     },
     "help": {
         "command": {
             "start": "Запустити бота",
             "info": "Інформація",
             "notion": "Налаштувати Notion",
-            "database": "Додати базу даних",
-            "template": "Додати шаблон",
+            "databases": "Додати базу даних",
+            "templates": "Додати шаблон",
             "help": "Допомога",
             "export": "Експорт даних",
             "version": "Версія"
