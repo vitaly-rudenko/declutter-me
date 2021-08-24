@@ -92,7 +92,7 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
     bot.use(withTelegramAccount(storage));
     bot.use(withLocalization());
 
-    bot.start(withUser({ required: false }), startCommand({ userSessionManager }));
+    bot.start(withUser({ required: false, skipAccountCheck: true }), startCommand({ userSessionManager }));
     bot.action('start:update', withUser(), startUpdateAction({ userSessionManager }));
     bot.action(/language:(.+)/, withPhase(phases.start.language, startLanguageAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
 
