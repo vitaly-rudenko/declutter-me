@@ -34,6 +34,10 @@ export function get(messageKey, language) {
         result = result[path.shift()];
     }
 
+    if (!result) {
+        console.log(`Could not find localization key for "${messageKey}"`)
+    }
+
     return result ?? messageKey;
 };
 

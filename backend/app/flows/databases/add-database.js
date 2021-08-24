@@ -1,7 +1,22 @@
-import { NotionDatabase } from '../notion/NotionDatabase.js';
-import { phases } from '../phases.js';
+import { NotionDatabase } from '../../notion/NotionDatabase.js';
+import { phases } from '../../phases.js';
 
-export function databaseLinkMessage({ userSessionManager }) {
+// -- "add" button clicked
+export function databasesAddAction({ userSessionManager }) {
+    return async (context) => {
+        await context.answerCbQuery();
+
+        await Promise.all([
+            context.deleteMessage(),
+            context.reply(context.state.localize('command.databases.add.link'))
+        ]);
+
+        userSessionManager.setPhase(context.state.userId, phases.addDatabase.link);
+    };
+}
+
+// -- link sent
+export function databasesAddLinkMessage({ userSessionManager }) {
     return async (context) => {
         if (!('text' in context.message)) return;
 
@@ -17,7 +32,8 @@ export function databaseLinkMessage({ userSessionManager }) {
     };
 }
 
-export function databaseAliasMessage({ storage, userSessionManager }) {
+// -- alias sent
+export function databasesAddAliasMessage({ storage, userSessionManager }) {
     return async (context) => {
         if (!('text' in context.message)) return;
 

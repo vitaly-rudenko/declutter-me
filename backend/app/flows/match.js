@@ -6,10 +6,16 @@ import { NotionProperty } from '../notion/NotionProperty.js';
 import { escapeMd } from '../utils/escapeMd.js';
 import { mergeFields } from '../utils/mergeFields.js';
 
+// -- message is sent
+const MatchResultStatus = {
+    MATCHED: 'matched',
+    SAVED: 'saved',
+    FAILED: 'failed',
+};
+
 export function matchMessage({ bot, storage }) {
     return async (context) => {
         if (!('text' in context.message)) return;
-        if (context.message.text.startsWith('/')) return;
 
         const { userId, user } = context.state;
 
@@ -31,34 +37,42 @@ export function matchMessage({ bot, storage }) {
             );
 
             if (!result) continue;
-            const message = await context.reply(context.state.localize('match.checking'));
 
             const fields = mergeFields(template.defaultFields, result.fields)
 
             const databaseField = fields.find(field => field.inputType === InputType.DATABASE)
             if (!databaseField) {
-                await bot.telegram.editMessageText(
-                    message.chat.id,
-                    message.message_id,
-                    null,
-                    context.state.localize('match.noDatabaseSpecified')
-                );
+                await context.reply(context.state.localize('match.noDatabaseSpecified'));
                 return;
             }
 
             const databaseAlias = databaseField.value;
             const database = await storage.findDatabaseByAlias(userId, databaseAlias);
             if (!database) {
-                await bot.telegram.editMessageText(
-                    message.chat.id,
-                    message.message_id,
-                    null,
-                    context.state.localize('match.databaseNotFound', { database: databaseAlias })
-                );
+                await context.reply(context.state.localize('match.databaseNotFound', { database: databaseAlias }));
                 return;
             }
 
-            let pageId, pageUrl;
+            let message, pageId, pageUrl;
+            async function sendMatchResult(status, { error } = {}) {
+                const text = formatMatchResult({ status, database, fields, localize: context.state.localize, result, error });
+                const options = {
+                    parse_mode: 'MarkdownV2',
+                    disable_web_page_preview: true,
+                    reply_markup: pageId && pageUrl && Markup.inlineKeyboard([
+                        Markup.button.url(context.state.localize('match.open'), pageUrl),
+                        Markup.button.callback(context.state.localize('match.undo'), `undo:notion:${pageId}`)
+                    ], { columns: 2 }).reply_markup,
+                };
+    
+                if (message) {
+                    await bot.telegram.editMessageText(message.chat.id, message.message_id, null, text, options);
+                } else {
+                    message = await context.reply(text, options);
+                }
+            }
+
+            await sendMatchResult(MatchResultStatus.MATCHED);
             try {
                 const notionDatabase = await notion.databases.retrieve({ database_id: database.notionDatabaseId });
                 const entry = new NotionEntry({
@@ -83,50 +97,35 @@ export function matchMessage({ bot, storage }) {
                 pageId = page.id;
                 pageUrl = page.url;
             } catch (error) {
-                try {
-                    await bot.telegram.editMessageText(
-                        message.chat.id,
-                        message.message_id,
-                        null,
-                        context.state.localize('match.failed', { error: error.message })
-                    );
-                } catch (error) {}
-
+                sendMatchResult(MatchResultStatus.FAILED, { error: error.message })
+                    .catch(() => {});
                 throw error;
             }
 
-            await bot.telegram.editMessageText(
-                message.chat.id,
-                message.message_id,
-                null,
-                context.state.localize('match.patternMatched', {
-                    match: formatCombination(result.combination, fields),
-                    databaseAlias: escapeMd(database.alias),
-                    databaseUrl: database.notionDatabaseUrl,
-                    fields: fields
-                        .filter(field => field.inputType !== InputType.DATABASE)
-                        .map((field) => context.state.localize(
-                            'match.patternMatchField',
-                            {
-                                name: escapeMd(field.name),
-                                value: escapeMd(Array.isArray(field.value) ? field.value.join(', '): field.value)
-                            }
-                        )).join('\n')
-                }),
-                {
-                    parse_mode: 'MarkdownV2',
-                    disable_web_page_preview: true,
-                    reply_markup: Markup.inlineKeyboard([
-                        Markup.button.url(context.state.localize('match.open'), pageUrl),
-                        Markup.button.callback(context.state.localize('match.undo'), `undo:notion:${pageId}`)
-                    ], { columns: 2 }).reply_markup,
-                }
-            );
+            await sendMatchResult(MatchResultStatus.SAVED);
             return;
         }
 
-        await context.reply(context.state.localize('match.noPatternMatched'));
+        await context.reply(context.state.localize('match.notMatch'));
     };
+}
+
+function formatMatchResult({ status, result, fields, database, localize, error }) {
+    return localize(`match.${status}`, {
+        ...error && { error: escapeMd(error) },
+        match: formatCombination(result.combination, fields),
+        databaseAlias: escapeMd(database.alias),
+        databaseUrl: database.notionDatabaseUrl,
+        fields: fields
+            .filter(field => field.inputType !== InputType.DATABASE)
+            .map((field) => localize(
+                'match.field',
+                {
+                    name: escapeMd(field.name),
+                    value: escapeMd(Array.isArray(field.value) ? field.value.join(', '): field.value)
+                }
+            )).join('\n')
+    });
 }
 
 export function formatCombination(combination, fields) {
@@ -151,4 +150,29 @@ export function formatCombination(combination, fields) {
 
         return escapeMd(token.value);
     }).join('');
+}
+
+// -- "undo" button clicked
+export function matchNotionUndoAction() {
+    return async (context) => {
+        await context.answerCbQuery();
+
+        context.editMessageReplyMarkup(
+            Markup.inlineKeyboard([
+                Markup.button.callback(context.state.localize('match.undoInProcess'), 'fake-button'),
+            ]).reply_markup,
+        ).catch(() => {});
+
+        /** @type {import('@notionhq/client').Client} */
+        const notion = context.state.notion;
+        const pageId = context.match[1];
+
+        await notion.pages.update({
+            page_id: pageId,
+            archived: true,
+            properties: {},
+        });
+
+        await context.editMessageText(context.state.localize('match.undoSuccessful'));
+    };
 }

@@ -17,7 +17,7 @@ services:
       GUIDE_LINK_EN: "https://www.notion.so/Declutter-Me-Complete-Guide-78984108cfe840baaf66a5fa4878c4a4"
       GUIDE_LINK_RU: "https://www.notion.so/Declutter-Me-65e3b12213924208aefa8cf443b28b65"
       GUIDE_LINK_UK: "https://www.notion.so/Declutter-Me-e8c012521ffa4dc6bbd8476a287c57de"
-      DOMAIN: "https://declutter-me.loca.lt"
+      DOMAIN: "https://declutter-me-staging.loca.lt"
       PORT: "1234"
     volumes:
       - ./backend:/backend
@@ -38,7 +38,7 @@ services:
     image: efrecon/localtunnel
     restart: always
     command:
-      --local-host backend --print-requests --port 1234 --subdomain declutter-me
+      --local-host backend --print-requests --port 1234 --subdomain declutter-me-staging
 
   backend-test:
     container_name: backend-test

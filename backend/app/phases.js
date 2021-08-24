@@ -4,7 +4,7 @@ export const phases = organizeValues({
         timezone: '',
     },
     notion: {
-        token: '',
+        sendToken: '',
     },
     addDatabase: {
         link: '',

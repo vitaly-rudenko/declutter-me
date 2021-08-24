@@ -1,5 +1,4 @@
 import yaml from 'js-yaml';
-import { escapeMd } from '../utils/escapeMd.js';
 
 export function exportCommand({ storage }) {
     /** @param {import('telegraf').Context} context */

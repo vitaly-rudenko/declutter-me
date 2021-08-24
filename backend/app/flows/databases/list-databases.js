@@ -1,7 +1,8 @@
 import { Markup } from 'telegraf';
-import { formatDatabases } from '../utils/formatDatabases.js';
+import { formatDatabases } from '../../utils/formatDatabases.js';
 
-export function manageDatabasesCommand({ storage }) {
+// -- /databases command
+export function databasesCommand({ storage }) {
     return async (context) => {
         const databases = await storage.findDatabasesByUserId(context.state.userId);
 

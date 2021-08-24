@@ -22,24 +22,21 @@ import { localize } from './app/localize.js';
 import { Language } from './app/Language.js';
 import { PostgresStorage } from './app/storage/PostgresStorage.js';
 import { Cache } from './app/storage/Cache.js';
-import { infoCommand } from './app/commands/info.js';
-import { helpCommand } from './app/commands/help.js';
-import { notionCommand } from './app/commands/notion.js';
-import { manageDatabasesCommand } from './app/commands/databases.js';
-import { addDatabaseAction, cancelDeleteDatabaseAction, deleteDatabaseAction, deleteDatabaseByAliasAction } from './app/actions/databases.js';
-import { manageTemplatesCommand } from './app/commands/templates.js';
-import { addDefaultFieldsToTemplateAction, addTemplateAction, addTemplateWithDatabaseAction, addTemplateWithoutDatabase, cancelAddDefaultFieldsToTemplateAction, cancelDeleteTemplateAction, deleteTemplateAction, deleteTemplateByHashAction, reorderTemplatesAction } from './app/actions/templates.js';
-import { timezoneMessage } from './app/messages/timezone.js';
-import { notionMessage } from './app/messages/notion.js';
-import { databaseAliasMessage, databaseLinkMessage } from './app/messages/databases.js';
-import { templateDefaultFieldsMessage, templatePatternMessage } from './app/messages/templates.js';
-import { matchMessage } from './app/messages/match.js';
-import { languageAction } from './app/actions/language.js';
-import { undoNotionAction } from './app/actions/notion.js';
-import { startCommand } from './app/commands/start.js';
-import { versionCommand } from './app/commands/version.js';
-import { exportCommand } from './app/commands/export.js';
-import { importMessage } from './app/messages/import.js';
+import { startLanguageAction, startCommand, startTimezoneMessage, startUpdateAction } from './app/flows/start.js';
+import { notionCommand, notionUpdateTokenAction, notionTokenMessage } from './app/flows/notion.js';
+import { databasesAddLinkMessage, databasesAddAliasMessage, databasesAddAction } from './app/flows/databases/add-database.js';
+import { databasesCommand } from './app/flows/databases/list-databases.js';
+import { databasesDeleteAction, databasesDeleteByAliasAction, databasesDeleteCancelAction } from './app/flows/databases/delete-database.js';
+import { templatesReorderAction, templatesReorderCommand } from './app/flows/templates/reorder-templates.js';
+import { templatesDeleteCancelAction, templatesDeleteAction, templatesDeleteByHashAction } from './app/flows/templates/delete-template.js';
+import { templatesAddDefaultFieldsCancelAction, templatesAddDefaultFieldsAction, templatesAddDefaultFieldsMessage } from './app/flows/templates/add-default-fields.js';
+import { templatesAddAction, templatesAddWithDatabaseAction, templatesAddWithoutDatabaseAction, templatesAddPatternMessage } from './app/flows/templates/add-template.js';
+import { templatesCommand } from './app/flows/templates/list-templates.js';
+import { matchMessage, matchNotionUndoAction } from './app/flows/match.js';
+import { exportCommand } from './app/flows/export.js';
+import { helpCommand } from './app/flows/help.js';
+import { importMessage } from './app/flows/import.js';
+import { versionCommand } from './app/flows/version.js';
 
 const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
 
@@ -73,7 +70,7 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
     const notionSessionManager = new NotionSessionManager({ storage });
 
     bot.telegram.setMyCommands(
-        ['databases', 'templates', 'info', 'notion', 'help', 'start', 'export', 'version']
+        ['databases', 'templates', 'notion', 'help', 'start', 'export', 'version']
             .map(command => ({
                 command: `/${command}`,
                 description: localize(`help.command.${command}`, null, Language.ENGLISH)
@@ -95,51 +92,57 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
     bot.use(withTelegramAccount(storage));
     bot.use(withLocalization());
 
-    bot.start(startCommand({ userSessionManager }));
-    bot.action(/language:(.+)/, withPhase(phases.start.language, languageAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
+    bot.start(withUser({ required: false }), startCommand({ userSessionManager }));
+    bot.action('start:update', withUser(), startUpdateAction({ userSessionManager }));
+    bot.action(/language:(.+)/, withPhase(phases.start.language, startLanguageAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
 
-    bot.command('info', withUser(), withNotion({ required: false }), infoCommand({ storage }));
     bot.command('help', withUser(), helpCommand());
-    bot.command('notion', withUser(), notionCommand({ userSessionManager }));
-    
-    bot.command('databases', withUser(), withNotion(), manageDatabasesCommand({ storage }));
-    bot.action('databases:add', withUser(), withNotion(), addDatabaseAction({ userSessionManager }));
-    bot.action('databases:delete', withUser(), withNotion(), deleteDatabaseAction({ storage }));
-    bot.action(/databases:delete:(.+)/, withUser(), withPhase(null, deleteDatabaseByAliasAction({ storage })));
-    bot.action('databases:delete:cancel', withUser(), withNotion(), cancelDeleteDatabaseAction());
 
-    bot.command('templates', withUser(), withNotion(), manageTemplatesCommand({ storage }));
-    bot.action('templates:add', withUser(), withNotion(), addTemplateAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager, storage }));
-    bot.action('templates:delete', withUser(), withNotion(), deleteTemplateAction({ storage }));
-    bot.action(/templates:delete:template:(.+)/, withUser(), withPhase(null, deleteTemplateByHashAction({ storage })));
-    bot.action('templates:delete:cancel', withUser(), withNotion(), cancelDeleteTemplateAction());
-    bot.action('templates:reorder', withUser(), withNotion(), reorderTemplatesAction({ frontendDomain: FRONTEND_DOMAIN, storage }));
-    bot.action(/template:add:database:(.+)/, withUser(), withPhase(phases.template.database, addTemplateWithDatabaseAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
-    bot.action('template:add:skip-database', withUser(), withPhase(phases.template.database, addTemplateWithoutDatabase({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
-    bot.action('template:add-default-fields:cancel', withUser(), cancelAddDefaultFieldsToTemplateAction({ userSessionManager }));
-    bot.action(/template:add-default-fields:(.+)/, withUser(), addDefaultFieldsToTemplateAction({ userSessionManager }));
+    bot.command('notion', withUser(), withNotion({ required: false }), notionCommand({ userSessionManager }));
+    bot.action('notion:update', withUser(), notionUpdateTokenAction({ userSessionManager }));
+    
+    bot.command('databases', withUser(), withNotion(), databasesCommand({ storage }));
+    bot.action('databases:add', withUser(), withNotion(), databasesAddAction({ userSessionManager }));
+    bot.action('databases:delete', withUser(), withNotion(), databasesDeleteAction({ storage }));
+    bot.action(/databases:delete:(.+)/, withUser(), withPhase(null, databasesDeleteByAliasAction({ storage })));
+    bot.action('databases:delete:cancel', withUser(), withNotion(), databasesDeleteCancelAction());
+
+    bot.command('templates', withUser(), withNotion(), templatesReorderCommand({ storage }), templatesCommand({ storage }));
+    bot.action('templates:add', withUser(), withNotion(), templatesAddAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager, storage }));
+    bot.action('templates:delete', withUser(), withNotion(), templatesDeleteAction({ storage }));
+    bot.action(/templates:delete:template:(.+)/, withUser(), withPhase(null, templatesDeleteByHashAction({ storage })));
+    bot.action('templates:delete:cancel', withUser(), withNotion(), templatesDeleteCancelAction());
+    bot.action('templates:reorder', withUser(), withNotion(), templatesReorderAction({ frontendDomain: FRONTEND_DOMAIN, storage }));
+    bot.action(/template:add:database:(.+)/, withUser(), withPhase(phases.template.database, templatesAddWithDatabaseAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
+    bot.action('template:add:skip-database', withUser(), withPhase(phases.template.database, templatesAddWithoutDatabaseAction({ frontendDomain: FRONTEND_DOMAIN, userSessionManager })));
+    bot.action('template:add-default-fields:cancel', withUser(), templatesAddDefaultFieldsCancelAction({ userSessionManager }));
+    bot.action(/template:add-default-fields:(.+)/, withUser(), templatesAddDefaultFieldsAction({ userSessionManager }));
 
     bot.command('export', withUser(), withNotion(), exportCommand({ storage }));
 
     bot.on('message',
+        async (context, next) => {
+            if ('text' in context.message && context.message.text.startsWith('/')) return;
+            await next();
+        },
         // Start
-        withPhase(phases.start.timezone, timezoneMessage({ storage, userSessionManager, notionSessionManager })),
+        withPhase(phases.start.timezone, startTimezoneMessage({ storage, userSessionManager, notionSessionManager })),
         withUser(),
         // Notion
-        withPhase(phases.notion.token, notionMessage({ storage, userSessionManager, notionSessionManager })),
+        withPhase(phases.notion.sendToken, notionTokenMessage({ storage, userSessionManager, notionSessionManager })),
         // Databases
-        withPhase(phases.addDatabase.link, databaseLinkMessage({ userSessionManager })),
-        withPhase(phases.addDatabase.alias, databaseAliasMessage({ storage, userSessionManager })),
+        withPhase(phases.addDatabase.link, databasesAddLinkMessage({ userSessionManager })),
+        withPhase(phases.addDatabase.alias, databasesAddAliasMessage({ storage, userSessionManager })),
         // Templates
-        withPhase(phases.template.pattern, templatePatternMessage({ storage, userSessionManager })),
-        withPhase(phases.template.addDefaultFields, templateDefaultFieldsMessage({ storage, userSessionManager })),
+        withPhase(phases.template.pattern, templatesAddPatternMessage({ storage, userSessionManager })),
+        withPhase(phases.template.addDefaultFields, templatesAddDefaultFieldsMessage({ storage, userSessionManager })),
         // Import
         importMessage({ bot, storage }),
         // Handle message
         withNotion(),
         withPhase(null, matchMessage({ bot, storage })),
     );
-    bot.action(/undo:notion:(.+)/, withUser(), withNotion(), withPhase(null, undoNotionAction()));
+    bot.action(/undo:notion:(.+)/, withUser(), withNotion(), withPhase(null, matchNotionUndoAction()));
 
     bot.catch((error) => logError(error));
 
