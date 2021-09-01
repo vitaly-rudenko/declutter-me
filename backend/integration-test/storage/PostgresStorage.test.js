@@ -19,7 +19,6 @@ const createStringGenerator = (prefix) => {
 };
 
 const generateUserId = () => uuid();
-const generateApiKey = () => uuid();
 const generateTelegramUserId = () => Math.floor(Date.now() / 100) * 100 + Math.floor(Math.random() * 100);
 const generateNotionToken = createStringGenerator('token-');
 const generateDatabaseAlias = createStringGenerator('alias-');
@@ -40,6 +39,7 @@ describe('PostgresStorage', () => {
 
     it('should implement User flow', async () => {
         expect(await postgresStorage.findUserById(123)).to.be.null;
+        expect(await postgresStorage.findUserByApiKey('fake-api-key')).to.be.null;
 
         const user = await postgresStorage.createUser(
             new User({ language: Language.UKRAINIAN, timezoneOffsetMinutes: 180, apiKey: 'fake-api-key' })
@@ -51,6 +51,7 @@ describe('PostgresStorage', () => {
         expect(user.apiKey).to.equal('fake-api-key');
 
         expect(await postgresStorage.findUserById(user.id)).to.deep.equal(user);
+        expect(await postgresStorage.findUserByApiKey('fake-api-key')).to.deep.equal(user);
 
         const updatedUser = await postgresStorage.updateUser(
             new User({
@@ -63,6 +64,7 @@ describe('PostgresStorage', () => {
 
         expect(user.id).to.equal(updatedUser.id);
         expect(await postgresStorage.findUserById(user.id)).to.deep.equal(updatedUser);
+        expect(await postgresStorage.findUserByApiKey('updated-fake-api-key')).to.deep.equal(updatedUser);
     });
 
     it('should implement TelegramAccount flow', async () => {

@@ -50,6 +50,16 @@ export class PostgresStorage {
         return this.deserializeUser(response.rows[0]);
     }
 
+    async findUserByApiKey(apiKey) {
+        const response = await this._client.query(`
+            SELECT *
+            FROM users
+            WHERE api_key = $1
+        `, [apiKey]);
+
+        return this.deserializeUser(response.rows[0]);
+    }
+
     deserializeUser(row) {
         if (!row) return null;
         return new User({
