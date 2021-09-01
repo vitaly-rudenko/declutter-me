@@ -38,6 +38,7 @@ import { helpCommand } from './app/flows/help.js';
 import { importMessage } from './app/flows/import.js';
 import { versionCommand } from './app/flows/version.js';
 import { apiCommand } from './app/flows/api.js';
+import { match } from './app/match.js';
 
 const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
 
@@ -160,6 +161,7 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
 
     const app = express();
     app.use(express.json());
+
     app.post(`/bot${telegramBotToken}`, async (req, res, next) => {
         const updateId = req.body['update_id']
         if (!updateId) {
@@ -183,6 +185,62 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
             next(error);
         }
     });
+
+    app.post('/api/messages', async (req, res, next) => {
+        try {
+            const apiKey = req.get('api-key')
+            if (!apiKey) {
+                return res.status(422).json({ error: { code: 'API_KEY_NOT_PROVIDED' } });
+            }
+
+            const text = req.body.text
+            if (!text) {
+                return res.status(422).json({ error: { code: 'TEXT_NOT_PROVIDED' } });
+            }
+    
+            const user = await storage.findUserByApiKey(apiKey);
+            if (!user) {
+                return res.status(401).json({ error: { code: 'API_KEY_NOT_FOUND' } });
+            }
+    
+            const [notion] = await notionSessionManager.get(user.id);
+            if (!notion) {
+                return res.status(400).json({ error: { code: 'NOTION_ACCOUNT_NOT_CONFIGURED' } });
+            }
+    
+            const result = await match({
+                user,
+                notion,
+                storage,
+                text,
+            });
+    
+            if (!result.match) {
+                return res.status(404).json({ match: null });
+            }
+    
+            res.json({
+                match: {
+                    fields: result.match.fields.map(field => ({
+                        name: field.name,
+                        inputType: field.inputType,
+                        value: field.value,
+                    })),
+                    database: {
+                        alias: result.match.database.alias,
+                        notionDatabaseUrl: result.match.database.notionDatabaseUrl,
+                    },
+                    notionPage: {
+                        id: result.match.notion.pageId,
+                        url: result.match.notion.pageUrl,
+                    },
+                    combination: result.match.combination,
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    })
 
     await new Promise(resolve => app.listen(port, () => resolve()));
 
