@@ -1,7 +1,5 @@
-import { v4 as uuid } from 'uuid'
-
 export class User {
-    constructor({ id = null, language, timezoneOffsetMinutes, apiKey = uuid() }) {
+    constructor({ id = null, language, timezoneOffsetMinutes, apiKey }) {
         this._id = id;
         this._language = language;
         this._timezoneOffsetMinutes = timezoneOffsetMinutes;
