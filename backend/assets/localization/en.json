@@ -161,6 +161,46 @@
         },
         "import": {
             "done": "Templates and databases have been successfully imported."
+        },
+        "api": {
+            "response": [
+                "🚀 *API key*",
+                "`{apiKey}`",
+                "",
+                "📝 *Sending a message*",
+                "```",
+                "POST {domain}/api/messages",
+                "Body: {",
+                "  text: 'Hello World!'",
+                "}",
+                "Headers: {",
+                "  'Api-Key': '{apiKey}'",
+                "}",
+                "=> 200 {",
+                "  match: {",
+                "    fields: [",
+                "      { name: 'Note', inputType: 'text', value: 'Hello World!' },",
+                "    ],",
+                "    database: {",
+                "      alias: 'dashboard_slipbox'",
+                "      notionDatabaseUrl: 'https://www.notion.so/example/3f86ab5c2141234562a9a2b618656abd',",
+                "    }",
+                "    notionPage: {",
+                "      id: 'a434afb4-5dcd-1234-8789-1ad1cba6635e',",
+                "      url: 'https://www.notion.so/Hello-World-a434afb12345618d87891ad1cba6635e'",
+                "    }",
+                "    combination: [",
+                "      { type: 'variable', value: 'Note', inputType: 'text' }",
+                "    ],",
+                "  }",
+                "}",
+                "=> 404 { match: null }",
+                "=> 400 { error: { code: 'NOTION_ACCOUNT_NOT_CONFIGURED' } }",
+                "=> 401 { error: { code: 'API_KEY_NOT_FOUND' } }",
+                "=> 422 { error: { code: 'API_KEY_NOT_PROVIDED' } }",
+                "=> 422 { error: { code: 'TEXT_NOT_PROVIDED' } }",
+                "```"
+            ]
         }
     },
     "match": {
@@ -193,13 +233,13 @@
     },
     "help": {
         "command": {
-            "start": "Start the bot",
-            "info": "Get your information",
+            "start": "Configure language and timezone",
             "notion": "Configure Notion integration",
             "databases": "Manage your databases",
             "templates": "Manage your templates",
             "help": "Help",
             "export": "Export your data",
+            "api": "API usage",
             "version": "Version"
         }
     }

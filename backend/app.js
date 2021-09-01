@@ -37,6 +37,7 @@ import { exportCommand } from './app/flows/export.js';
 import { helpCommand } from './app/flows/help.js';
 import { importMessage } from './app/flows/import.js';
 import { versionCommand } from './app/flows/version.js';
+import { apiCommand } from './app/flows/api.js';
 
 const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
 
@@ -70,7 +71,7 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
     const notionSessionManager = new NotionSessionManager({ storage });
 
     bot.telegram.setMyCommands(
-        ['databases', 'templates', 'notion', 'help', 'start', 'export', 'version']
+        ['databases', 'templates', 'notion', 'help', 'start', 'export', 'api', 'version']
             .map(command => ({
                 command: `/${command}`,
                 description: localize(`help.command.${command}`, null, Language.ENGLISH)
@@ -119,6 +120,7 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
     bot.action(/template:add-default-fields:(.+)/, withUser(), templatesAddDefaultFieldsAction({ userSessionManager }));
 
     bot.command('export', withUser(), withNotion(), exportCommand({ storage }));
+    bot.command('api', withUser(), apiCommand({ storage }));
 
     bot.on('message',
         async (context, next) => {
