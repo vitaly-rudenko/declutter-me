@@ -39,6 +39,7 @@ const NUMBER_MATCHERS = [
     [['восемьсот'], 800],
     [['девятьсот'], 900],
     [['тысяч', 'тысяча', 'тысячи'], 1000],
+    [['миллион', 'миллионов', 'миллиона'], 1000000],
 ];
 
 export class RussianNumberParser {
@@ -69,12 +70,23 @@ export class RussianNumberParser {
                 continue;
             }
 
-            const match = NUMBER_MATCHERS.find(([values]) => values.includes(part));
+            let multiplier = 1;
+            let match = NUMBER_MATCHERS.find(([values]) => values.includes(part));
             if (!match) {
-                return null;
+                if (!part.startsWith('пол')) {
+                    return null;
+                }
+
+                const shortenedPart = part.slice(3);
+                match = NUMBER_MATCHERS.find(([values]) => values.includes(shortenedPart));
+                multiplier = 0.5;
+
+                if (!match) {
+                    return null;
+                }
             }
 
-            const number = Number(match[1]);
+            const number = Number(match[1]) * multiplier;
 
             if (number >= largestNumber) {
                 if (glue) return null;
