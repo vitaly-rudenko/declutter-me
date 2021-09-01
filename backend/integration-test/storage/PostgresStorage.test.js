@@ -19,6 +19,7 @@ const createStringGenerator = (prefix) => {
 };
 
 const generateUserId = () => uuid();
+const generateApiKey = () => uuid();
 const generateTelegramUserId = () => Math.floor(Date.now() / 100) * 100 + Math.floor(Math.random() * 100);
 const generateNotionToken = createStringGenerator('token-');
 const generateDatabaseAlias = createStringGenerator('alias-');
@@ -41,12 +42,13 @@ describe('PostgresStorage', () => {
         expect(await postgresStorage.findUserById(123)).to.be.null;
 
         const user = await postgresStorage.createUser(
-            new User({ language: Language.UKRAINIAN, timezoneOffsetMinutes: 180 })
+            new User({ language: Language.UKRAINIAN, timezoneOffsetMinutes: 180, apiKey: 'fake-api-key' })
         );
 
         expect(typeof user.id === 'string').to.be.true
         expect(user.language).to.equal(Language.UKRAINIAN);
         expect(user.timezoneOffsetMinutes).to.equal(180);
+        expect(user.apiKey).to.equal('fake-api-key');
 
         expect(await postgresStorage.findUserById(user.id)).to.deep.equal(user);
 
@@ -55,6 +57,7 @@ describe('PostgresStorage', () => {
                 id: user.id,
                 language: Language.ENGLISH,
                 timezoneOffsetMinutes: -60,
+                apiKey: 'updated-fake-api-key',
             })
         );
 
