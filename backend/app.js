@@ -39,6 +39,7 @@ import { importMessage } from './app/flows/import.js';
 import { versionCommand } from './app/flows/version.js';
 import { apiCommand } from './app/flows/api.js';
 import { match } from './app/match.js';
+import { NotionAccountNotFound } from './app/errors/NotionAccountNotFound.js';
 
 const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
 
@@ -203,9 +204,15 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
                 return res.status(401).json({ error: { code: 'API_KEY_NOT_FOUND' } });
             }
     
-            const [notion] = await notionSessionManager.get(user.id);
-            if (!notion) {
-                return res.status(400).json({ error: { code: 'NOTION_ACCOUNT_NOT_CONFIGURED' } });
+            let notion;
+            try {
+                ([notion] = await notionSessionManager.get(user.id));
+            } catch (error) {
+                if (error instanceof NotionAccountNotFound) {
+                    return res.status(400).json({ error: { code: 'NOTION_ACCOUNT_NOT_CONFIGURED' } });
+                }
+
+                throw error;
             }
     
             const result = await match({
@@ -238,7 +245,12 @@ const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
                 }
             });
         } catch (error) {
-            next(error);
+            res.status(500).json({
+                error: {
+                    code: 'UNEXPECTED_ERROR',
+                    message: error.message,
+                }
+            });
         }
     })
 
