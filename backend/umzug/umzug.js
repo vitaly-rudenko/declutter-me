@@ -9,7 +9,7 @@ if (process.env.USE_NATIVE_ENV !== 'true') {
 }
 
 const client = new pg.Client(process.env.DATABASE_URL);
-client.connect();
+client.connect().catch(() => {});
 
 export const umzug = new Umzug({
     storage: new PostgresStorage(client, 'migrations_meta'),
