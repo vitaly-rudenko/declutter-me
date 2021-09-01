@@ -1,4 +1,5 @@
 export { RussianDateParser } from './src/date-parsers/RussianDateParser.js';
+export { RussianNumberParser } from './src/number-parsers/RussianNumberParser.js';
 export { EntryMatchers } from './src/entries/EntryMatchers.js';
 export { Field } from './src/fields/Field.js';
 export { fuzzyEquals } from './src/utils/fuzzyEquals.js';
