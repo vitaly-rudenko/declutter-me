@@ -6,11 +6,6 @@ function last(arrayOrValue) {
 }
 
 export class NotionEntrySerializer {
-    /** @param {{ dateParser }} dependencies */
-    constructor({ dateParser }) {
-        this._dateParser = dateParser;
-    }
-
     /**
      * @param {import('./NotionEntry').NotionEntry} entry
      * @param {import('../users/User').User} user
@@ -44,11 +39,18 @@ export class NotionEntrySerializer {
             } else if (type === NotionFieldType.NUMBER) {
                 properties[name] = this.serializeNumber(Number(last(field.value)));
             } else if (type === NotionFieldType.DATE) {
-                const date = this._dateParser.parse(last(field.value), {
-                    futureOnly: field.inputType === InputType.FUTURE_DATE,
-                });
+                const date = new Date(last(field.value));
+                const utcDate = new Date(Date.UTC(
+                    date.getFullYear(),
+                    date.getMonth(),
+                    date.getDate(),
+                    date.getHours(),
+                    date.getMinutes(),
+                    date.getSeconds(),
+                    date.getMilliseconds()
+                ) - user.timezoneOffsetMinutes * 60_000);
 
-                properties[name] = this.serializeDate(date, user.timezoneOffsetMinutes);
+                properties[name] = this.serializeDate(utcDate, user.timezoneOffsetMinutes);
             } else {
                 throw new Error('Unsupported field type: ' + type);
             }

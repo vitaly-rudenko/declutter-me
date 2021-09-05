@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { parseTimezoneOffsetMinutes } from '../../app/messages/timezone.js';
+import { parseTimezoneOffsetMinutes } from '../../app/flows/start.js';
 
 describe('[timezone message]', () => {
     describe('parseTimezoneOffsetMinutes()', () => {

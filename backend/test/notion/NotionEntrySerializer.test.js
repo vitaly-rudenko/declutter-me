@@ -10,17 +10,13 @@ import sinonChai from 'sinon-chai'
 
 chai.use(sinonChai);
 const { expect } = chai;
-const { spy } = sinon;
 
 describe('NotionEntrySerializer', () => {
     /** @type {NotionEntrySerializer} */
     let notionEntrySerializer;
-    let dateParser;
 
     beforeEach(() => {
-        dateParser = spy({ parse: () => utcDate('2015-06-07 12:34') });
-
-        notionEntrySerializer = new NotionEntrySerializer({ dateParser });
+        notionEntrySerializer = new NotionEntrySerializer();
     });
 
     describe('serialize()', () => {
@@ -59,13 +55,13 @@ describe('NotionEntrySerializer', () => {
                         }),
                         new Field({
                             name: 'DATE',
-                            inputType: InputType.DATE,
-                            value: 'в 8:05',
+                            inputType: InputType.TEXT,
+                            value: '2021-01-02 12:34',
                         }),
                         new Field({
                             name: 'reminder-date',
-                            inputType: InputType.FUTURE_DATE,
-                            value: 'в 12:00',
+                            inputType: InputType.TEXT,
+                            value: '14 apr 1998',
                         }),
                     ]
                 }),
@@ -113,18 +109,14 @@ describe('NotionEntrySerializer', () => {
                     },
                     'date': {
                         'type': 'date',
-                        'date': '2015-06-07T15:34:00.000+03:00'
+                        'date': '2021-01-02T12:34:00.000+03:00'
                     },
                     'Reminder Date': {
                         'type': 'date',
-                        'date': '2015-06-07T15:34:00.000+03:00'
+                        'date': '1998-04-14T00:00:00.000+03:00'
                     },
                 }
             });
-
-            expect(dateParser.parse).to.have.been.calledTwice;
-            expect(dateParser.parse).to.have.been.calledWithExactly('в 8:05', { futureOnly: false });
-            expect(dateParser.parse).to.have.been.calledWithExactly('в 12:00', { futureOnly: true });
         });
     });
 });

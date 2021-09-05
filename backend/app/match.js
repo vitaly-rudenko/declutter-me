@@ -1,4 +1,4 @@
-import { EntryMatchers, InputType, PatternBuilder, PatternMatcher, RussianDateParser } from '@vitalyrudenko/templater';
+import { EntryMatchers, InputType, PatternBuilder, PatternMatcher } from '@vitalyrudenko/templater';
 import { MatchError } from './errors/MatchError.js';
 import { NotionEntry } from './notion/NotionEntry.js';
 import { NotionEntrySerializer } from './notion/NotionEntrySerializer.js';
@@ -16,9 +16,8 @@ const noopAsync = async (status, options) => {}
 export async function match({ text, user, storage, notion, sendMatchResult = noopAsync }) {
     const templates = await storage.findTemplatesByUserId(user.id);
 
-    const dateParser = new RussianDateParser();
     const patternMatcher = new PatternMatcher();
-    const entryMatchers = new EntryMatchers({ dateParser });
+    const entryMatchers = new EntryMatchers();
 
     for (const template of templates) {
         const result = patternMatcher.match(
@@ -60,9 +59,7 @@ export async function match({ text, user, storage, notion, sendMatchResult = noo
             });
             
             const page = await notion.pages.create(
-                new NotionEntrySerializer({
-                    dateParser,
-                }).serialize(
+                new NotionEntrySerializer().serialize(
                     entry,
                     user,
                 )
