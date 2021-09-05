@@ -1,5 +1,5 @@
-import { NotionAccountNotFound } from '../errors/NotionAccountNotFound';
-import { match } from '../match';
+import { NotionAccountNotFound } from '../errors/NotionAccountNotFound.js';
+import { match } from '../match.js';
 
 export function sendMessage({ storage, notionSessionManager }) {
     return async (req, res) => {
