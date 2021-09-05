@@ -76,18 +76,3 @@ describe('RussianNumberParser', () => {
         });
     });
 });
-
-function utcDate(dateString) {
-    const date = new Date(dateString);
-    const result = new Date();
-
-    result.setUTCFullYear(date.getFullYear());
-    result.setUTCMonth(date.getMonth());
-    result.setUTCDate(date.getDate());
-    result.setUTCHours(date.getHours());
-    result.setUTCMinutes(date.getMinutes());
-    result.setUTCSeconds(date.getSeconds());
-    result.setUTCMilliseconds(0);
-
-    return result;
-}
