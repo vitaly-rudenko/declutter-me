@@ -1,22 +1,26 @@
 const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
 export class EnglishDateParser {
-  constructor({ references: { morningHours, eveningHours } }) {
+  constructor({ references: { morningHours, eveningHours, nightHours } }) {
     this.timeOfDay = {
-      midnightHours: 0,
       morningHours,
       noonHours: 12,
       eveningHours,
+      midnightHours: 24,
+      nightHours,
     }
   }
 
-  parse(input, { forwardOnly = false } = {}) {
+  parse(rawInput, { forwardOnly = false } = {}) {
+    const input = rawInput.toLowerCase()
+
     const reference = new Date()
 
     const [result, unit] = /** @type [Date, string] */ (
       this._parseTimeOfDay(input, { reference }) ||
       this._parseDayOfWeek(input, { reference }) ||
       this._parsePostponed(input, { reference }) ||
+      this._parseDayOfWeekAndTimeOfDay(input, { reference }) ||
       [null, null]
     )
 
@@ -35,6 +39,7 @@ export class EnglishDateParser {
     if (input === 'in the morning') hours = this.timeOfDay.morningHours
     if (input === 'at noon') hours = this.timeOfDay.noonHours
     if (input === 'in the evening') hours = this.timeOfDay.eveningHours
+    if (input === 'at night') hours = this.timeOfDay.nightHours
     if (input === 'at midnight') hours = this.timeOfDay.midnightHours
 
     if (hours === null) return null
@@ -53,21 +58,15 @@ export class EnglishDateParser {
 
   _parseDayOfWeek(input, { reference }) {
     if (!input.startsWith('on ')) return null
+    const inputDay = daysOfWeek.indexOf(input.slice(3))
+    if (inputDay === -1) return null
 
-    const offset = daysOfWeek.indexOf(input.slice(3)) + 1 - reference.getDay()
+    const offset = inputDay + 1 - reference.getDay()
 
-    return [
-      this._merge(
-        new Date(
-          reference.getFullYear(),
-          reference.getMonth(),
-          reference.getDate() + offset,
-          0, 0, 0, 0
-        ),
-        reference
-      ),
-      'week'
-    ]
+    const date = new Date(reference)
+    date.setDate(date.getDate() + offset)
+
+    return [date, 'week']
   }
 
   _parsePostponed(input, { reference }) {
@@ -90,12 +89,51 @@ export class EnglishDateParser {
     }
 
     const postponedDate = this._getPostponedDate(reference, unit, amount)
-    return postponedDate ? [postponedDate, unit] : null
+    if (postponedDate === null) return null
+
+    return [postponedDate, unit]
+  }
+
+  _parseDayOfWeekAndTimeOfDay(input, { reference }) {
+    const parts = input.split(' ')
+
+    const dateInput = parts.slice(0, 2).join(' ')
+    const timeInput = parts.slice(2).join(' ')
+
+    const [date, dateUnit] = this._parseDayOfWeek(dateInput, { reference })
+    if (date === null) return null
+
+    const [dateTime] = this._parseShortTimeOfDay(timeInput, { reference: date })
+    if (dateTime === null) return null
+
+    return [dateTime, dateUnit]
+  }
+
+  _parseShortTimeOfDay(input, { reference }) {
+    let hours = null
+    if (input === 'morning') hours = this.timeOfDay.morningHours
+    if (input === 'at noon') hours = this.timeOfDay.noonHours
+    if (input === 'evening') hours = this.timeOfDay.eveningHours
+    if (input === 'night') hours = this.timeOfDay.nightHours
+    if (input === 'at midnight') hours = this.timeOfDay.midnightHours
+
+    if (hours === null) return null
+    return [
+      new Date(
+        reference.getFullYear(),
+        reference.getMonth(),
+        reference.getDate(),
+        hours,
+        0, 0, 0
+      ),
+      'day'
+    ]
   }
 
   _getPostponedDate(reference, unit, amount) {
-    const date = new Date(reference)
+    if (!Number.isInteger(amount)) return null
 
+    const date = new Date(reference)
     if (unit === 'minute')
       date.setMinutes(date.getMinutes() + amount)
     else if (unit === 'hour')
@@ -111,17 +149,5 @@ export class EnglishDateParser {
     else return null
 
     return date
-  }
-
-  _merge(date, time) {
-    return new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      time.getHours(),
-      time.getMinutes(),
-      time.getSeconds(),
-      time.getMilliseconds(),
-    )
   }
 }
