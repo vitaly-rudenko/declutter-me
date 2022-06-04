@@ -166,14 +166,6 @@ export class PatternMatcher {
                 combinations.push(...this.getPatternCombinations(variation, matchers));
             }
         }
-        
-        if (token.type === TokenType.ANY_ORDER) {
-            combinations.push(
-                ...squashCombinations(token.value.map(part => this.getPatternCombinations(part, matchers)))
-                    .map(c => generateCombinations(c).map(c => c.flat()))
-                    .flat()
-            )
-        }
 
         return combinations.map(this.simplifyPattern);
     }

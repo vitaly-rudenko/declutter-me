@@ -5,7 +5,7 @@ import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 const { expect } = chai;
 chai.use(deepEqualInAnyOrder);
 
-const { TEXT, VARIABLE, OPTIONAL, VARIATIONAL, ANY_ORDER } = TokenType;
+const { TEXT, VARIABLE, OPTIONAL, VARIATIONAL } = TokenType;
 
 describe('PatternMatcher', () => {
     /** @type {PatternMatcher} */
@@ -324,83 +324,6 @@ describe('PatternMatcher', () => {
                 [{ type: TEXT, value: 'jon doe?' }],
                 [{ type: TEXT, value: 'john snow?' }],
                 [{ type: TEXT, value: 'john doe?' }],
-            ]);
-        });
-
-        it('should create combinations for any-order operator', () => {
-            // <{phone}>
-            expect(patternMatcher.getTokenCombinations({
-                type: ANY_ORDER,
-                value: [
-                    [{ type: VARIABLE, value: 'phone' }]
-                ]
-            })).to.deep.equalInAnyOrder([
-                [{ type: VARIABLE, value: 'phone' }],
-            ]);
-
-            // <{phone}|{email}>
-            expect(patternMatcher.getTokenCombinations({
-                type: ANY_ORDER,
-                value: [
-                    [
-                        { type: VARIABLE, value: 'phone' },
-                    ],
-                    [
-                        { type: VARIABLE, value: 'email' },
-                    ],
-                ]
-            })).to.deep.equalInAnyOrder([
-                [{ type: VARIABLE, value: 'phone' }, { type: VARIABLE, value: 'email' }],
-                [{ type: VARIABLE, value: 'email' }, { type: VARIABLE, value: 'phone' }],
-            ]);
-
-            // <{phone}|{email}|{url}>
-            expect(patternMatcher.getTokenCombinations({
-                type: ANY_ORDER,
-                value: [
-                    [{ type: VARIABLE, value: 'phone' }],
-                    [{ type: VARIABLE, value: 'email' }],
-                    [{ type: VARIABLE, value: 'url' }],
-                ]
-            })).to.deep.equalInAnyOrder([
-                [{ type: VARIABLE, value: 'phone' }, { type: VARIABLE, value: 'email' }, { type: VARIABLE, value: 'url' }],
-                [{ type: VARIABLE, value: 'phone' }, { type: VARIABLE, value: 'url' }, { type: VARIABLE, value: 'email' }],
-                [{ type: VARIABLE, value: 'email' }, { type: VARIABLE, value: 'phone' }, { type: VARIABLE, value: 'url' }],
-                [{ type: VARIABLE, value: 'email' }, { type: VARIABLE, value: 'url' }, { type: VARIABLE, value: 'phone' }],
-                [{ type: VARIABLE, value: 'url' }, { type: VARIABLE, value: 'phone' }, { type: VARIABLE, value: 'email' }],
-                [{ type: VARIABLE, value: 'url' }, { type: VARIABLE, value: 'email' }, { type: VARIABLE, value: 'phone' }],
-            ]);
-        });
-
-        it.skip('should create combinations for optional any-order operator', () => {
-            // <[{phone}]|[{email}]|[{url}]>
-            expect(patternMatcher.getTokenCombinations({
-                type: ANY_ORDER,
-                value: [
-                    [{ type: OPTIONAL, value: [{ type: VARIABLE, value: 'phone' }] }],
-                    [{ type: OPTIONAL, value: [{ type: VARIABLE, value: 'email' }] }],
-                    [{ type: OPTIONAL, value: [{ type: VARIABLE, value: 'url' }] }],
-                ]
-            })).to.deep.equalInAnyOrder([
-                [{ type: VARIABLE, value: 'phone' }],
-                [{ type: VARIABLE, value: 'email' }],
-                [{ type: VARIABLE, value: 'url' }],
-
-                [{ type: VARIABLE, value: 'phone' }, { type: VARIABLE, value: 'email' }],
-                [{ type: VARIABLE, value: 'email' }, { type: VARIABLE, value: 'phone' }],
-
-                [{ type: VARIABLE, value: 'phone' }, { type: VARIABLE, value: 'url' }],
-                [{ type: VARIABLE, value: 'url' }, { type: VARIABLE, value: 'phone' }],
-
-                [{ type: VARIABLE, value: 'email' }, { type: VARIABLE, value: 'url' }],
-                [{ type: VARIABLE, value: 'url' }, { type: VARIABLE, value: 'email' }],
-
-                [{ type: VARIABLE, value: 'phone' }, { type: VARIABLE, value: 'email' }, { type: VARIABLE, value: 'url' }],
-                [{ type: VARIABLE, value: 'phone' }, { type: VARIABLE, value: 'url' }, { type: VARIABLE, value: 'email' }],
-                [{ type: VARIABLE, value: 'email' }, { type: VARIABLE, value: 'phone' }, { type: VARIABLE, value: 'url' }],
-                [{ type: VARIABLE, value: 'email' }, { type: VARIABLE, value: 'url' }, { type: VARIABLE, value: 'phone' }],
-                [{ type: VARIABLE, value: 'url' }, { type: VARIABLE, value: 'phone' }, { type: VARIABLE, value: 'email' }],
-                [{ type: VARIABLE, value: 'url' }, { type: VARIABLE, value: 'email' }, { type: VARIABLE, value: 'phone' }],
             ]);
         });
     });

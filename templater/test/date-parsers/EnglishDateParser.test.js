@@ -3,7 +3,7 @@ import sinon from 'sinon'
 
 import { EnglishDateParser } from '../../index.js'
 
-describe.only('EnglishDateParser', () => {
+describe('EnglishDateParser', () => {
   /** @type {EnglishDateParser} */
   let englishDateParser
   let clock

@@ -66,22 +66,6 @@ export class PatternBuilder {
                 }
             }
 
-            if (character === '<') {
-                nested++;
-                if (nested === 1) {
-                    skip = true;
-                    type = TokenType.ANY_ORDER;
-                }
-            }
-
-            if (character === '>') {
-                nested--;
-                if (nested === 0) {
-                    skip = true;
-                    type = TokenType.TEXT;
-                }
-            }
-
             if (
                 value.length > 0 &&
                 (currentType !== type || character === null)
@@ -117,7 +101,7 @@ export class PatternBuilder {
                     type: currentType,
                     ...value && { value: currentType === TokenType.OPTIONAL
                         ? this.build(value)
-                        : (currentType === TokenType.VARIATIONAL || currentType === TokenType.ANY_ORDER)
+                        : currentType === TokenType.VARIATIONAL
                             ? value.split(/(?<!\\)\|/g).map(v => this.build(v))
                             : value },
                     ...metadata,
