@@ -28,9 +28,15 @@ describe('EnglishDateParser', () => {
     function testEach(describe, title, inputOutput, options) {
       describe(`[${title}]`, () => {
         for (const [input, output] of inputOutput) {
-          it(`should parse "${input}"`, () => {
-            expect(englishDateParser.parse(input, options)).to.deep.eq(new Date(output))
-          })
+          if (output) {
+            it(`should parse "${input}"`, () => {
+              expect(englishDateParser.parse(input, options)).to.deep.eq(new Date(output))
+            })
+          } else {
+            it(`should NOT parse "${input}"`, () => {
+              expect(englishDateParser.parse(input, options)).to.be.null
+            })
+          }
         }
       })
     }
@@ -53,7 +59,16 @@ describe('EnglishDateParser', () => {
       ['on sunday',    '2020-05-10 10:00'],
     ])
 
-    testEach(describe, 'postponed', [
+    testEach(describe, 'relative date', [
+      ['day before yesterday', '2020-05-03 10:00'],
+      ['yesterday',            '2020-05-04 10:00'],
+      ['today',                '2020-05-05 10:00'],
+      ['tomorrow',             '2020-05-06 10:00'],
+      ['day after tomorrow',   '2020-05-07 10:00'],
+    ])
+
+    testEach(describe, 'relative time', [
+      ['now',           '2020-05-05 10:00'],
       ['in a minute',   '2020-05-05 10:01'],
       ['in 15 minutes', '2020-05-05 10:15'],
       ['in an hour',    '2020-05-05 11:00'],
@@ -92,12 +107,20 @@ describe('EnglishDateParser', () => {
   
       testEach(describe, 'days of week', [
         ['on monday',    '2020-05-11 10:00'],
-        ['on tuesday',   '2020-05-12 10:00'],
+        ['on tuesday',   '2020-05-05 10:00'],
         ['on wednesday', '2020-05-06 10:00'],
         ['on thursday',  '2020-05-07 10:00'],
         ['on friday',    '2020-05-08 10:00'],
         ['on saturday',  '2020-05-09 10:00'],
         ['on sunday',    '2020-05-10 10:00'],
+      ], options)
+
+      testEach(describe, 'relative date', [
+        ['day before yesterday', null],
+        ['yesterday',            null],
+        ['today',                '2020-05-05 10:00'],
+        ['tomorrow',             '2020-05-06 10:00'],
+        ['day after tomorrow',   '2020-05-07 10:00'],
       ], options)
 
       describe('[complex]', () => {

@@ -19,14 +19,16 @@ export class EnglishDateParser {
     const [result, unit] = /** @type [Date, string] */ (
       this._parseTimeOfDay(input, { reference }) ||
       this._parseDayOfWeek(input, { reference }) ||
-      this._parsePostponed(input, { reference }) ||
+      this._parseRelativeDate(input, { reference }) ||
+      this._parseRelativeTime(input, { reference }) ||
       this._parseDayOfWeekAndTimeOfDay(input, { reference }) ||
       [null, null]
     )
 
     if (result === null) return null
 
-    if (forwardOnly && result.getTime() <= reference.getTime()) {
+    if (forwardOnly && result.getTime() < reference.getTime()) {
+      if (unit === null) return null
       const forwardResult = this._getPostponedDate(result, unit, 1)
       return forwardResult
     }
@@ -69,7 +71,8 @@ export class EnglishDateParser {
     return [date, 'week']
   }
 
-  _parsePostponed(input, { reference }) {
+  _parseRelativeTime(input, { reference }) {
+    if (input === 'now') return [new Date(reference), null]
     if (!input.startsWith('in ')) return null
 
     const [rawAmount, rawUnit] = input.slice(3).split(' ')
@@ -94,16 +97,32 @@ export class EnglishDateParser {
     return [postponedDate, unit]
   }
 
+  _parseRelativeDate(input, { reference }) {
+    let offset = null
+    if (input === 'day before yesterday') offset = -2
+    if (input === 'yesterday') offset = -1
+    if (input === 'today') offset = 0
+    if (input === 'tomorrow') offset = 1
+    if (input === 'day after tomorrow') offset = 2
+
+    if (offset === null) return null
+
+    const date = new Date(reference)
+    date.setDate(date.getDate() + offset)
+
+    return [date, null]
+  }
+
   _parseDayOfWeekAndTimeOfDay(input, { reference }) {
     const parts = input.split(' ')
 
     const dateInput = parts.slice(0, 2).join(' ')
     const timeInput = parts.slice(2).join(' ')
 
-    const [date, dateUnit] = this._parseDayOfWeek(dateInput, { reference })
+    const [date, dateUnit] = this._parseDayOfWeek(dateInput, { reference }) || [null, null]
     if (date === null) return null
 
-    const [dateTime] = this._parseShortTimeOfDay(timeInput, { reference: date })
+    const [dateTime] = this._parseShortTimeOfDay(timeInput, { reference: date }) || [null, null]
     if (dateTime === null) return null
 
     return [dateTime, dateUnit]
