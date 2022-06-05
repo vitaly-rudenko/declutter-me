@@ -29,7 +29,7 @@ export class EnglishDateParser {
 
     if (forwardOnly && result.getTime() < reference.getTime()) {
       if (unit === null) return null
-      const forwardResult = this._getPostponedDate(result, unit, 1)
+      const forwardResult = this._getRelativeDateTime(result, unit, 1)
       return forwardResult
     }
 
@@ -77,27 +77,52 @@ export class EnglishDateParser {
 
     const [rawAmount, rawUnit] = input.slice(3).split(' ')
     
-    let amount = null, unit = null
-    if (rawUnit.startsWith('minute')) unit = 'minute'
-    if (rawUnit.startsWith('hour')) unit = 'hour'
-    if (rawUnit.startsWith('day')) unit = 'day'
-    if (rawUnit.startsWith('week')) unit = 'week'
-    if (rawUnit.startsWith('month')) unit = 'month'
-    if (rawUnit.startsWith('year')) unit = 'year'
+    const unit = this._parseUnit(rawUnit)
+    if (unit === null) return null
 
-    if (rawAmount === 'an' || rawAmount === 'a') {
-      amount = 1
-    } else {
-      amount = Number(rawAmount)
-    }
+    const amount = this._parseAmount(rawAmount)
+    if (amount === null) return null
 
-    const postponedDate = this._getPostponedDate(reference, unit, amount)
-    if (postponedDate === null) return null
+    const date = this._getRelativeDateTime(reference, unit, amount)
+    if (date === null) return null
 
-    return [postponedDate, unit]
+    return [date, unit]
   }
 
   _parseRelativeDate(input, { reference }) {
+    if (input.endsWith(' ago')) {
+      const [rawAmount, rawUnit] = input.split(' ')
+
+      const unit = this._parseUnit(rawUnit)
+      if (unit === null) return null
+
+      const amount = this._parseAmount(rawAmount)
+      if (amount === null) return null
+
+      const date = this._getRelativeDateTime(reference, unit, -amount)
+      if (date === null) return null
+
+      return [date, null]
+    }
+
+    if (input.startsWith('last ') || input.startsWith('previous ')) {
+      const unit = this._parseUnit(input.split(' ')[1])
+
+      const date = this._getRelativeDateTime(reference, unit, -1)
+      if (date === null) return null
+
+      return [date, null]
+    }
+
+    if (input.startsWith('next ')) {
+      const unit = this._parseUnit(input.split(' ')[1])
+
+      const date = this._getRelativeDateTime(reference, unit, 1)
+      if (date === null) return null
+
+      return [date, null]
+    }
+
     let offset = null
     if (input === 'day before yesterday') offset = -2
     if (input === 'yesterday') offset = -1
@@ -149,7 +174,31 @@ export class EnglishDateParser {
     ]
   }
 
-  _getPostponedDate(reference, unit, amount) {
+  _parseAmount(rawAmount) {
+    if (rawAmount === 'an' || rawAmount === 'a') {
+      return 1
+    }
+
+    const value = Number(rawAmount)
+
+    if (Number.isInteger(value)) {
+      return value
+    }
+
+    return null
+  }
+
+  _parseUnit(rawUnit) {
+    if (rawUnit.startsWith('minute')) return 'minute'
+    if (rawUnit.startsWith('hour')) return 'hour'
+    if (rawUnit.startsWith('day')) return 'day'
+    if (rawUnit.startsWith('week')) return 'week'
+    if (rawUnit.startsWith('month')) return 'month'
+    if (rawUnit.startsWith('year')) return 'year'
+    return null
+  }
+
+  _getRelativeDateTime(reference, unit, amount) {
     if (!Number.isInteger(amount)) return null
 
     const date = new Date(reference)

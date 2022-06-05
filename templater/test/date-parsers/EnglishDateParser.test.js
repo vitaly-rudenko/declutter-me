@@ -60,11 +60,29 @@ describe('EnglishDateParser', () => {
     ])
 
     testEach(describe, 'relative date', [
+      ['5 years ago',          '2015-05-05 10:00'],
+      ['a year ago',           '2019-05-05 10:00'],
+      ['last year',            '2019-05-05 10:00'],
+      ['previous year',        '2019-05-05 10:00'],
+      ['2 months ago',         '2020-03-05 10:00'],
+      ['a month ago',          '2020-04-05 10:00'],
+      ['last month',           '2020-04-05 10:00'],
+      ['previous month',       '2020-04-05 10:00'],
+      ['3 weeks ago',          '2020-04-14 10:00'],
+      ['a week ago',           '2020-04-28 10:00'],
+      ['last week',            '2020-04-28 10:00'],
+      ['previous week',        '2020-04-28 10:00'],
       ['day before yesterday', '2020-05-03 10:00'],
+      ['previous day',         '2020-05-04 10:00'],
+      ['a day ago',            '2020-05-04 10:00'],
       ['yesterday',            '2020-05-04 10:00'],
       ['today',                '2020-05-05 10:00'],
       ['tomorrow',             '2020-05-06 10:00'],
+      ['next day',             '2020-05-06 10:00'],
       ['day after tomorrow',   '2020-05-07 10:00'],
+      ['next week',            '2020-05-12 10:00'],
+      ['next month',           '2020-06-05 10:00'],
+      ['next year',            '2021-05-05 10:00'],
     ])
 
     testEach(describe, 'relative time', [
@@ -116,11 +134,29 @@ describe('EnglishDateParser', () => {
       ], options)
 
       testEach(describe, 'relative date', [
+        ['5 years ago',          null],
+        ['a year ago',           null],
+        ['last year',            null],
+        ['previous year',        null],
+        ['2 months ago',         null],
+        ['a month ago',          null],
+        ['last month',           null],
+        ['previous month',       null],
+        ['3 weeks ago',          null],
+        ['a week ago',           null],
+        ['last week',            null],
+        ['previous week',        null],
         ['day before yesterday', null],
+        ['previous day',         null],
+        ['a day ago',            null],
         ['yesterday',            null],
         ['today',                '2020-05-05 10:00'],
         ['tomorrow',             '2020-05-06 10:00'],
+        ['next day',             '2020-05-06 10:00'],
         ['day after tomorrow',   '2020-05-07 10:00'],
+        ['next week',            '2020-05-12 10:00'],
+        ['next month',           '2020-06-05 10:00'],
+        ['next year',            '2021-05-05 10:00'],
       ], options)
 
       describe('[complex]', () => {
