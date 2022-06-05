@@ -1,8 +1,6 @@
 import { Field } from './fields/Field.js';
 import { InputType } from './InputType.js';
 import { TokenType } from './TokenType.js';
-import { generateCombinations } from './utils/generateCombinations.js';
-import { squashCombinations } from './utils/squashCombinations.js';
 
 export class PatternMatcher {
     /**

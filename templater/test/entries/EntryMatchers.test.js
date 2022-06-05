@@ -673,4 +673,46 @@ describe('EntryMatchers', () => {
         })
     })
   })
+
+  describe('[english date parser]', () => {
+    it('should match partially', () => {
+      const pattern = patternBuilder.build('remind me to {reminder:text} {when:forward_date}')
+
+      expect(patternMatcher.match('remind me to eat vegetables on sunday evening', pattern, matchers))
+        .to.deep.eq({
+          fields: [
+            new Field({ name: 'reminder', value: 'eat vegetables', inputType: InputType.TEXT }),
+            new Field({ name: 'when', value: 'on sunday evening', inputType: InputType.FORWARD_DATE }),
+          ]
+        })
+
+        expect(patternMatcher.match('remind me to fly in an hour', pattern, matchers))
+        .to.deep.eq({
+          fields: [
+            new Field({ name: 'reminder', value: 'fly', inputType: InputType.TEXT }),
+            new Field({ name: 'when', value: 'in an hour', inputType: InputType.FORWARD_DATE }),
+          ]
+        })
+    })
+
+    it('should match partially', () => {
+      const pattern = patternBuilder.build('remind me to {reminder:text} {when:forward_date}')
+
+      expect(patternMatcher.match('remind me to on monday at noon', pattern, matchers))
+        .to.deep.eq({
+          fields: [
+            new Field({ name: 'reminder', value: 'on monday', inputType: InputType.TEXT }),
+            new Field({ name: 'when', value: 'at noon', inputType: InputType.FORWARD_DATE }),
+          ]
+        })
+    })
+
+    it('should not match invalid inputs', () => {
+      const pattern = patternBuilder.build('remind me to {reminder:text} {when:forward_date}')
+
+      expect(patternMatcher.match('remind me remind myself', pattern, matchers)).to.be.null
+      expect(patternMatcher.match('remind me to on monday evening', pattern, matchers)).to.be.null
+      expect(patternMatcher.match('remind me fly tomorrow if I can', pattern, matchers)).to.be.null
+    })
+  })
 })

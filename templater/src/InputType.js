@@ -3,7 +3,7 @@ export const InputType = {
     TEXT: 'text',
     WORD: 'word',
     DATE: 'date',
-    FUTURE_DATE: 'future_date',
+    FORWARD_DATE: 'forward_date',
     URL: 'url',
     EMAIL: 'email',
     PHONE: 'phone',
