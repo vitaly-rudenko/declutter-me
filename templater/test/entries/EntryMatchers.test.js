@@ -16,7 +16,7 @@ describe('EntryMatchers', () => {
   beforeEach(() => {
     patternBuilder = new PatternBuilder()
     patternMatcher = new PatternMatcher()
-    englishDateParser = new EnglishDateParser({ references: { morningHours: 7, eveningHours: 18, nightHours: 21 } })
+    englishDateParser = new EnglishDateParser({ references: { startOfDay: 5, morning: 7, evening: 18, night: 21 } })
     matchers = new EntryMatchers({ dateParser: englishDateParser })
   })
 
