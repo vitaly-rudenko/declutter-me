@@ -1,13 +1,14 @@
 const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
 export class EnglishDateParser {
-  constructor({ references: { morningHours, eveningHours, nightHours } }) {
+  constructor({ references: { startOfDay, morning, evening, night } }) {
     this.timeOfDay = {
-      morningHours,
+      startOfDay,
+      morning,
       noonHours: 12,
-      eveningHours,
-      midnightHours: 24,
-      nightHours,
+      evening,
+      midnight: 24,
+      night,
     }
   }
 
@@ -19,8 +20,8 @@ export class EnglishDateParser {
     const [result, unit] = /** @type [Date, string] */ (
       this._parseTimeOfDay(input, { reference }) ||
       this._parseDayOfWeek(input, { reference }) ||
+      this._parseAlignedRelativeDate(input, { reference }) ||
       this._parseRelativeDate(input, { reference }) ||
-      this._parseRelativeTime(input, { reference }) ||
       this._parseDayOfWeekAndTimeOfDay(input, { reference }) ||
       [null, null]
     )
@@ -38,11 +39,11 @@ export class EnglishDateParser {
 
   _parseTimeOfDay(input, { reference }) {
     let hours = null
-    if (input === 'in the morning') hours = this.timeOfDay.morningHours
+    if (input === 'in the morning') hours = this.timeOfDay.morning
     if (input === 'at noon') hours = this.timeOfDay.noonHours
-    if (input === 'in the evening') hours = this.timeOfDay.eveningHours
-    if (input === 'at night') hours = this.timeOfDay.nightHours
-    if (input === 'at midnight') hours = this.timeOfDay.midnightHours
+    if (input === 'in the evening') hours = this.timeOfDay.evening
+    if (input === 'at night') hours = this.timeOfDay.night
+    if (input === 'at midnight') hours = this.timeOfDay.midnight
 
     if (hours === null) return null
 
@@ -65,28 +66,9 @@ export class EnglishDateParser {
 
     const offset = inputDay + 1 - reference.getDay()
 
-    const date = new Date(reference)
-    date.setDate(date.getDate() + offset)
+    const date = this._getRelativeDateTime(reference, 'day', offset, { alignToStart: true })
 
     return [date, 'week']
-  }
-
-  _parseRelativeTime(input, { reference }) {
-    if (input === 'now') return [new Date(reference), null]
-    if (!input.startsWith('in ')) return null
-
-    const [rawAmount, rawUnit] = input.slice(3).split(' ')
-    
-    const unit = this._parseUnit(rawUnit)
-    if (unit === null) return null
-
-    const amount = this._parseAmount(rawAmount)
-    if (amount === null) return null
-
-    const date = this._getRelativeDateTime(reference, unit, amount)
-    if (date === null) return null
-
-    return [date, unit]
   }
 
   _parseRelativeDate(input, { reference }) {
@@ -105,10 +87,28 @@ export class EnglishDateParser {
       return [date, null]
     }
 
+    if (input === 'now') return [new Date(reference), null]
+    if (!input.startsWith('in ')) return null
+
+    const [rawAmount, rawUnit] = input.slice(3).split(' ')
+    
+    const unit = this._parseUnit(rawUnit)
+    if (unit === null) return null
+
+    const amount = this._parseAmount(rawAmount)
+    if (amount === null) return null
+
+    const date = this._getRelativeDateTime(reference, unit, amount)
+    if (date === null) return null
+
+    return [date, unit]
+  }
+
+  _parseAlignedRelativeDate(input, { reference }) {
     if (input.startsWith('last ') || input.startsWith('previous ')) {
       const unit = this._parseUnit(input.split(' ')[1])
 
-      const date = this._getRelativeDateTime(reference, unit, -1)
+      const date = this._getRelativeDateTime(reference, unit, -1, { alignToStart: true })
       if (date === null) return null
 
       return [date, null]
@@ -117,7 +117,7 @@ export class EnglishDateParser {
     if (input.startsWith('next ')) {
       const unit = this._parseUnit(input.split(' ')[1])
 
-      const date = this._getRelativeDateTime(reference, unit, 1)
+      const date = this._getRelativeDateTime(reference, unit, 1, { alignToStart: true })
       if (date === null) return null
 
       return [date, null]
@@ -132,9 +132,7 @@ export class EnglishDateParser {
 
     if (offset === null) return null
 
-    const date = new Date(reference)
-    date.setDate(date.getDate() + offset)
-
+    const date = this._getRelativeDateTime(reference, 'day', offset, { alignToStart: true })
     return [date, null]
   }
 
@@ -155,11 +153,11 @@ export class EnglishDateParser {
 
   _parseShortTimeOfDay(input, { reference }) {
     let hours = null
-    if (input === 'morning') hours = this.timeOfDay.morningHours
+    if (input === 'morning') hours = this.timeOfDay.morning
     if (input === 'at noon') hours = this.timeOfDay.noonHours
-    if (input === 'evening') hours = this.timeOfDay.eveningHours
-    if (input === 'night') hours = this.timeOfDay.nightHours
-    if (input === 'at midnight') hours = this.timeOfDay.midnightHours
+    if (input === 'evening') hours = this.timeOfDay.evening
+    if (input === 'night') hours = this.timeOfDay.night
+    if (input === 'at midnight') hours = this.timeOfDay.midnight
 
     if (hours === null) return null
     return [
@@ -198,23 +196,60 @@ export class EnglishDateParser {
     return null
   }
 
-  _getRelativeDateTime(reference, unit, amount) {
+  _getRelativeDateTime(reference, unit, amount, { alignToStart = false } = {}) {
     if (!Number.isInteger(amount)) return null
 
     const date = new Date(reference)
-    if (unit === 'minute')
+    if (unit === 'minute') {
       date.setMinutes(date.getMinutes() + amount)
-    else if (unit === 'hour')
+      if (alignToStart) {
+        date.setSeconds(0)
+        date.setMilliseconds(0)
+      }
+    } else if (unit === 'hour') {
       date.setHours(date.getHours() + amount)
-    else if (unit === 'day')
+      if (alignToStart) {
+        date.setMinutes(0)
+        date.setSeconds(0)
+        date.setMilliseconds(0)
+      }
+    } else if (unit === 'day') {
       date.setDate(date.getDate() + amount)
-    else if (unit === 'week')
+      if (alignToStart) {
+        date.setHours(this.timeOfDay.startOfDay)
+        date.setMinutes(0)
+        date.setSeconds(0)
+        date.setMilliseconds(0)
+      }
+    } else if (unit === 'week') {
       date.setDate(date.getDate() + 7 * amount)
-    else if (unit === 'month')
+      if (alignToStart) {
+        date.setDate(date.getDate() - date.getDay() + 1)
+        date.setHours(this.timeOfDay.startOfDay)
+        date.setMinutes(0)
+        date.setSeconds(0)
+        date.setMilliseconds(0)
+      }
+    } else if (unit === 'month') {
       date.setMonth(date.getMonth() + amount)
-    else if (unit === 'year')
+      if (alignToStart) {
+        date.setDate(1)
+        date.setHours(this.timeOfDay.startOfDay)
+        date.setMinutes(0)
+        date.setSeconds(0)
+        date.setMilliseconds(0)
+      }
+    } else if (unit === 'year') {
       date.setFullYear(date.getFullYear() + amount)
-    else return null
+      if (alignToStart) {
+        date.setMonth(0)
+        date.setDate(1)
+        date.setHours(this.timeOfDay.startOfDay)
+        date.setMinutes(0)
+        date.setSeconds(0)
+        date.setMilliseconds(0)
+      }
+    } else return null
 
     return date
   }
