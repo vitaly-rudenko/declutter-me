@@ -14,6 +14,6 @@ export const InputTypeIcons = {
     [InputType.DATE]: CalendarToday,
     [InputType.DATABASE]: Storage,
     [InputType.WORD]: TextFormat,
-    [InputType.FUTURE_DATE]: Schedule,
+    [InputType.FORWARD_DATE]: Schedule,
     [InputType.MATCH]: Code,
 };

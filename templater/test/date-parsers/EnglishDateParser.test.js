@@ -92,6 +92,9 @@ describe('EnglishDateParser', () => {
     ])
 
     // last sunday, next tuesday
+    // tomorrow morning
+    // in december
+    // in half an hour
 
     testEach(describe, 'relative date', [
       ['5 years ago',    '2015-05-05 10:20', null],

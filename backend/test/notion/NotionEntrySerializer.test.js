@@ -64,7 +64,7 @@ describe('NotionEntrySerializer', () => {
                         }),
                         new Field({
                             name: 'reminder-date',
-                            inputType: InputType.FUTURE_DATE,
+                            inputType: InputType.FORWARD_DATE,
                             value: 'в 12:00',
                         }),
                     ]
@@ -123,8 +123,8 @@ describe('NotionEntrySerializer', () => {
             });
 
             expect(dateParser.parse).to.have.been.calledTwice;
-            expect(dateParser.parse).to.have.been.calledWithExactly('в 8:05', { futureOnly: false });
-            expect(dateParser.parse).to.have.been.calledWithExactly('в 12:00', { futureOnly: true });
+            expect(dateParser.parse).to.have.been.calledWithExactly('в 8:05', { forwardOnly: false });
+            expect(dateParser.parse).to.have.been.calledWithExactly('в 12:00', { forwardOnly: true });
         });
     });
 });

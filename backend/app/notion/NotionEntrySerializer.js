@@ -45,7 +45,7 @@ export class NotionEntrySerializer {
                 properties[name] = this.serializeNumber(Number(last(field.value)));
             } else if (type === NotionFieldType.DATE) {
                 const date = this._dateParser.parse(last(field.value), {
-                    futureOnly: field.inputType === InputType.FUTURE_DATE,
+                    forwardOnly: field.inputType === InputType.FORWARD_DATE,
                 });
 
                 properties[name] = this.serializeDate(date, user.timezoneOffsetMinutes);
