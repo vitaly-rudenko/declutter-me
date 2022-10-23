@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "npm run db:migrate && node app.js",
-    "debug": "npm run db:migrate && nodemon --legacy-watch app.js",
+    "dev": "npm run db:migrate && nodemon --legacy-watch app.js",
     "test": "mocha --recursive",
     "test:watch": "npm run test -- --watch --parallel",
     "test:mutate": "stryker run",
@@ -33,16 +33,19 @@
   "homepage": "https://github.com/vitaly-rudenko/declutter-me#readme",
   "dependencies": {
     "@notionhq/client": "^0.3.1",
+    "@vitalyrudenko/telegramify": "^0.0.3",
     "@vitalyrudenko/templater": "^1.0.0-pre.4",
     "base64url": "^3.0.1",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "got": "^11.8.2",
+    "ioredis": "^5.2.3",
     "js-yaml": "^4.0.0",
     "log4js": "^6.3.0",
     "markdown-escapes": "^2.0.0",
     "pako": "^2.0.3",
     "pg": "^8.6.0",
+    "pino": "^8.7.0",
     "telegraf": "^4.3.0",
     "umzug": "^2.3.0",
     "uuid": "^8.3.2"
