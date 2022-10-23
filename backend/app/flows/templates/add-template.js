@@ -4,7 +4,7 @@ import { linkLanguageMap } from '../../linkLanguageMap.js';
 import { phases } from '../../phases.js';
 import { Template } from '../../templates/Template.js';
 import { createGuideLink } from '../../utils/createGuideLink.js';
-import { escapeMd } from '../../utils/escapeMd.js';
+import { escapeMd } from '@vitalyrudenko/telegramify'
 
 // -- "add" button clicked
 export function templatesAddAction({ frontendDomain, userSessionManager, storage }) {

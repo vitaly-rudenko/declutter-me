@@ -1,5 +1,5 @@
 import { InputType } from '@vitalyrudenko/templater';
-import { escapeMd } from './escapeMd.js';
+import { escapeMd } from '@vitalyrudenko/telegramify';
 import { formatPattern } from './formatPattern.js';
 
 /** @param {import('../templates/Template').Template[]} templates */

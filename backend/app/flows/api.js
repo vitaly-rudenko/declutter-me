@@ -1,6 +1,6 @@
-import { escapeMd } from '../utils/escapeMd.js';
+import { escapeMd } from '@vitalyrudenko/telegramify'
 
-export function apiCommand({ storage }) {
+export function apiCommand() {
     /** @param {import('telegraf').Context} context */
     return async (context) => {
         const { user } = context.state

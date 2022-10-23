@@ -7,8 +7,8 @@ import { phases } from '../phases.js';
 import { TelegramAccount } from '../telegram/TelegramAccount.js';
 import { User } from '../users/User.js';
 import { createGuideLink } from '../utils/createGuideLink.js';
-import { escapeMd } from '../utils/escapeMd.js';
 import { formatTimezone } from '../utils/formatTimezone.js';
+import { escapeMd } from '@vitalyrudenko/telegramify'
 
 // -- /start
 export function startCommand({ userSessionManager }) {

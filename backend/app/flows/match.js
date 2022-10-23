@@ -1,7 +1,7 @@
 import { InputType, TokenType } from '@vitalyrudenko/templater';
 import { Markup } from 'telegraf';
 import { match } from '../match.js';
-import { escapeMd } from '../utils/escapeMd.js';
+import { escapeMd } from '@vitalyrudenko/telegramify'
 
 // -- message is sent
 const MatchResultStatus = {
