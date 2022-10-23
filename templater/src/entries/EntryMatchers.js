@@ -10,8 +10,6 @@ const InputTypeScore = {
     [InputType.TEXT]: 1,
     [InputType.WORD]: 2,
     [InputType.DATABASE]: 2,
-    [InputType.DATE]: 3,
-    [InputType.FUTURE_DATE]: 3,
     [InputType.URL]: 3,
     [InputType.EMAIL]: 3,
     [InputType.PHONE]: 3,
@@ -20,17 +18,11 @@ const InputTypeScore = {
 };
 
 export class EntryMatchers {
-    /** @param {{ dateParser }} dependencies */
-    constructor({ dateParser }) {
-        this._dateParser = dateParser;
-
+    constructor() {
         this[InputType.DATABASE] = this._word.bind(this);
 
         this[InputType.TEXT] = this._text.bind(this);
         this[InputType.WORD] = this._word.bind(this);
-
-        this[InputType.DATE] = (input) => this._date(input, false);
-        this[InputType.FUTURE_DATE] = (input) => this._date(input, true);
 
         this[InputType.URL] = this._url.bind(this);
         this[InputType.EMAIL] = this._email.bind(this);
@@ -66,45 +58,7 @@ export class EntryMatchers {
             }   
 
             results.push(input);
-
-            if (nextToken2 && nextToken2.inputType === InputType.FUTURE_DATE) {
-                return results.map(result => this._removeDateFromInput(result, { nextTokens: [nextToken2] }, { futureOnly: true }))
-            }
-
-            if (nextToken2 && nextToken2.inputType === InputType.DATE) {
-                return results.map(result => this._removeDateFromInput(result, { nextTokens: [nextToken2] }, { futureOnly: false }))
-            }
-
             return results;
-        }
-
-        return input;
-    }
-
-    _removeDateFromInput(input, { nextTokens: [nextToken] }, { futureOnly }) {
-        if (!nextToken) {
-            return input;
-        }
-
-        let lastDate = null;
-        let startIndex = input.length;
-
-        while (startIndex > 0) {
-            startIndex = input.lastIndexOf(' ', startIndex - 1);
-            if (startIndex === -1) startIndex = -1;
-
-            const date = input.slice(startIndex + 1);
-            if (this._dateParser.parse(date, { futureOnly })) {
-                lastDate = date;
-            }
-        }
-
-        if (lastDate) {
-            input = input.slice(0, input.length - lastDate.length);
-
-            if (nextToken.type === TokenType.TEXT) {
-                input = input.slice(0, input.length - nextToken.value.length);
-            }
         }
 
         return input;
@@ -151,23 +105,6 @@ export class EntryMatchers {
 
     _match(input, { token, nextTokens: [nextToken], match }) {
         return this._select(input, nextToken, value => match(value, token.match));
-    }
-
-    _date(input, futureOnly) {
-        let lastDate = null;
-        let endIndex = 0;
-
-        while (endIndex < input.length) {
-            endIndex = input.indexOf(' ', endIndex + 1);
-            if (endIndex === -1) endIndex = input.length;
-
-            const date = input.slice(0, endIndex);
-            if (this._dateParser.parse(date, { futureOnly })) {
-                lastDate = date;
-            }
-        }
-
-        return lastDate;
     }
 
     _select(input, nextToken, matcher) {

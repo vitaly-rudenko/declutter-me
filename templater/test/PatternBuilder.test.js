@@ -219,7 +219,7 @@ describe('PatternBuilder', () => {
         });
 
         it('should parse input types', () => {
-            expect(patternBuilder.build('#{database} buy {Note:text}, please[ {when:future_date}][ #{My Tag:word}]'))
+            expect(patternBuilder.build('#{database} buy {Note:text}, please[ {when:number}][ #{My Tag:word}]'))
                 .to.deep.eq([
                     { type: TEXT, value: '#' },
                     { type: VARIABLE, inputType: InputType.DATABASE },
@@ -228,7 +228,7 @@ describe('PatternBuilder', () => {
                     { type: TEXT, value: ', please' },
                     { type: OPTIONAL, value: [
                         { type: TEXT, value: ' ' },
-                        { type: VARIABLE, value: 'when', inputType: InputType.FUTURE_DATE },
+                        { type: VARIABLE, value: 'when', inputType: InputType.NUMBER },
                     ] },
                     { type: OPTIONAL, value: [
                         { type: TEXT, value: ' #' },

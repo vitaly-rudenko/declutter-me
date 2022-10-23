@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { Button, Chip, Link, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@material-ui/core';
 import { InputTypeIcons } from './InputTypeIcons.js';
-import { RussianDateParser, EntryMatchers, PatternMatcher, PatternBuilder } from '@vitalyrudenko/templater';
+import { EntryMatchers, PatternMatcher, PatternBuilder } from '@vitalyrudenko/templater';
 import { useLocalize } from '../useLocalize.js';
 import './TemplateTester.css';
 
@@ -34,7 +34,7 @@ export const TemplateTester = ({ test, setTest, rawPatterns }) => {
                         const match = new PatternMatcher().match(
                             test,
                             pattern,
-                            new EntryMatchers({ dateParser: new RussianDateParser() })
+                            new EntryMatchers()
                         );
         
                         if (match) {

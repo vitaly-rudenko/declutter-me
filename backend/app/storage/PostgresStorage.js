@@ -19,10 +19,10 @@ export class PostgresStorage {
     /** @param {import('../users/User').User} user */
     async createUser(user) {
         const response = await this._client.query(`
-            INSERT INTO users (id, language, timezone_offset_minutes)
-            VALUES ($1, $2, $3)
+            INSERT INTO users (id, language, timezone_offset_minutes, api_key)
+            VALUES ($1, $2, $3, $4)
             RETURNING *;
-        `, [uuid(), user.language, user.timezoneOffsetMinutes])
+        `, [uuid(), user.language, user.timezoneOffsetMinutes, user.apiKey])
         
         return this.deserializeUser(response.rows[0]);
     }
@@ -32,10 +32,10 @@ export class PostgresStorage {
     async updateUser(user) {
         const response = await this._client.query(`
             UPDATE users
-            SET (language, timezone_offset_minutes) = ($1, $2)
-            WHERE id = $3
+            SET (language, timezone_offset_minutes, api_key) = ($2, $3, $4)
+            WHERE id = $1
             RETURNING *;
-        `, [user.language, user.timezoneOffsetMinutes, user.id]);
+        `, [user.id, user.language, user.timezoneOffsetMinutes, user.apiKey]);
 
         return this.deserializeUser(response.rows[0]);
     }
@@ -50,12 +50,23 @@ export class PostgresStorage {
         return this.deserializeUser(response.rows[0]);
     }
 
+    async findUserByApiKey(apiKey) {
+        const response = await this._client.query(`
+            SELECT *
+            FROM users
+            WHERE api_key = $1
+        `, [apiKey]);
+
+        return this.deserializeUser(response.rows[0]);
+    }
+
     deserializeUser(row) {
         if (!row) return null;
         return new User({
             id: row['id'],
             language: row['language'],
             timezoneOffsetMinutes: row['timezone_offset_minutes'],
+            apiKey: row['api_key'],
         });
     }
 

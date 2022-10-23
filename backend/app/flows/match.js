@@ -1,10 +1,7 @@
-import { EntryMatchers, InputType, PatternBuilder, PatternMatcher, RussianDateParser, TokenType } from '@vitalyrudenko/templater';
+import { InputType, TokenType } from '@vitalyrudenko/templater';
 import { Markup } from 'telegraf';
-import { NotionEntry } from '../notion/NotionEntry.js';
-import { NotionEntrySerializer } from '../notion/NotionEntrySerializer.js';
-import { NotionProperty } from '../notion/NotionProperty.js';
+import { match } from '../match.js';
 import { escapeMd } from '../utils/escapeMd.js';
-import { mergeFields } from '../utils/mergeFields.js';
 
 // -- message is sent
 const MatchResultStatus = {
@@ -16,97 +13,46 @@ const MatchResultStatus = {
 export function matchMessage({ bot, storage }) {
     return async (context) => {
         if (!('text' in context.message)) return;
+        const { user, notion } = context.state;
 
-        const { userId, user } = context.state;
-
-        /** @type {import('@notionhq/client').Client} */
-        const notion = context.state.notion;
-
-        const templates = await storage.findTemplatesByUserId(userId);
-
-        const dateParser = new RussianDateParser();
-        const patternMatcher = new PatternMatcher();
-        const entryMatchers = new EntryMatchers({ dateParser });
-
-        for (const template of templates) {
-            const result = patternMatcher.match(
-                context.message.text,
-                new PatternBuilder().build(template.pattern),
-                entryMatchers,
-                { returnCombination: true }
-            );
-
-            if (!result) continue;
-
-            const fields = mergeFields(template.defaultFields, result.fields)
-
-            const databaseField = fields.find(field => field.inputType === InputType.DATABASE)
-            if (!databaseField) {
+        let message, result;
+        try {
+            result = await match({
+                user,
+                notion,
+                storage,
+                text: context.message.text,
+                sendMatchResult: async (status, { result, database, fields, pageId, pageUrl, error }) => {
+                    const text = formatMatchResult({ status, database, fields, localize: context.state.localize, result, error });
+                    const options = {
+                        parse_mode: 'MarkdownV2',
+                        disable_web_page_preview: true,
+                        reply_markup: pageId && pageUrl && Markup.inlineKeyboard([
+                            Markup.button.url(context.state.localize('match.open'), pageUrl),
+                            Markup.button.callback(context.state.localize('match.undo'), `undo:notion:${pageId}`)
+                        ], { columns: 2 }).reply_markup,
+                    };
+        
+                    if (message) {
+                        await bot.telegram.editMessageText(message.chat.id, message.message_id, null, text, options);
+                    } else {
+                        message = await context.reply(text, options);
+                    }
+                },
+            })
+        } catch (error) {
+            if (error.code === 'DATABASE_NOT_SPECIFIED') {
                 await context.reply(context.state.localize('match.noDatabaseSpecified'));
-                return;
+            } else if (error.code === 'DATABASE_NOT_FOUND') {
+                await context.reply(context.state.localize('match.databaseNotFound', { database: error.data.databaseAlias }));
+            } else {
+                throw error
             }
-
-            const databaseAlias = databaseField.value;
-            const database = await storage.findDatabaseByAlias(userId, databaseAlias);
-            if (!database) {
-                await context.reply(context.state.localize('match.databaseNotFound', { database: databaseAlias }));
-                return;
-            }
-
-            let message, pageId, pageUrl;
-            async function sendMatchResult(status, { error } = {}) {
-                const text = formatMatchResult({ status, database, fields, localize: context.state.localize, result, error });
-                const options = {
-                    parse_mode: 'MarkdownV2',
-                    disable_web_page_preview: true,
-                    reply_markup: pageId && pageUrl && Markup.inlineKeyboard([
-                        Markup.button.url(context.state.localize('match.open'), pageUrl),
-                        Markup.button.callback(context.state.localize('match.undo'), `undo:notion:${pageId}`)
-                    ], { columns: 2 }).reply_markup,
-                };
-    
-                if (message) {
-                    await bot.telegram.editMessageText(message.chat.id, message.message_id, null, text, options);
-                } else {
-                    message = await context.reply(text, options);
-                }
-            }
-
-            await sendMatchResult(MatchResultStatus.MATCHED);
-            try {
-                const notionDatabase = await notion.databases.retrieve({ database_id: database.notionDatabaseId });
-                const entry = new NotionEntry({
-                    databaseId: notionDatabase.id,
-                    fields,
-                    properties: Object.entries(notionDatabase.properties)
-                        .map(([name, options]) => new NotionProperty({
-                            type: options.type,
-                            name,
-                        }))
-                });
-                
-                const page = await notion.pages.create(
-                    new NotionEntrySerializer({
-                        dateParser,
-                    }).serialize(
-                        entry,
-                        user,
-                    )
-                );
-
-                pageId = page.id;
-                pageUrl = page.url;
-            } catch (error) {
-                sendMatchResult(MatchResultStatus.FAILED, { error: error.message })
-                    .catch(() => {});
-                throw error;
-            }
-
-            await sendMatchResult(MatchResultStatus.SAVED);
-            return;
         }
 
-        await context.reply(context.state.localize('match.notMatch'));
+        if (!result.match) {
+            await context.reply(context.state.localize('match.notMatch'));
+        }
     };
 }
 

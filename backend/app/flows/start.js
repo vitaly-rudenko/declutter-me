@@ -1,4 +1,5 @@
 import { Markup } from 'telegraf';
+import { v4 as uuid } from 'uuid';
 import { Language } from '../Language.js';
 import { linkLanguageMap } from '../linkLanguageMap.js';
 import { localize } from '../localize.js';
@@ -104,11 +105,13 @@ export function startTimezoneMessage({ storage, userSessionManager, notionSessio
             return;
         }
 
-        if (!context.state.telegramAccount) {
-            const user = await storage.createUser(new User({ language, timezoneOffsetMinutes }));
+        const { telegramAccount } = context.state
+        if (!telegramAccount) {
+            const user = await storage.createUser(new User({ language, timezoneOffsetMinutes, apiKey: uuid() }));
             await storage.createTelegramAccount(new TelegramAccount({ userId: user.id, telegramUserId: context.from.id }));
         } else {
-            await storage.updateUser(new User({ id: context.state.userId, language, timezoneOffsetMinutes }));
+            const user = await storage.findUserById(telegramAccount.userId);
+            await storage.updateUser(new User({ id: context.state.userId, language, timezoneOffsetMinutes, apiKey: user.apiKey }));
         }
 
         notionSessionManager.clear(userId)

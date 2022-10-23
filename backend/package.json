@@ -1,6 +1,6 @@
 {
   "name": "declutter-me",
-  "version": "1.0.0-pre.6",
+  "version": "1.0.0-pre.8",
   "description": "Smart & customizable organizer",
   "main": "app.js",
   "type": "module",
@@ -32,8 +32,8 @@
   },
   "homepage": "https://github.com/vitaly-rudenko/declutter-me#readme",
   "dependencies": {
-    "@notionhq/client": "^0.2.3",
-    "@vitalyrudenko/templater": "^1.0.0-pre.2",
+    "@notionhq/client": "^0.3.1",
+    "@vitalyrudenko/templater": "^1.0.0-pre.4",
     "base64url": "^3.0.1",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
