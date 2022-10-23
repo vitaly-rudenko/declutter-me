@@ -1,6 +1,6 @@
 {
   "name": "@vitalyrudenko/telegramify",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Tools for creating a simple telegram bot",
   "main": "index.js",
   "type": "module",
