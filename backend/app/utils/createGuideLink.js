@@ -1,8 +1,6 @@
-import { Language } from '../Language.js';
+import { Locale } from '../Locale.js';
 
 export function createGuideLink({ language }) {
-    if (language === Language.ENGLISH) return process.env.GUIDE_LINK_EN;
-    if (language === Language.RUSSIAN) return process.env.GUIDE_LINK_RU;
-    if (language === Language.UKRAINIAN) return process.env.GUIDE_LINK_UK;
+    if (language === Locale.ENGLISH) return process.env.GUIDE_LINK_EN;
     throw new Error(`Invalid language: ${language}`)
 }
