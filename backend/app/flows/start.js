@@ -1,14 +1,12 @@
 import { Markup } from 'telegraf';
 import { v4 as uuid } from 'uuid';
-import { Language } from '../Language.js';
+import { Locale } from '../Locale.js';
 import { linkLanguageMap } from '../linkLanguageMap.js';
-import { localize } from '../localize.js';
 import { phases } from '../phases.js';
-import { TelegramAccount } from '../telegram/TelegramAccount.js';
 import { User } from '../users/User.js';
 import { createGuideLink } from '../utils/createGuideLink.js';
-import { escapeMd } from '../utils/escapeMd.js';
 import { formatTimezone } from '../utils/formatTimezone.js';
+import { escapeMd } from '@vitalyrudenko/telegramify'
 
 // -- /start
 export function startCommand({ userSessionManager }) {
@@ -48,7 +46,9 @@ export function startUpdateAction({ userSessionManager }) {
 }
 
 async function updateUserInfo(context, { userSessionManager }) {
-    const languages = Object.values(Language).map(language => [
+    const { localize } = context
+
+    const languages = Object.values(Locale).map(language => [
         language,
         localize('chooseLanguage', { language: localize(`language.${language}`, null, language) }, language)
     ]);
@@ -68,6 +68,8 @@ async function updateUserInfo(context, { userSessionManager }) {
 // -- language selected
 export function startLanguageAction({ frontendDomain, userSessionManager }) {
     return async (context) => {
+        const { localize } = context.state
+
         await context.answerCbQuery();
 
         const language = context.match[1];
@@ -95,6 +97,7 @@ export function createTimezoneCheckerLink({ frontendDomain, language }) {
 export function startTimezoneMessage({ storage, userSessionManager, notionSessionManager }) {
     return async (context) => {
         if (!('text' in context.message)) return;
+        const { localize } = context.state
         
         const userId = context.state.userId || context.from.id;
         const { language } = userSessionManager.context(userId);
@@ -105,13 +108,11 @@ export function startTimezoneMessage({ storage, userSessionManager, notionSessio
             return;
         }
 
-        const { telegramAccount } = context.state
-        if (!telegramAccount) {
-            const user = await storage.createUser(new User({ language, timezoneOffsetMinutes, apiKey: uuid() }));
-            await storage.createTelegramAccount(new TelegramAccount({ userId: user.id, telegramUserId: context.from.id }));
+        const { user } = context.state
+        if (!user) {
+            await storage.createUser(new User({ id: userId, language, timezoneOffsetMinutes, apiKey: uuid() }));
         } else {
-            const user = await storage.findUserById(telegramAccount.userId);
-            await storage.updateUser(new User({ id: context.state.userId, language, timezoneOffsetMinutes, apiKey: user.apiKey }));
+            await storage.updateUser(new User({ id: user.id, language, timezoneOffsetMinutes, apiKey: user.apiKey }));
         }
 
         notionSessionManager.clear(userId)

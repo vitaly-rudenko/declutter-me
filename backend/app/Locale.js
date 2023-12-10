@@ -1,3 +1,3 @@
-export const Language =  {
+export const Locale = {
     ENGLISH: 'english',
 };

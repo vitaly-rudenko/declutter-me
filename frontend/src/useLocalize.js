@@ -6,8 +6,6 @@ import { get, localize } from './localize.js';
 
 const languageMap = {
     'en': Language.ENGLISH,
-    'uk': Language.UKRAINIAN,
-    'ru': Language.RUSSIAN,
 };
 
 export const useLocalize = () => {

@@ -1,4 +1,6 @@
-export const phases = organizeValues({
+import { parsePhases } from '@vitalyrudenko/telegramify'
+
+export const phases = parsePhases({
     start: {
         language: '',
         timezone: '',
@@ -19,22 +21,3 @@ export const phases = organizeValues({
         addDefaultFields: ''
     },
 });
-
-/**
- * @param {T} values
- * @returns {T}
- * @template T
- */
-export function organizeValues(values, parents = []) {
-    // @ts-ignore
-    return Object.fromEntries(
-        Object.entries(values).map(([key, value]) => {
-            return [
-                key,
-                typeof value !== 'object'
-                    ? [...parents, key].join(':')
-                    : organizeValues(value, [...parents, key]),
-            ];
-        })
-    );
-}

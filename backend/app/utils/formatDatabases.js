@@ -1,4 +1,4 @@
-import { escapeMd } from './escapeMd.js';
+import { escapeMd } from '@vitalyrudenko/telegramify'
 
 export function formatDatabases(databases, localize) {
     return databases.length > 0

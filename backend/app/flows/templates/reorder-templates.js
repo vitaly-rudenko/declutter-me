@@ -1,6 +1,6 @@
 import pako from 'pako';
 import base64url from 'base64url';
-import { escapeMd } from '../../utils/escapeMd.js';
+import { escapeMd } from '@vitalyrudenko/telegramify'
 import { formatTemplates } from '../../utils/formatTemplates.js';
 import { linkLanguageMap } from '../../linkLanguageMap.js';
 

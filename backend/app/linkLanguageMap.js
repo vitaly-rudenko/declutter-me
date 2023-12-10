@@ -1,7 +1,5 @@
-import { Language } from './Language.js';
+import { Locale } from './Locale.js';
 
 export const linkLanguageMap = {
-    [Language.ENGLISH]: 'en',
-    [Language.RUSSIAN]: 'ru',
-    [Language.UKRAINIAN]: 'uk',
+    [Locale.ENGLISH]: 'en',
 };
