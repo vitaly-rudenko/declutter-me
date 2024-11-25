@@ -1,18 +1,15 @@
 import { App, normalizePath, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { RouteBuilder } from '@vitalyrudenko/templater'
 import { z } from 'zod';
-import { isMatching, match } from 'match';
+import { match } from 'match';
 
 const DEFAULT_SETTINGS: DeclutterMePluginSettings = {
 	routes: [],
 }
 
 const routeSchema = z.object({
-	pattern: z.string(),
+	regex: z.string(),
 	path: z.string(),
 	content: z.string(),
-	// section: z.string().optional(),
-	// template: z.string().optional(),
 })
 
 type Route = z.infer<typeof routeSchema>
@@ -25,16 +22,19 @@ const routesSchema = z.array(routeSchema)
 
 const routesExample: Route[] = [
 	{
-		pattern: "w {note:text}",
-		path: "Work/Tasks/{date:YYYY} from {device}",
-		content: "- [ ] {note}"
+		regex: "w (?<note>.+)",
+		path: "5 Test/2 Work/Tasks/{date:YYYY} from {device}.md",
+		content: "\n- [ ] {note}",
 	},
 	{
-		pattern: "p {note:text}",
-		// template: "Templates/Personal Task",
-		path: "Personal/Tasks/{date:YYYY} from {device}",
-		content: "- [ ] {note}",
-		// section: "# Backlog ({date:MMMM})"
+		regex: "p (?<note>.+)",
+		path: "5 Test/1 Personal/Tasks/{date:YYYY} from {device}.md",
+		content: "\n- [ ] {note}",
+	},
+	{
+		regex: "DHRPERF-(?<id>\\d+) (?<note>.+)",
+		path: "5 Test/2 Work/Tickets/DHRPERF-{id} from {device}.md",
+		content: "\n- [ ] {note}",
 	}
 ];
 
@@ -47,25 +47,15 @@ export default class DeclutterMePlugin extends Plugin {
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 
 		this.registerObsidianProtocolHandler('declutter-me', async (event) => {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const { action, input, ...inputVariables } = event as { action: string; input: string; [key: string]: string };
-			console.log({ action, input }, inputVariables)
 
-			const matchedRoute = this.settings.routes.find((route) => isMatching(input, route.pattern))
+			const matchedRoute = this.settings.routes.find((route) => match(input, route.regex))
 			if (!matchedRoute) return // TODO: warning
-			const matchResult = match(input, matchedRoute.pattern)
-			if (!matchResult) return // TODO: warning
-
-			console.log('match:', matchedRoute, matchResult)
-
-			const matchedVariables = matchResult.fields.reduce<Record<string, string>>((acc, curr) => {
-				if (!curr.name) return acc
-				acc[curr.name] = Array.isArray(curr.value) ? curr.value.join(', ') : curr.value
-				return acc
-			}, {})
+			const matchedVariables = match(input, matchedRoute.regex)
+			if (!matchedVariables) return // TODO: warning
 
 			const variables = { ...inputVariables, ...matchedVariables }
-
-			console.log('variables:', variables)
 
 			function replaceVariables(input: string, variables: Record<string, string>) {
 				let result = input
@@ -79,15 +69,14 @@ export default class DeclutterMePlugin extends Plugin {
 				return result.replace('{date:YYYY}', String(new Date().getFullYear()))
 			}
 
-			let path = normalizePath(replaceVariables(matchedRoute.path, variables))
-			if (!path.endsWith('.md')) {
-				path = path + '.md'
-			}
+			const path = normalizePath(replaceVariables(matchedRoute.path, variables))
 
 			let file = this.app.vault.getFileByPath(path)
 			if (!file) {
 				if (path.includes('/')) {
-					await this.app.vault.createFolder(path.split('/').slice(0, -1).join('/'))
+					try {
+						await this.app.vault.createFolder(path.split('/').slice(0, -1).join('/'))
+					} catch { /* ignore */ }
 				}
 
 				file = await this.app.vault.create(path, '')
@@ -128,7 +117,7 @@ class SampleSettingTab extends PluginSettingTab {
 			.setDesc('In JSON format')
 			.addTextArea((textArea) => {
 				textArea.inputEl.rows = 20;
-				textArea.inputEl.cols = 40;
+				textArea.inputEl.cols = 60;
 
 				return textArea
 					.setPlaceholder(JSON.stringify(routesExample, null, 2))
