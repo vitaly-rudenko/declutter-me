@@ -1,6 +1,6 @@
 import { App, normalizePath, Plugin, PluginSettingTab, Setting } from 'obsidian';
 import { z } from 'zod';
-import { match } from 'match';
+import { match } from './match.js';
 
 const DEFAULT_SETTINGS: DeclutterMePluginSettings = {
 	routes: [],
