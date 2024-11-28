@@ -439,5 +439,13 @@ describe('parseTemplate()', () => {
     expect(parseTemplate('{hello\\:world}')).toEqual([
       { type: 'variable', value: 'hello:world', input: { type: 'text' } }
     ])
+
+    expect(parseTemplate('{hello\\:world:hi\\:there:hello}')).toEqual([
+      {
+        type: 'variable',
+        value: 'hello:world',
+        input: { type: 'match', match: [{ type: 'text', value: 'hi\\:there:hello' }] }
+      }
+    ])
   })
 });
