@@ -24,13 +24,14 @@ export const tokenInputTypes = ['text', 'word', 'number', 'url', 'email', 'phone
 export type TokenInputType = (typeof tokenInputTypes)[number]
 
 export function parseTemplate(template: string): Token[] {
-  template = template.replace(/\\\|/g, '|')
-
   const result: Token[] = [];
 
   let currentType: TokenType = 'text';
   let value = '';
+  let values: string[] = [];
+  let variableName: string | undefined = undefined
   let nested = 0;
+  let escape = false;
 
   let i = 0;
   while (i <= template.length) {
@@ -39,51 +40,112 @@ export function parseTemplate(template: string): Token[] {
     let type: TokenType = currentType;
     let skip = false;
 
+
+    if (currentType === 'variational') {
+      if (character === '|' && nested === 1) {
+        if (escape) {
+          escape = false
+        } else {
+          values.push(value)
+          value = ''
+          i++
+          continue
+        }
+      }
+    }
+
+    if (currentType === 'variable') {
+      if (character === ':' && nested === 1 && variableName === undefined) {
+        if (escape) {
+          escape = false
+        } else {
+          variableName = value
+          value = ''
+          i++
+          continue
+        }
+      }
+    }
+
+    if (character === '\\') {
+      if (!escape) {
+        escape = true;
+        i++
+        continue
+      }
+    }
+
     if (character === '{') {
-      nested++;
-      if (nested === 1) {
-        skip = true;
-        type = 'variable';
+      if (escape) {
+        escape = false;
+      } else {
+        nested++;
+        if (nested === 1) {
+          variableName = undefined
+          skip = true;
+          type = 'variable';
+        }
       }
     }
 
     if (character === '}') {
-      nested--;
-      if (nested === 0) {
-        skip = true;
-        type = 'text';
+      if (escape) {
+        escape = false;
+      } else {
+        nested--;
+        if (nested === 0) {
+          skip = true;
+          type = 'text';
+        }
       }
     }
 
     if (character === '[') {
-      nested++;
-      if (nested === 1) {
-        skip = true;
-        type = 'optional';
+      if (escape) {
+        escape = false;
+      } else {
+        nested++;
+        if (nested === 1) {
+          skip = true;
+          type = 'optional';
+        }
       }
     }
 
     if (character === ']') {
-      nested--;
-      if (nested === 0) {
-        skip = true;
-        type = 'text';
+      if (escape) {
+        escape = false;
+      } else {
+        nested--;
+        if (nested === 0) {
+          skip = true;
+          type = 'text';
+        }
       }
     }
 
     if (character === '(') {
-      nested++;
-      if (nested === 1) {
-        skip = true;
-        type = 'variational';
+      if (escape) {
+        escape = false;
+      } else {
+        nested++;
+        if (nested === 1) {
+          skip = true;
+          type = 'variational';
+        }
       }
     }
 
     if (character === ')') {
-      nested--;
-      if (nested === 0) {
-        skip = true;
-        type = 'text';
+      if (escape) {
+        escape = false;
+      } else {
+        nested--;
+        if (nested === 0) {
+          values.push(value)
+          skip = true;
+          type = 'text';
+        }
       }
     }
 
@@ -94,14 +156,19 @@ export function parseTemplate(template: string): Token[] {
       let inputType: TokenInputType | undefined
       let match: Token[] | undefined
 
-      if (currentType === 'variable') {
-        let rawInputType: string | undefined
+      if (currentType === 'text') {
+        if (!value) throw new Error('TODO: text parsing error')
 
-        const parts = value.split(':');
-        if (parts.length > 1) {
-          value = parts[0];
-          rawInputType = parts.slice(1).join(':');
-        }
+        result.push({
+          type: currentType,
+          value,
+        })
+      } else if (currentType === 'variable') {
+        const finalVariableName = variableName === undefined ? value : variableName
+        if (!finalVariableName) throw new Error('TODO: empty variable')
+
+        const rawInputType = variableName === undefined ? undefined : value
+
 
         if (rawInputType) {
           if (tokenInputTypes.includes(rawInputType as TokenInputType)) {
@@ -113,29 +180,20 @@ export function parseTemplate(template: string): Token[] {
         } else {
           inputType = 'text'
         }
-      }
 
-      if (!value) {
-        throw new Error('TODO')
-      }
-
-      if (currentType === 'text') {
-        result.push({
-          type: currentType,
-          value,
-        })
-      } else if (currentType === 'variable') {
         const input = inputType === 'match' && match
           ? { type: 'match', match } as const : inputType !== 'match' && inputType
-            ? { type: inputType } as const : undefined
+          ? { type: inputType } as const : undefined
         if (!input) throw new Error('TODO')
 
         result.push({
           type: currentType,
-          value,
+          value: finalVariableName,
           input,
         })
       } else if (currentType === 'optional') {
+        if (!value) throw new Error('TODO: empty optional')
+
         result.push({
           type: currentType,
           value: parseTemplate(value),
@@ -143,23 +201,29 @@ export function parseTemplate(template: string): Token[] {
       } else {
         result.push({
           type: currentType,
-          value: value.split(/(?<!\\)\|/g).map(v => parseTemplate(v)),
+          value: values.map(v => parseTemplate(v)),
         })
       }
 
       value = '';
+      values = [];
+    }
+
+    if (escape) {
+      value += '\\'
+      escape = false;
     }
 
     currentType = type;
     if (!skip) {
-      if (character === '|' && nested > 1) {
-        value += '\\';
-      }
-
       value += character;
     }
 
     i++;
+  }
+
+  if (nested !== 0) {
+    throw new Error('TODO: nested ' + nested)
   }
 
   return result;

@@ -104,6 +104,4 @@ describe('transformPatternToRegex()', () => {
             { type: 'text', value: 'Hello? Pick your name: John | Jane. * You can edit later.' },
         ])).toEqual('Hello\\? Pick your name: John \\| Jane\\. \\* You can edit later\\.')
     })
-
-    // it allows escaping (), [], {} and |
 })

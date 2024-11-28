@@ -338,4 +338,106 @@ describe('parseTemplate()', () => {
       }
     ]);
   });
+
+  it('properly extracts variations for variational tokens', () => {
+    expect(parseTemplate('(a(b|c)|d|e(f|(g|h)))')).toEqual([
+      {
+        type: 'variational',
+        value: [
+          [
+            { type: 'text', value: 'a' },
+            {
+              type: 'variational',
+              value: [
+                [{ type: 'text', value: 'b' }],
+                [{ type: 'text', value: 'c' }],
+              ]
+            }
+          ],
+          [{ type: 'text', value: 'd' }],
+          [
+            { type: 'text', value: 'e' },
+            {
+              type: 'variational',
+              value: [
+                [{ type: 'text', value: 'f' }],
+                [
+                  { type: 'variational', value: [
+                    [{ type: 'text', value: 'g' }],
+                    [{ type: 'text', value: 'h' }],
+                  ]}
+                ]
+              ]
+            }
+          ]
+        ]
+      }
+    ])
+
+    expect(parseTemplate('({z:(a|b)}|[c|d(e|f)])|g')).toEqual([
+      {
+        type: 'variational',
+        value: [
+          [{
+            type: 'variable',
+            value: 'z',
+            input: {
+              type: 'match',
+              match: [
+                {
+                  type: 'variational',
+                  value: [
+                    [{ type: 'text', value: 'a' }],
+                    [{ type: 'text', value: 'b' }],
+                  ]
+                }
+              ]
+            }
+          }],
+          [{
+            type: 'optional',
+            value: [
+              {
+                type: 'text',
+                value: 'c|d'
+              },
+              {
+                type: 'variational',
+                value: [
+                  [{ type: 'text', value: 'e' }],
+                  [{ type: 'text', value: 'f' }],
+                ]
+              }
+            ]
+          }],
+        ]
+      },
+      {
+        type: 'text',
+        value: '|g'
+      }
+    ])
+  })
+
+  it('allows escaping the syntax', () => {
+    expect(parseTemplate('|:')).toEqual([{ type: 'text', value: '|:' }]);
+
+    expect(parseTemplate('Hello \\{hello\\} \\[world\\] \n \\n \\(a\\|b\\) hello|world \\\\')).toEqual([
+      { type: 'text', value: 'Hello {hello} [world] \n \\n (a\\|b) hello|world \\\\' }
+    ]);
+
+    expect(parseTemplate('(first|second\\|third)')).toEqual([
+      {
+        type: 'variational',
+        value: [
+          [{ type: 'text', value: 'first' }],
+          [{ type: 'text', value: 'second|third' }],
+        ]
+      }
+    ]);
+
+    expect(parseTemplate('{hello\\:world}')).toEqual([
+      { type: 'variable', value: 'hello:world', input: { type: 'text' } }
+    ])
+  })
 });

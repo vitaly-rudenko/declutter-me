@@ -18,6 +18,7 @@ export function transformPatternToRegex(tokens: Token[]): string {
         }
 
         if (token.type === 'variable') {
+            // TODO: heavily test and improve these regexes, especially email, phone and url ones
             const inputRegex =
                 token.input.type === 'text' ? '.+' :
                 token.input.type === 'word' ? '\\S+' :
