@@ -1,5 +1,5 @@
 export function escapeRegex(input: string) {
 	return input
 		.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&')
-		.replace(/-/g, '\\x2d');
+		.replace(/-/g, '\\x2d')
 }

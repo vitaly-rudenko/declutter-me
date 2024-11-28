@@ -14,7 +14,7 @@ export type MatchResult = {
 
 export function match(input: string, template: string): MatchResult | undefined {
   const tokens = parseTemplate(template)
-  const regex = transformPatternToRegex(tokens)
+  const regex = `^${transformPatternToRegex(tokens)}$`
   const variableDefinitionMap = extractVariableDefinitionsFromPattern(tokens)
 
   const matchResult = input.match(new RegExp(regex, 'i'))

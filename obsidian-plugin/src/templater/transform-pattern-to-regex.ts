@@ -1,26 +1,26 @@
-import { escapeRegex } from './escape-regex';
-import { Token } from './parse-template';
+import { escapeRegex } from './escape-regex.js'
+import { Token } from './parse-template.js'
 
 export function transformPatternToRegex(tokens: Token[]): string {
     let result = ''
 
     for (const token of tokens) {
         if (token.type === 'text') {
-            result += escapeRegex(token.value);
+            result += escapeRegex(token.value)
         }
 
         if (token.type === 'optional') {
-            result += `(?:${transformPatternToRegex(token.value)})?`;
+            result += `(?:${transformPatternToRegex(token.value)})?`
         }
 
         if (token.type === 'variational') {
-            result += `(?:${token.value.map(pattern => transformPatternToRegex(pattern)).join('|')})`;
+            result += `(?:${token.value.map(pattern => transformPatternToRegex(pattern)).join('|')})`
         }
 
         if (token.type === 'variable') {
             // TODO: heavily test and improve these regexes, especially email, phone and url ones
             const inputRegex =
-                token.input.type === 'text' ? '.+' :
+                token.input.type === 'text' ? '.+?' :
                 token.input.type === 'word' ? '\\S+' :
                 token.input.type === 'number' ? '[\\d\\.]+' :
                 token.input.type === 'email' ? '\\S+@\\S+\\.\\S+' :

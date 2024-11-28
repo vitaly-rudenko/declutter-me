@@ -27,21 +27,21 @@ export type TokenInputType = (typeof tokenInputTypes)[number]
 // TODO: repeated pattern
 
 export function parseTemplate(template: string): Token[] {
-  const result: Token[] = [];
+  const result: Token[] = []
 
-  let currentType: TokenType = 'text';
-  let value = '';
-  let values: string[] = [];
+  let currentType: TokenType = 'text'
+  let value = ''
+  let values: string[] = []
   let variableName: string | undefined = undefined
-  let nested = 0;
-  let escape = false;
+  let nested = 0
+  let escape = false
 
-  let i = 0;
+  let i = 0
   while (i <= template.length) {
-    const character = i < template.length ? template[i] : null;
+    const character = i < template.length ? template[i] : null
 
-    let type: TokenType = currentType;
-    let skip = false;
+    let type: TokenType = currentType
+    let skip = false
 
 
     if (currentType === 'variational') {
@@ -72,7 +72,7 @@ export function parseTemplate(template: string): Token[] {
 
     if (character === '\\') {
       if (!escape) {
-        escape = true;
+        escape = true
         i++
         continue
       }
@@ -80,74 +80,74 @@ export function parseTemplate(template: string): Token[] {
 
     if (character === '{') {
       if (escape) {
-        escape = false;
+        escape = false
       } else {
-        nested++;
+        nested++
         if (nested === 1) {
           variableName = undefined
-          skip = true;
-          type = 'variable';
+          skip = true
+          type = 'variable'
         }
       }
     }
 
     if (character === '}') {
       if (escape) {
-        escape = false;
+        escape = false
       } else {
-        nested--;
+        nested--
         if (nested === 0) {
-          skip = true;
-          type = 'text';
+          skip = true
+          type = 'text'
         }
       }
     }
 
     if (character === '[') {
       if (escape) {
-        escape = false;
+        escape = false
       } else {
-        nested++;
+        nested++
         if (nested === 1) {
-          skip = true;
-          type = 'optional';
+          skip = true
+          type = 'optional'
         }
       }
     }
 
     if (character === ']') {
       if (escape) {
-        escape = false;
+        escape = false
       } else {
-        nested--;
+        nested--
         if (nested === 0) {
-          skip = true;
-          type = 'text';
+          skip = true
+          type = 'text'
         }
       }
     }
 
     if (character === '(') {
       if (escape) {
-        escape = false;
+        escape = false
       } else {
-        nested++;
+        nested++
         if (nested === 1) {
-          skip = true;
-          type = 'variational';
+          skip = true
+          type = 'variational'
         }
       }
     }
 
     if (character === ')') {
       if (escape) {
-        escape = false;
+        escape = false
       } else {
-        nested--;
+        nested--
         if (nested === 0) {
           values.push(value)
-          skip = true;
-          type = 'text';
+          skip = true
+          type = 'text'
         }
       }
     }
@@ -175,10 +175,10 @@ export function parseTemplate(template: string): Token[] {
 
         if (rawInputType) {
           if (tokenInputTypes.includes(rawInputType as TokenInputType)) {
-            inputType = rawInputType as TokenInputType;
+            inputType = rawInputType as TokenInputType
           } else {
-            inputType = 'match';
-            match = parseTemplate(rawInputType);
+            inputType = 'match'
+            match = parseTemplate(rawInputType)
           }
         } else {
           inputType = 'text'
@@ -208,26 +208,26 @@ export function parseTemplate(template: string): Token[] {
         })
       }
 
-      value = '';
-      values = [];
+      value = ''
+      values = []
     }
 
     if (escape) {
       value += '\\'
-      escape = false;
+      escape = false
     }
 
-    currentType = type;
+    currentType = type
     if (!skip) {
-      value += character;
+      value += character
     }
 
-    i++;
+    i++
   }
 
   if (nested !== 0) {
     throw new Error('TODO: nested ' + nested)
   }
 
-  return result;
+  return result
 }

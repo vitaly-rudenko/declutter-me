@@ -1,44 +1,44 @@
-import { parseTemplate } from './parse-template.js'
 import { stripIndent } from 'common-tags'
+import { parseTemplate } from './parse-template.js'
 
 describe('parseTemplate()', () => {
   it('should parse simple text', () => {
     expect(parseTemplate('Hello'))
       .toEqual([
         { type: 'text', value: 'Hello' },
-      ]);
+      ])
 
     expect(parseTemplate('Buy chicken'))
       .toEqual([
         { type: 'text', value: 'Buy chicken' },
-      ]);
-  });
+      ])
+  })
 
   it('should parse variables', () => {
     expect(parseTemplate('{note}'))
       .toEqual([
         { type: 'variable', value: 'note', input: { type: 'text' } },
-      ]);
+      ])
 
     expect(parseTemplate('{tag}{note}'))
       .toEqual([
         { type: 'variable', value: 'tag', input: { type: 'text' } },
         { type: 'variable', value: 'note', input: { type: 'text' } },
-      ]);
+      ])
 
     expect(parseTemplate('{tag} {note}'))
       .toEqual([
         { type: 'variable', value: 'tag', input: { type: 'text' } },
         { type: 'text', value: ' ' },
         { type: 'variable', value: 'note', input: { type: 'text' } },
-      ]);
+      ])
 
     expect(parseTemplate('Buy {note}, please'))
       .toEqual([
         { type: 'text', value: 'Buy ' },
         { type: 'variable', value: 'note', input: { type: 'text' } },
         { type: 'text', value: ', please' },
-      ]);
+      ])
 
     expect(parseTemplate('#{tag} Buy {note}, please'))
       .toEqual([
@@ -47,28 +47,28 @@ describe('parseTemplate()', () => {
         { type: 'text', value: ' Buy ' },
         { type: 'variable', value: 'note', input: { type: 'text' } },
         { type: 'text', value: ', please' },
-      ]);
-  });
+      ])
+  })
 
   it('should parse optionals', () => {
     expect(parseTemplate('[hello]'))
       .toEqual([
         { type: 'optional', value: [{ type: 'text', value: 'hello' }] }
-      ]);
+      ])
 
     expect(parseTemplate('[hello][world]'))
       .toEqual([
         { type: 'optional', value: [{ type: 'text', value: 'hello' }] },
         { type: 'optional', value: [{ type: 'text', value: 'world' }] }
-      ]);
+      ])
 
     expect(parseTemplate('[hello] [world]'))
       .toEqual([
         { type: 'optional', value: [{ type: 'text', value: 'hello' }] },
         { type: 'text', value: ' ' },
         { type: 'optional', value: [{ type: 'text', value: 'world' }] }
-      ]);
-  });
+      ])
+  })
 
   it('should parse variations', () => {
     expect(parseTemplate('(hello)'))
@@ -79,7 +79,7 @@ describe('parseTemplate()', () => {
             [{ type: 'text', value: 'hello' }],
           ]
         }
-      ]);
+      ])
 
     expect(parseTemplate('(hello|hi)'))
       .toEqual([
@@ -90,7 +90,7 @@ describe('parseTemplate()', () => {
             [{ type: 'text', value: 'hi' }],
           ]
         }
-      ]);
+      ])
 
     expect(parseTemplate('(hello|hi)(world|there)'))
       .toEqual([
@@ -108,7 +108,7 @@ describe('parseTemplate()', () => {
             [{ type: 'text', value: 'there' }],
           ]
         }
-      ]);
+      ])
 
     expect(parseTemplate('(hello|hi|hey) (world|there)'))
       .toEqual([
@@ -128,8 +128,8 @@ describe('parseTemplate()', () => {
             [{ type: 'text', value: 'there' }],
           ]
         }
-      ]);
-  });
+      ])
+  })
 
   it('should build pattern from the input string (complex)', () => {
     expect(parseTemplate('(Buy|Purchase) {body}[,] please[ #{tag}][(!|.)]'))
@@ -165,8 +165,8 @@ describe('parseTemplate()', () => {
             ]
           }]
         },
-      ]);
-  });
+      ])
+  })
 
   it('should parse nested cases', () => {
     expect(parseTemplate('[[{tag}]]'))
@@ -180,7 +180,7 @@ describe('parseTemplate()', () => {
             input: { type: 'text' }
           }]
         }]
-      }]);
+      }])
 
     expect(parseTemplate('(([[hello]]))'))
       .toEqual([{
@@ -202,8 +202,8 @@ describe('parseTemplate()', () => {
             ]
           }]
         ]
-      }]);
-  });
+      }])
+  })
 
   it('should parse input types', () => {
     expect(parseTemplate('#{hashtag} buy {Note:text}, please[ {when:number}][ #{My Tag:word}]'))
@@ -227,8 +227,8 @@ describe('parseTemplate()', () => {
             { type: 'variable', value: 'My Tag', input: { type: 'word' } },
           ]
         },
-      ]);
-  });
+      ])
+  })
 
   it('should build multiline patterns properly', () => {
     expect(parseTemplate(stripIndent`
@@ -254,7 +254,7 @@ describe('parseTemplate()', () => {
       },
       { type: 'text', value: '\nEmail: ' },
       { type: 'variable', value: 'Email', input: { type: 'email' } },
-    ]);
+    ])
 
     expect(parseTemplate(stripIndent`
       Hello( world|
@@ -268,8 +268,8 @@ describe('parseTemplate()', () => {
           [{ type: 'text', value: '\nworld' }],
         ]
       },
-    ]);
-  });
+    ])
+  })
 
   it('should build patterns for complex nested variational and optional tokens', () => {
     expect(parseTemplate('(кг|кило[грам[(а|ов)]])')).toEqual([
@@ -300,8 +300,8 @@ describe('parseTemplate()', () => {
           ]
         ]
       }
-    ]);
-  });
+    ])
+  })
 
   it('should build patterns for custom input types', () => {
     expect(parseTemplate('{Unit:(kg|g|pcs)}')).toEqual([
@@ -322,7 +322,7 @@ describe('parseTemplate()', () => {
           ]
         }
       }
-    ]);
+    ])
 
     expect(parseTemplate('{Amount:{AmountNumber:number} kg}')).toEqual([
       {
@@ -336,8 +336,8 @@ describe('parseTemplate()', () => {
           ]
         }
       }
-    ]);
-  });
+    ])
+  })
 
   it('properly extracts variations for variational tokens', () => {
     expect(parseTemplate('(a(b|c)|d|e(f|(g|h)))')).toEqual([
@@ -420,11 +420,11 @@ describe('parseTemplate()', () => {
   })
 
   it('allows escaping the syntax', () => {
-    expect(parseTemplate('|:')).toEqual([{ type: 'text', value: '|:' }]);
+    expect(parseTemplate('|:')).toEqual([{ type: 'text', value: '|:' }])
 
     expect(parseTemplate('Hello \\{hello\\} \\[world\\] \n \\n \\(a\\|b\\) hello|world \\\\')).toEqual([
       { type: 'text', value: 'Hello {hello} [world] \n \\n (a\\|b) hello|world \\\\' }
-    ]);
+    ])
 
     expect(parseTemplate('(first|second\\|third)')).toEqual([
       {
@@ -434,7 +434,7 @@ describe('parseTemplate()', () => {
           [{ type: 'text', value: 'second|third' }],
         ]
       }
-    ]);
+    ])
 
     expect(parseTemplate('{hello\\:world}')).toEqual([
       { type: 'variable', value: 'hello:world', input: { type: 'text' } }
@@ -448,4 +448,4 @@ describe('parseTemplate()', () => {
       }
     ])
   })
-});
+})

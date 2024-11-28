@@ -1,5 +1,5 @@
-import { extractVariableDefinitionsFromPattern } from './extract-variable-definitions-from-pattern';
-import { parseTemplate } from './parse-template';
+import { extractVariableDefinitionsFromPattern } from './extract-variable-definitions-from-pattern.js'
+import { parseTemplate } from './parse-template.js'
 
 describe('extractVariableDefinitionsFromPattern()', () => {
     it('extracts variable definitions from flat pattern', () => {
@@ -33,7 +33,7 @@ describe('extractVariableDefinitionsFromPattern()', () => {
             j: { type: 'match' },
             k: { type: 'number' },
         })
-    });
+    })
 
     it('fails when variable is already defined', () => {
         const patterns = [
@@ -45,5 +45,5 @@ describe('extractVariableDefinitionsFromPattern()', () => {
         for (const pattern of patterns) {
             expect(() => extractVariableDefinitionsFromPattern(pattern)).toThrow('Variable is already defined: a')
         }
-    });
-});
+    })
+})

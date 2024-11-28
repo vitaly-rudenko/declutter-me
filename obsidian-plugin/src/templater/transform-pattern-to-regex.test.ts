@@ -1,4 +1,4 @@
-import { transformPatternToRegex } from "./transform-pattern-to-regex"
+import { transformPatternToRegex } from './transform-pattern-to-regex.js'
 
 describe('transformPatternToRegex()', () => {
     it('transforms simple patterns', () => {
@@ -11,7 +11,7 @@ describe('transformPatternToRegex()', () => {
         expect(transformPatternToRegex([
             { type: 'text', value: 'p ' },
             { type: 'variable', value: 'note', input: { type: 'text' } }
-        ])).toEqual('p (?<note>.+)')
+        ])).toEqual('p (?<note>.+?)')
 
         // (p|personal) {note:text}
         expect(transformPatternToRegex([
@@ -23,7 +23,7 @@ describe('transformPatternToRegex()', () => {
                 ]
             },
             { type: 'variable', value: 'note', input: { type: 'text' } }
-        ])).toEqual('(?:p |personal )(?<note>.+)')
+        ])).toEqual('(?:p |personal )(?<note>.+?)')
 
         // p[ersonal] {note:text}
         expect(transformPatternToRegex([
@@ -31,7 +31,7 @@ describe('transformPatternToRegex()', () => {
             { type: 'optional', value: [{ type: 'text', value: 'ersonal' }] },
             { type: 'text', value: ' ' },
             { type: 'variable', value: 'note', input: { type: 'text' } }
-        ])).toEqual('p(?:ersonal)? (?<note>.+)')
+        ])).toEqual('p(?:ersonal)? (?<note>.+?)')
     })
 
     it('transforms nested patterns', () => {
@@ -95,7 +95,7 @@ describe('transformPatternToRegex()', () => {
             },
             { type: 'text', value: ' of ' },
             { type: 'variable', value: 'product', input: { type: 'text' } }
-        ])).toEqual('Buy (?<amount>(?<_>[\\d\\.]+)(?:kg|g)) of (?<product>.+)')
+        ])).toEqual('Buy (?<amount>(?<_>[\\d\\.]+)(?:kg|g)) of (?<product>.+?)')
     })
 
     it('escapes regex', () => {
