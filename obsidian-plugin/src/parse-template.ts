@@ -23,6 +23,9 @@ export type TokenType = Token['type']
 export const tokenInputTypes = ['text', 'word', 'number', 'url', 'email', 'phone', 'match'] as const
 export type TokenInputType = (typeof tokenInputTypes)[number]
 
+// TODO: arrays
+// TODO: repeated pattern
+
 export function parseTemplate(template: string): Token[] {
   const result: Token[] = [];
 

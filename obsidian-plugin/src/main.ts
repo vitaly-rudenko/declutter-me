@@ -58,17 +58,20 @@ export default class DeclutterMePlugin extends Plugin {
 
 			const matchedRoute = this.settings.routes.find((route) => match(input, route.template))
 			if (!matchedRoute) return // TODO: warning
-			const matchedVariables = match(input, matchedRoute.template)
-			if (!matchedVariables) return // TODO: warning
+			const matchResult = match(input, matchedRoute.template)
+			if (!matchResult) return // TODO: warning
 
-			const variables = { ...inputVariables, ...matchedVariables }
+			const variables = { ...inputVariables }
+			for (const [variableName, { value }] of Object.entries(matchResult)) {
+				variables[variableName] = String(value)
+			}
 
-			function replaceVariables(input: string, variables: Record<string, string | number>) {
+			function replaceVariables(input: string, variables: Record<string, string>) {
 				let result = input
 				for (const [name, value] of Object.entries(variables)) {
 					const variableName = '{' + name + '}'
 					while (result.includes(variableName)) {
-						result = result.replace(variableName, String(value))
+						result = result.replace(variableName, value)
 					}
 				}
 				// TODO: format date
@@ -91,7 +94,7 @@ export default class DeclutterMePlugin extends Plugin {
 			const fileData = await this.app.vault.read(file)
 			const dataToWrite = fileData + replaceVariables(matchedRoute.content, variables)
 
-			console.debug({ action, input, inputVariables, matchedVariables, variables, path, fileData, dataToWrite })
+			console.debug({ action, input, inputVariables, matchedVariables: matchResult, variables, path, fileData, dataToWrite })
 
 			await this.app.vault.modify(file, dataToWrite);
 		})
