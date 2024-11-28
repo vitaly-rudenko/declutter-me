@@ -7,7 +7,7 @@ const DEFAULT_SETTINGS: DeclutterMePluginSettings = {
 }
 
 const routeSchema = z.object({
-	regex: z.string(),
+	template: z.string(),
 	path: z.string(),
 	content: z.string(),
 })
@@ -22,18 +22,18 @@ const routesSchema = z.array(routeSchema)
 
 const routesExample: Route[] = [
 	{
-		regex: "w (?<note>.+)",
+		template: "w {note}",
 		path: "5 Test/2 Work/Tasks/{date:YYYY} from {device}.md",
 		content: "\n- [ ] {note}",
 	},
 	{
-		regex: "p (?<note>.+)",
+		template: "p {note}",
 		path: "5 Test/1 Personal/Tasks/{date:YYYY} from {device}.md",
 		content: "\n- [ ] {note}",
 	},
 	{
-		regex: "DHRPERF-(?<id>\\d+) (?<note>.+)",
-		path: "5 Test/2 Work/Tickets/DHRPERF-{id} from {device}.md",
+		template: "JIRA-{id:number} {note}",
+		path: "5 Test/2 Work/Tickets/JIRA-{id} from {device}.md",
 		content: "\n- [ ] {note}",
 	}
 ];
@@ -50,19 +50,19 @@ export default class DeclutterMePlugin extends Plugin {
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const { action, input, ...inputVariables } = event as { action: string; input: string; [key: string]: string };
 
-			const matchedRoute = this.settings.routes.find((route) => match(input, route.regex))
+			const matchedRoute = this.settings.routes.find((route) => match(input, route.template))
 			if (!matchedRoute) return // TODO: warning
-			const matchedVariables = match(input, matchedRoute.regex)
+			const matchedVariables = match(input, matchedRoute.template)
 			if (!matchedVariables) return // TODO: warning
 
 			const variables = { ...inputVariables, ...matchedVariables }
 
-			function replaceVariables(input: string, variables: Record<string, string>) {
+			function replaceVariables(input: string, variables: Record<string, string | number>) {
 				let result = input
 				for (const [name, value] of Object.entries(variables)) {
 					const variableName = '{' + name + '}'
 					while (result.includes(variableName)) {
-						result = result.replace(variableName, value)
+						result = result.replace(variableName, String(value))
 					}
 				}
 				// TODO: format date
