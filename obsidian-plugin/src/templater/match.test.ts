@@ -90,7 +90,7 @@ describe('match()', () => {
     }
   })
 
-  it.only('should match patterns with special characters', () => {
+  it('should match patterns with special characters', () => {
     expect(match(
       'Jon Snow: A character of Game of Thrones',
       '{name:word} {surname:word}: {description:text}'
