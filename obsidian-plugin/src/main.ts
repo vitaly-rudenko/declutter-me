@@ -85,6 +85,8 @@ export default class DeclutterMePlugin extends Plugin {
 			const fileData = await this.app.vault.read(file)
 			const dataToWrite = fileData + replaceVariables(matchedRoute.content, variables)
 
+			console.debug({ action, input, inputVariables, matchedVariables, variables, path, fileData, dataToWrite })
+
 			await this.app.vault.modify(file, dataToWrite);
 		})
 	}

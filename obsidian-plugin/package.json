@@ -2,7 +2,7 @@
 	"name": "declutter-me-obsidian-plugin",
 	"version": "0.1.0",
 	"description": "Gateway for your notes",
-	"main": "dist/main.js",
+	"main": "main.js",
 	"scripts": {
 		"test": "jest --coverage",
 		"dev": "node esbuild.config.mjs",
