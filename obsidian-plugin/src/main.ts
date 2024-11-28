@@ -20,6 +20,12 @@ type DeclutterMePluginSettings = {
 
 const routesSchema = z.array(routeSchema)
 
+// TODO: vault
+// TODO: append/prepend modes
+// TODO: section
+// TODO: fileTemplate
+// TODO: open file after modifying?
+
 const routesExample: Route[] = [
 	{
 		template: "w {note}",
