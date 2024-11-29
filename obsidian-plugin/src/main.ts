@@ -9,6 +9,7 @@ const routeSchema = z.object({
 	content: z.string(),
 	mode: z.enum(['appendLineAfterContent', 'prependLineBeforeContent']).optional(),
 	leaf: z.enum(['split', 'tab', 'window']).optional(),
+	skipProperties: z.boolean().optional(),
 })
 
 type Route = z.infer<typeof routeSchema>
@@ -19,7 +20,6 @@ type DeclutterMePluginSettings = {
 
 const routesSchema = z.array(routeSchema)
 
-// TODO: append/prepend modes
 // TODO: section
 // TODO: fileTemplate
 
@@ -105,15 +105,25 @@ export class ExampleModal extends SuggestModal<Route> {
   }
 }
 
-function getIndexOfFirstNonEmptyLine(lines: string[]) {
-	const index = lines.findIndex(line => line.trim() !== '')
-	if (index === -1) return 0
+function getIndexOfFirstNonEmptyLine(lines: string[], options?: { skipProperties?: boolean }) {
+	let startWithIndex = 0
+	if (lines[0] === '---' && lines.indexOf('---', 1) !== -1 && options?.skipProperties) {
+		startWithIndex = lines.indexOf('---', 1) + 1
+	}
+
+	let index = lines.findIndex((line, index) => index >= startWithIndex && line.trim() !== '')
+	if (index === -1) index = startWithIndex
 	return index
 }
 
-function getIndexAfterLastNonEmptyLine(lines: string[]) {
-	const index = lines.findLastIndex(line => line.trim() !== '')
-	if (index === -1) return 0
+function getIndexAfterLastNonEmptyLine(lines: string[], options?: { skipProperties?: boolean }) {
+	let startWithIndex = 0
+	if (lines[0] === '---' && lines.indexOf('---', 1) !== -1 && options?.skipProperties) {
+		startWithIndex = lines.indexOf('---', 1) + 1
+	}
+
+	let index = lines.findLastIndex(line => line.trim() !== '')
+	if (index === -1) index = startWithIndex
 	return index + 1
 }
 
@@ -157,13 +167,16 @@ export default class DeclutterMePlugin extends Plugin {
 		const fileData = await this.app.vault.read(file)
 
 		const mode: Route['mode'] = matchedRoute.mode ?? 'appendLineAfterContent'
+		const skipProperties = matchedRoute.skipProperties !== false
 
 		const lines = fileData.split('\n')
-		const index = mode === 'appendLineAfterContent' ? getIndexAfterLastNonEmptyLine(lines) : getIndexOfFirstNonEmptyLine(lines)
-		lines.splice(index, 0, replaceVariables(matchedRoute.content, variables))
+		const index = mode === 'appendLineAfterContent'
+			? getIndexAfterLastNonEmptyLine(lines)
+			: getIndexOfFirstNonEmptyLine(lines, { skipProperties })
+		const content = replaceVariables(matchedRoute.content, variables)
+		lines.splice(index, 0, content)
 
 		const dataToWrite = lines.join('\n')
-
 		console.debug({ input, variables, path, dataToWrite })
 
 		await this.app.vault.modify(file, dataToWrite)
@@ -172,6 +185,8 @@ export default class DeclutterMePlugin extends Plugin {
 			const leaf = this.app.workspace.getLeaf(matchedRoute.leaf)
 			await leaf.openFile(file)
 		}
+
+		new Notice(`Note saved\n${path.split('/').at(-1)?.replace(/\.md$/, '')}`)
 	}
 
 	async onload() {
