@@ -12,6 +12,7 @@ const routeSchema = z.object({
 	leaf: z.enum(['split', 'tab', 'window']).optional(),
 	skipProperties: z.boolean().optional(),
 	section: z.string().optional(),
+	templatePath: z.string().optional(),
 })
 
 type Route = z.infer<typeof routeSchema>
@@ -21,8 +22,6 @@ type DeclutterMePluginSettings = {
 }
 
 const routesSchema = z.array(routeSchema)
-
-// TODO: fileTemplate
 
 const routesExample: Route[] = [
 	{
@@ -143,7 +142,16 @@ export default class DeclutterMePlugin extends Plugin {
 			file = await this.app.vault.create(path, '')
 		}
 
-		const fileData = await this.app.vault.read(file)
+		let fileData = await this.app.vault.read(file)
+		if (fileData === '' && matchedRoute.templatePath) {
+			const templateFile = this.app.vault.getFileByPath(matchedRoute.templatePath)
+			if (templateFile) {
+				const templateFileData = await this.app.vault.read(templateFile)
+				if (templateFileData !== '') {
+					fileData = templateFileData
+				}
+			}
+		}
 
 		const dataToWrite = applyMarkdownModification({
 			markdown: fileData,
