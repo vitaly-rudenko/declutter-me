@@ -138,4 +138,8 @@ describe('match()', () => {
         Email: { type: 'email', value: 'jon.snow@example.com' }
       })
   })
+
+  it('does not match partial input', () => {
+    expect(match('Hello world!', 'Hello')).toBeUndefined()
+  })
 })
