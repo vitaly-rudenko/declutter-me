@@ -1,8 +1,8 @@
-import { format } from 'date-fns'
 import { App, normalizePath, Notice, Plugin, PluginSettingTab, Setting, SuggestModal } from 'obsidian'
 import { z } from 'zod'
 import { match, MatchResult } from './templater/match.js'
 import { applyMarkdownModification } from './markdown/apply-markdown-modification.js'
+import { replaceVariables } from './replace-variables.js'
 
 const routeSchema = z.object({
 	template: z.string(),
@@ -47,17 +47,6 @@ const routesExample: Route[] = [
 const DEFAULT_SETTINGS: DeclutterMePluginSettings = {
 	// routes: [],
 	routes: routesExample,
-}
-
-function replaceVariables(input: string, variables: Record<string, string>) {
-  let result = input
-  for (const [name, value] of Object.entries(variables)) {
-    const variableName = '{' + name + '}'
-    while (result.includes(variableName)) {
-      result = result.replace(variableName, value)
-    }
-  }
-  return result.replace(/\{date:(.+?)\}/i, (_, dateFormat) => format(new Date(), dateFormat))
 }
 
 export class ExampleModal extends SuggestModal<Route> {
