@@ -2,6 +2,7 @@ import { format } from 'date-fns'
 import { App, normalizePath, Notice, Plugin, PluginSettingTab, Setting, SuggestModal } from 'obsidian'
 import { z } from 'zod'
 import { match, MatchResult } from './templater/match.js'
+import { applyMarkdownModification } from './markdown/apply-markdown-modification.js'
 
 const routeSchema = z.object({
 	template: z.string(),
@@ -10,6 +11,7 @@ const routeSchema = z.object({
 	mode: z.enum(['appendLineAfterContent', 'prependLineBeforeContent']).optional(),
 	leaf: z.enum(['split', 'tab', 'window']).optional(),
 	skipProperties: z.boolean().optional(),
+	section: z.string().optional(),
 })
 
 type Route = z.infer<typeof routeSchema>
@@ -20,7 +22,6 @@ type DeclutterMePluginSettings = {
 
 const routesSchema = z.array(routeSchema)
 
-// TODO: section
 // TODO: fileTemplate
 
 const routesExample: Route[] = [
@@ -105,28 +106,6 @@ export class ExampleModal extends SuggestModal<Route> {
   }
 }
 
-function getIndexOfFirstNonEmptyLine(lines: string[], options?: { skipProperties?: boolean }) {
-	let startWithIndex = 0
-	if (lines[0] === '---' && lines.indexOf('---', 1) !== -1 && options?.skipProperties) {
-		startWithIndex = lines.indexOf('---', 1) + 1
-	}
-
-	let index = lines.findIndex((line, index) => index >= startWithIndex && line.trim() !== '')
-	if (index === -1) index = startWithIndex
-	return index
-}
-
-function getIndexAfterLastNonEmptyLine(lines: string[], options?: { skipProperties?: boolean }) {
-	let startWithIndex = 0
-	if (lines[0] === '---' && lines.indexOf('---', 1) !== -1 && options?.skipProperties) {
-		startWithIndex = lines.indexOf('---', 1) + 1
-	}
-
-	let index = lines.findLastIndex(line => line.trim() !== '')
-	if (index === -1) index = startWithIndex
-	return index + 1
-}
-
 export default class DeclutterMePlugin extends Plugin {
 	settings: DeclutterMePluginSettings = DEFAULT_SETTINGS
 
@@ -166,17 +145,14 @@ export default class DeclutterMePlugin extends Plugin {
 
 		const fileData = await this.app.vault.read(file)
 
-		const mode: Route['mode'] = matchedRoute.mode ?? 'appendLineAfterContent'
-		const skipProperties = matchedRoute.skipProperties !== false
+		const dataToWrite = applyMarkdownModification({
+			markdown: fileData,
+			type: matchedRoute.mode ?? 'appendLineAfterContent',
+			content: replaceVariables(matchedRoute.content, variables),
+			skipProperties: matchedRoute.skipProperties ?? false,
+			section: matchedRoute.section,
+		})
 
-		const lines = fileData.split('\n')
-		const index = mode === 'appendLineAfterContent'
-			? getIndexAfterLastNonEmptyLine(lines)
-			: getIndexOfFirstNonEmptyLine(lines, { skipProperties })
-		const content = replaceVariables(matchedRoute.content, variables)
-		lines.splice(index, 0, content)
-
-		const dataToWrite = lines.join('\n')
 		console.debug({ input, variables, path, dataToWrite })
 
 		await this.app.vault.modify(file, dataToWrite)
