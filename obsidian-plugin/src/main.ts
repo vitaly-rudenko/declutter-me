@@ -1,6 +1,7 @@
+import { format } from 'date-fns'
 import { App, normalizePath, Plugin, PluginSettingTab, Setting } from 'obsidian';
 import { z } from 'zod';
-import { match } from './templater/match.js';
+import { match, MatchResult } from './templater/match.js';
 
 const DEFAULT_SETTINGS: DeclutterMePluginSettings = {
 	routes: [],
@@ -10,6 +11,8 @@ const routeSchema = z.object({
 	template: z.string(),
 	path: z.string(),
 	content: z.string(),
+	mode: z.enum(['append', 'prepend']).default('append').optional(),
+	leaf: z.enum(['split', 'tab', 'window']).optional(),
 })
 
 type Route = z.infer<typeof routeSchema>
@@ -20,27 +23,28 @@ type DeclutterMePluginSettings = {
 
 const routesSchema = z.array(routeSchema)
 
-// TODO: vault
 // TODO: append/prepend modes
 // TODO: section
 // TODO: fileTemplate
-// TODO: open file after modifying?
 
 const routesExample: Route[] = [
 	{
-		template: "w {note}",
-		path: "5 Test/2 Work/Tasks/{date:YYYY} from {device}.md",
-		content: "\n- [ ] {note}",
+		template: 'w {note}',
+		path: '5 Test/2 Work/Tasks/{date:YYYY} from {device}.md',
+		content: '- [ ] {note}',
 	},
 	{
-		template: "p {note}",
-		path: "5 Test/1 Personal/Tasks/{date:YYYY} from {device}.md",
-		content: "\n- [ ] {note}",
+		template: 'p {note}',
+		path: '5 Test/1 Personal/Tasks/{date:YYYY} from {device}.md',
+		content: '- [ ] {note}',
+		leaf: 'split',
 	},
 	{
-		template: "JIRA-{id:number} {note}",
-		path: "5 Test/2 Work/Tickets/JIRA-{id} from {device}.md",
-		content: "\n- [ ] {note}",
+		template: 'JIRA-{id:number} {note}',
+		path: '5 Test/2 Work/Tickets/JIRA-{id} from {device}.md',
+		content: '- [ ] {note}',
+		mode: 'prepend',
+		leaf: 'tab',
 	}
 ];
 
@@ -53,13 +57,16 @@ export default class DeclutterMePlugin extends Plugin {
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 
 		this.registerObsidianProtocolHandler('declutter-me', async (event) => {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const { action, input, ...inputVariables } = event as { action: string; input: string; [key: string]: string };
 
-			const matchedRoute = this.settings.routes.find((route) => match(input, route.template))
-			if (!matchedRoute) return // TODO: warning
-			const matchResult = match(input, matchedRoute.template)
-			if (!matchResult) return // TODO: warning
+			let matchedRoute: Route | undefined
+			let matchResult: MatchResult | undefined
+			for (const route of this.settings.routes) {
+				matchedRoute = route
+				matchResult = match(input, route.template)
+				if (matchResult) break
+			}
+			if (!matchedRoute || !matchResult) return // TODO: warning
 
 			const variables = { ...inputVariables }
 			for (const [variableName, { value }] of Object.entries(matchResult)) {
@@ -74,8 +81,7 @@ export default class DeclutterMePlugin extends Plugin {
 						result = result.replace(variableName, value)
 					}
 				}
-				// TODO: format date
-				return result.replace('{date:YYYY}', String(new Date().getFullYear()))
+				return result.replace(/\{date:(?<format>.+?)\}/i, (dateFormat) => format(new Date(), dateFormat))
 			}
 
 			const path = normalizePath(replaceVariables(matchedRoute.path, variables))
@@ -92,18 +98,25 @@ export default class DeclutterMePlugin extends Plugin {
 			}
 
 			const fileData = await this.app.vault.read(file)
-			const dataToWrite = fileData + replaceVariables(matchedRoute.content, variables)
+			const dataToWrite = matchedRoute.mode === 'append'
+				? fileData + '\n' + replaceVariables(matchedRoute.content, variables)
+				: replaceVariables(matchedRoute.content, variables) + '\n' + fileData
 
 			console.debug({ action, input, inputVariables, matchedVariables: matchResult, variables, path, fileData, dataToWrite })
 
 			await this.app.vault.modify(file, dataToWrite);
+
+			if (matchedRoute.leaf) {
+				const leaf = this.app.workspace.getLeaf(matchedRoute.leaf);
+				await leaf.openFile(file);
+			}
 		})
 	}
 
 	onunload() {}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = { ...DEFAULT_SETTINGS, ...await this.loadData() };
 	}
 
 	async saveSettings() {
