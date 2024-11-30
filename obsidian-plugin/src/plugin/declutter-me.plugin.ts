@@ -2,11 +2,12 @@ import { normalizePath, Notice, Plugin } from 'obsidian'
 import { match, MatchResult } from '../templater/match.js'
 import { applyMarkdownModification } from '../markdown/apply-markdown-modification.js'
 import { replaceVariables } from '../utils/replace-variables.js'
-import { transformMatchResultToVariables } from '../templater/transform-match-result-to-variables.js'
-import { DeclutterMePluginSettings, DEFAULT_SETTINGS, Route, Variables, variablesSchema } from './settings.js'
+import { DeclutterMePluginSettings, DEFAULT_SETTINGS, Route, Variable, VariableMap, variableSchema } from './common.js'
 import { DeclutterMePluginSettingTab } from './declutter-me.plugin-setting-tab.js'
 import { SpotlightSuggestModal } from './spotlight.suggest-modal.js'
 import { processTemplate } from './workarounds/process-template.js'
+import { flattenVariables } from 'src/utils/flatten-variables.js'
+import { z } from 'zod'
 
 type ObsidianProtocolHandlerEvent = {
   action: string
@@ -29,15 +30,15 @@ export class DeclutterMePlugin extends Plugin {
     })
 
     this.registerObsidianProtocolHandler('declutter-me', async (event) => {
-      const { action: _, input, ...inputVariables } = event as ObsidianProtocolHandlerEvent
-      await this.handleQuery(input, inputVariables)
+      const { action: _, input, ...inputVariableMap } = event as ObsidianProtocolHandlerEvent
+      await this.handleQuery(input, inputVariableMap)
     })
   }
 
   async loadSettings() {
-    let variables: Variables = {}
+    let variables: Variable[] = []
     try {
-      variables = variablesSchema.parse(JSON.parse(this.app.loadLocalStorage('declutter-me:variables') as string))
+      variables = z.array(variableSchema).parse(JSON.parse(this.app.loadLocalStorage('declutter-me:variables') as string))
     } catch { new Notice('Could not load variables') }
 
     this.settings = {
@@ -56,7 +57,7 @@ export class DeclutterMePlugin extends Plugin {
 
   // ---
 
-  async handleQuery(input: string, inputVariables: Variables = {}) {
+  async handleQuery(input: string, inputVariableMap: VariableMap = {}) {
     const firstMatchingRoute = this.getFirstMatchingRoute(input)
     if (!firstMatchingRoute) {
       new Notice('Could not parse input')
@@ -64,11 +65,11 @@ export class DeclutterMePlugin extends Plugin {
     }
 
     const { matchedRoute, matchResult } = firstMatchingRoute
-    const variables: Variables = {
+    const variables: VariableMap = {
       device: this.settings.device,
-      ...this.settings.variables,
-      ...inputVariables,
-      ...transformMatchResultToVariables(matchResult),
+      ...flattenVariables(this.settings.variables),
+      ...inputVariableMap,
+      ...flattenVariables(matchResult.variables),
     }
 
     const path = normalizePath(replaceVariables(matchedRoute.path, variables))

@@ -5,12 +5,18 @@ describe('match()', () => {
     expect(match('w Hello world!', 'p {note}')).toBeUndefined()
 
     expect(match('w Hello world!', 'w {note}')).toEqual({
-      note: { type: 'text', value: 'Hello world!' }
+      variables: [{
+        name: 'note',
+        type: 'text',
+        value: 'Hello world!'
+      }]
     })
 
     expect(match('JIRA-123 Hello world!', 'JIRA-{id:number} {note}')).toEqual({
-      id: { type: 'number', value: 123 },
-      note: { type: 'text', value: 'Hello world!' },
+      variables: [
+        { name: 'id', type: 'number', value: 123 },
+        { name: 'note', type: 'text', value: 'Hello world!' }
+      ]
     })
   })
 
@@ -19,14 +25,18 @@ describe('match()', () => {
 
     expect(match('#ideas Draw fan-art of Haruhi', pattern))
       .toEqual({
-        tag: { type: 'word', value: 'ideas' },
-        note: { type: 'text', value: 'Draw fan-art of Haruhi' }
+        variables: [
+          { name: 'tag', type: 'word', value: 'ideas' },
+          { name: 'note', type: 'text', value: 'Draw fan-art of Haruhi' }
+        ]
       })
 
     expect(match('#my-ideas Write HTML parser', pattern))
       .toEqual({
-        tag: { type: 'word', value: 'my-ideas' },
-        note: { type: 'text', value: 'Write HTML parser' }
+        variables: [
+          { name: 'tag', type: 'word', value: 'my-ideas' },
+          { name: 'note', type: 'text', value: 'Write HTML parser' }
+        ]
       })
 
     expect(match('Write HTML parser', pattern))
@@ -41,14 +51,18 @@ describe('match()', () => {
 
     expect(match('Draw fan-art of Haruhi #art-ideas', pattern))
       .toEqual({
-        note: { type: 'text', value: 'Draw fan-art of Haruhi' },
-        tag: { type: 'word', value: 'art-ideas' }
+        variables: [
+          { name: 'note', type: 'text', value: 'Draw fan-art of Haruhi' },
+          { name: 'tag', type: 'word', value: 'art-ideas' }
+        ]
       })
 
     expect(match('Write an app in Go #my #idea', pattern))
       .toEqual({
-        note: { type: 'text', value: 'Write an app in Go #my' },
-        tag: { type: 'word', value: 'idea' }
+        variables: [
+          { name: 'note', type: 'text', value: 'Write an app in Go #my' },
+          { name: 'tag', type: 'word', value: 'idea' }
+        ]
       })
 
     expect(match('Write an app in Go potatoes #my idea', pattern))
@@ -60,8 +74,10 @@ describe('match()', () => {
 
     expect(match('Save Pygmalion effect to the idea notes', pattern))
       .toEqual({
-        note: { type: 'text', value: 'Pygmalion effect' },
-        tag: { type: 'word', value: 'idea' }
+        variables: [
+          { name: 'note', type: 'text', value: 'Pygmalion effect' },
+          { name: 'tag', type: 'word', value: 'idea' }
+        ]
       })
   })
 
@@ -71,7 +87,9 @@ describe('match()', () => {
     for (const input of ['Add my unique idea', 'save my unique idea']) {
       expect(match(input, pattern))
         .toEqual({
-          note: { type: 'text', value: 'my unique idea' }
+          variables: [
+            { name: 'note', type: 'text', value: 'my unique idea' }
+          ]
         })
     }
 
@@ -83,9 +101,11 @@ describe('match()', () => {
     ]) {
       expect(match(input, pattern))
         .toEqual({
-          database: { type: 'text', value: 'shopping' },
-          note: { type: 'text', value: 'my unique idea' },
-          tag: { type: 'word', value: 'my-ideas' }
+          variables: [
+            { name: 'database', type: 'text', value: 'shopping' },
+            { name: 'note', type: 'text', value: 'my unique idea' },
+            { name: 'tag', type: 'word', value: 'my-ideas' }
+          ]
         })
     }
   })
@@ -95,18 +115,22 @@ describe('match()', () => {
       'Jon Snow: A character of Game of Thrones',
       '{name:word} {surname:word}: {description:text}'
     )).toEqual({
-      name: { type: 'word', value: 'Jon' },
-      surname: { type: 'word', value: 'Snow' },
-      description: { type: 'text', value: 'A character of Game of Thrones' }
+      variables: [
+        { name: 'name', type: 'word', value: 'Jon' },
+        { name: 'surname', type: 'word', value: 'Snow' },
+        { name: 'description', type: 'text', value: 'A character of Game of Thrones' }
+      ]
     })
 
     expect(match(
       'Hi! My name is George.',
       '{greeting:word}! My {variable:word} is {value:word}.'
     )).toEqual({
-      greeting: { type: 'word', value: 'Hi' },
-      variable: { type: 'word', value: 'name' },
-      value: { type: 'word', value: 'George' }
+      variables: [
+        { name: 'greeting', type: 'word', value: 'Hi' },
+        { name: 'variable', type: 'word', value: 'name' },
+        { name: 'value', type: 'word', value: 'George' }
+      ]
     })
   })
 
@@ -122,8 +146,10 @@ describe('match()', () => {
       Email: jon.snow@example.com
     `, pattern))
       .toEqual({
-        Name: { type: 'word', value: 'Jon' },
-        Email: { type: 'email', value: 'jon.snow@example.com' }
+        variables: [
+          { name: 'Name', type: 'word', value: 'Jon' },
+          { name: 'Email', type: 'email', value: 'jon.snow@example.com' }
+        ]
       })
 
     expect(match(`
@@ -132,10 +158,12 @@ describe('match()', () => {
       Email: jon.snow@example.com
     `, pattern))
       .toEqual({
-        Name: { type: 'word', value: 'Jon' },
-        Surname: { type: 'word', value: 'Snow' },
-        Phone: { type: 'phone', value: '+380123456789' },
-        Email: { type: 'email', value: 'jon.snow@example.com' }
+        variables: [
+          { name: 'Name', type: 'word', value: 'Jon' },
+          { name: 'Surname', type: 'word', value: 'Snow' },
+          { name: 'Phone', type: 'phone', value: '+380123456789' },
+          { name: 'Email', type: 'email', value: 'jon.snow@example.com' }
+        ]
       })
   })
 

@@ -2,14 +2,18 @@ import { extractVariableDefinitionsFromPattern } from './extract-variable-defini
 import { parseTemplate } from './parse-template'
 import { transformPatternToRegex } from './transform-pattern-to-regex'
 
+export type MatchResultVariable = {
+  name: string
+  type: 'text' | 'word' | 'url' | 'email' | 'phone'
+  value: string
+} | {
+  name: string
+  type: 'number'
+  value: number
+}
+
 export type MatchResult = {
-  [variableName: string]: {
-    type: 'text' | 'word' | 'url' | 'email' | 'phone'
-    value: string
-  } | {
-    type: 'number'
-    value: number
-  }
+  variables: MatchResultVariable[]
 }
 
 export function match(input: string, template: string): MatchResult | undefined {
@@ -20,7 +24,7 @@ export function match(input: string, template: string): MatchResult | undefined 
   const matchResult = input.match(new RegExp(regex, 'i'))
   if (!matchResult) return undefined
 
-  const results: MatchResult = {}
+  const variables: MatchResultVariable[] = []
   for (const [variableName, value] of Object.entries(matchResult.groups ?? {})) {
     if (value === undefined) continue
 
@@ -30,17 +34,19 @@ export function match(input: string, template: string): MatchResult | undefined 
     }
 
     if (variableDefinition.type === 'number') {
-      results[variableName] = {
+      variables.push({
+        name: variableName,
         type: 'number',
-        value: Number(value)
-      }
+        value: Number(value),
+      })
     } else {
-      results[variableName] = {
+      variables.push({
+        name: variableName,
         type: variableDefinition.type === 'match' ? 'text' : variableDefinition.type,
         value,
-      }
+      })
     }
   }
 
-  return results
+  return { variables }
 }

@@ -1,9 +1,9 @@
 import { SuggestModal } from 'obsidian'
 import { match } from '../templater/match.js'
 import { replaceVariables } from '../utils/replace-variables.js'
-import { transformMatchResultToVariables } from '../templater/transform-match-result-to-variables.js'
 import { DeclutterMePlugin } from './declutter-me.plugin.js'
-import { Route, Variables } from './settings.js'
+import { Route, VariableMap } from './common.js'
+import { flattenVariables } from 'src/utils/flatten-variables.js'
 
 export class SpotlightSuggestModal extends SuggestModal<Route> {
   private latestQuery: string | undefined
@@ -20,10 +20,10 @@ export class SpotlightSuggestModal extends SuggestModal<Route> {
 
   renderSuggestion(route: Route, el: HTMLElement) {
     const matchResult = this.latestQuery ? match(this.latestQuery, route.template) : undefined
-    const variables: Variables = {
+    const variables: VariableMap = {
       device: this.plugin.settings.device,
-      ...this.plugin.settings.variables,
-      ...matchResult ? transformMatchResultToVariables(matchResult) : {},
+      ...flattenVariables(this.plugin.settings.variables),
+      ...matchResult ? flattenVariables(matchResult.variables) : {},
     }
 
     if (!matchResult) {

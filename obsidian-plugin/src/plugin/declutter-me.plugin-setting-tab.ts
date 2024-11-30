@@ -1,6 +1,7 @@
 import { Notice, PluginSettingTab, Setting } from 'obsidian'
 import { DeclutterMePlugin } from './declutter-me.plugin'
-import { DEFAULT_SETTINGS, variablesSchema, routesSchema, Route } from './settings'
+import { DEFAULT_SETTINGS, routesSchema, Route, variableSchema } from './common'
+import { z } from 'zod'
 
 export class DeclutterMePluginSettingTab extends PluginSettingTab {
   constructor(readonly plugin: DeclutterMePlugin) {
@@ -28,24 +29,14 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
     this.containerEl.createEl('h3', { text: 'Variables' })
     this.containerEl.createEl('small', { text: 'Not synced to other devices' })
 
-    for (const [initialVariableName, value] of Object.entries(this.plugin.settings.variables)) {
-      let currentVariableName = initialVariableName
-
-      const setting = new Setting(this.containerEl)
+    for (const [index, variable] of this.plugin.settings.variables.entries()) {
+      new Setting(this.containerEl)
         .addText((text) => {
           return text
             .setPlaceholder('Variable name')
-            .setValue(currentVariableName)
+            .setValue(variable.name)
             .onChange(async (newVariableName) => {
-              if (currentVariableName === newVariableName) return
-              if (this.plugin.settings.variables[newVariableName]) {
-                new Notice('Variable already exists')
-                return
-              }
-
-              delete this.plugin.settings.variables[currentVariableName]
-              this.plugin.settings.variables[newVariableName] = value
-              currentVariableName = newVariableName
+              variable.name = newVariableName
 
               await this.plugin.saveSettings()
             })
@@ -53,11 +44,9 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
         .addText((text) => {
           return text
             .setPlaceholder('Value')
-            .setValue(String(value))
+            .setValue(String(variable.value))
             .onChange(async (newValue) => {
-              if (value === newValue) return
-
-              this.plugin.settings.variables[currentVariableName] = newValue
+              variable.value = newValue
 
               await this.plugin.saveSettings()
             })
@@ -67,48 +56,25 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
             .setWarning()
             .setIcon('x')
             .onClick(async () => {
-              delete this.plugin.settings.variables[currentVariableName]
-              setting.setVisibility(false)
-
-              await this.plugin.saveSettings()
-            })
-        })
-    }
-
-    let newVariableName = ''
-    let newVariableValue = ''
-    new Setting(this.containerEl)
-        .setName('Add new variable')
-        .addText((text) => {
-          return text
-            .setPlaceholder('Variable name')
-            .onChange(async (variableName) => {
-              newVariableName = variableName
-            })
-        })
-        .addText((text) => {
-          return text
-            .setPlaceholder('Value')
-            .onChange(async (value) => {
-              newVariableValue = value
-            })
-        })
-        .addButton((button) => {
-          return button
-            .setIcon('plus')
-            .onClick(async () => {
-              if (!newVariableName || !newVariableValue) return
-              if (this.plugin.settings.variables[newVariableName]) {
-                new Notice('Variable already exists')
-                return
-              }
-
-              this.plugin.settings.variables[newVariableName] = newVariableValue
+              this.plugin.settings.variables.splice(index, 1)
 
               await this.plugin.saveSettings()
               this.display()
             })
         })
+    }
+
+    new Setting(this.containerEl)
+      .addButton((button) => {
+        return button
+          .setButtonText('Add new variables')
+          .onClick(async () => {
+            this.plugin.settings.variables.push({ name: '', value: '' })
+
+            await this.plugin.saveSettings()
+            this.display()
+          })
+      })
 
     this.containerEl.createEl('h3', { text: 'Routes' })
     this.containerEl.createEl('small', { text: 'Synced to all devices' })
@@ -263,7 +229,7 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
           .setValue(JSON.stringify(this.plugin.settings.variables, null, 2))
           .onChange(async (value) => {
             try {
-              this.plugin.settings.variables = variablesSchema.parse(JSON.parse(value))
+              this.plugin.settings.variables = z.array(variableSchema).parse(JSON.parse(value))
             } catch {
               clearTimeout(variablesErrorTimeoutId)
               variablesErrorTimeoutId = setTimeout(() => new Notice('Could not parse variables'), 3000)
