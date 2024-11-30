@@ -61,34 +61,34 @@ const DEFAULT_SETTINGS: DeclutterMePluginSettings = {
 }
 
 export class ExampleModal extends SuggestModal<Route> {
-  private latestQuery: string | undefined;
+  private latestQuery: string | undefined
 
-  constructor(app: App, private readonly settings: DeclutterMePluginSettings, private readonly onTrigger: (query: string) => void) {
+  constructor(app: App, private readonly plugin: DeclutterMePlugin, private readonly onTrigger: (query: string) => void) {
     super(app)
   }
 
   getSuggestions(query: string): Route[] {
     this.latestQuery = query
-    const matchedRoute = this.settings.routes.find((route) => match(query, route.template) !== undefined);
-    return matchedRoute ? [matchedRoute] : this.settings.routes
+    const firstMatchingRoute = this.plugin.getFirstMatchingRoute(query)
+    return firstMatchingRoute ? [firstMatchingRoute.matchedRoute] : this.plugin.settings.routes
   }
 
   renderSuggestion(route: Route, el: HTMLElement) {
     const matchResult = this.latestQuery ? match(this.latestQuery, route.template) : undefined
     const variables: Variables = {
-      device: this.settings.device,
-      ...this.settings.variables,
+      device: this.plugin.settings.device,
+      ...this.plugin.settings.variables,
       ...matchResult ? transformMatchResultToVariables(matchResult) : {},
     }
 
     if (!matchResult) {
-      el.createEl('div', { text: route.template });
-      el.createEl('small', { text: replaceVariables(route.path, variables) });
+      el.createEl('div', { text: route.template })
+      el.createEl('small', { text: replaceVariables(route.path, variables) })
       return
     }
 
-    el.createEl('div', { text: replaceVariables(route.content, variables) });
-    el.createEl('small', { text: replaceVariables(route.path, variables) });
+    el.createEl('div', { text: replaceVariables(route.content, variables) })
+    el.createEl('small', { text: replaceVariables(route.path, variables) })
   }
 
   onChooseSuggestion() {
@@ -146,7 +146,7 @@ export default class DeclutterMePlugin extends Plugin {
     new Notice(`Note saved\n${path.split('/').at(-1)?.replace(/\.md$/, '')}`)
   }
 
-  private getFirstMatchingRoute(input: string) {
+  getFirstMatchingRoute(input: string) {
     let matchedRoute: Route | undefined
     let matchResult: MatchResult | undefined
     for (const route of this.settings.routes) {
@@ -196,7 +196,7 @@ export default class DeclutterMePlugin extends Plugin {
       id: 'declutter-me-spotlight',
       name: 'Spotlight',
       callback: () => {
-        new ExampleModal(this.app, this.settings, async (query) => {
+        new ExampleModal(this.app, this, async (query) => {
           await this.handleQuery(query, {})
         }).open()
       }
@@ -204,7 +204,7 @@ export default class DeclutterMePlugin extends Plugin {
 
     this.registerObsidianProtocolHandler('declutter-me', async (event) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { action, input, ...inputVariables } = event as { action: string; input: string;[key: string]: string }
+      const { action, input, ...inputVariables } = event as { action: string; input: string; [key: string]: string }
       await this.handleQuery(input, inputVariables)
     })
   }
