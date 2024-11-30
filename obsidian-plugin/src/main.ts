@@ -159,8 +159,13 @@ export default class DeclutterMePlugin extends Plugin {
 		await this.app.vault.modify(file, dataToWrite)
 
 		if (matchedRoute.leaf) {
-			const leaf = this.app.workspace.getLeaf(matchedRoute.leaf)
-			await leaf.openFile(file)
+			// TODO: do not open leaf if already opened & visible in any group / split
+			//       currently it only checks the currently active file
+			// TODO: activate existing leaf if already opened but not visible
+			if (this.app.workspace.getActiveFile()?.path !== file.path) {
+				const leaf = this.app.workspace.getLeaf(matchedRoute.leaf)
+				await leaf.openFile(file)
+			}
 		}
 
 		new Notice(`Note saved\n${path.split('/').at(-1)?.replace(/\.md$/, '')}`)
