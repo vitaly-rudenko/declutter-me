@@ -15,7 +15,7 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
 
     new Setting(this.containerEl)
       .setName('{device}')
-      .setDesc('Can be used in path and content. Not synced to other devices.')
+      .setDesc('Can be used in path, content and section. Not synced to other devices.')
       .addText((text) => {
         return text
           .setPlaceholder(DEFAULT_SETTINGS.device)
@@ -32,7 +32,7 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
     for (const [index, variable] of this.plugin.settings.variables.entries()) {
       const setting = new Setting(this.containerEl)
         .setName(`{${variable.name}}`)
-        .setDesc('Can be used in path and content. Not synced to other devices.')
+        .setDesc('Can be used in path, content and section. Not synced to other devices.')
         .addText((text) => {
           return text
             .setPlaceholder('Variable name')
