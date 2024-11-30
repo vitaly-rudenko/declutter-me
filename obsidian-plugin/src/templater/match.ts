@@ -1,6 +1,6 @@
-import { extractVariableDefinitionsFromPattern } from "./extract-variable-definitions-from-pattern"
-import { parseTemplate } from "./parse-template"
-import { transformPatternToRegex } from "./transform-pattern-to-regex"
+import { extractVariableDefinitionsFromPattern } from './extract-variable-definitions-from-pattern'
+import { parseTemplate } from './parse-template'
+import { transformPatternToRegex } from './transform-pattern-to-regex'
 
 export type MatchResult = {
   [variableName: string]: {
