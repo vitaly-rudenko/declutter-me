@@ -20,6 +20,7 @@ export class DeclutterMePlugin extends Plugin {
     await this.loadSettings()
 
     this.addSettingTab(new DeclutterMePluginSettingTab(this))
+    this.addRibbonIcon('sparkles', 'Declutter Me: Spotlight', () => new SpotlightSuggestModal(this).open())
 
     this.addCommand({
       id: 'declutter-me-spotlight',
