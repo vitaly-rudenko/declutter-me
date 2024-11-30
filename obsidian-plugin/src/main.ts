@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { match, MatchResult } from './templater/match.js'
 import { applyMarkdownModification } from './markdown/apply-markdown-modification.js'
 import { replaceVariables } from './utils/replace-variables.js'
-import { transformMatchResultToVariables } from './transform-match-result-to-variables.js'
+import { transformMatchResultToVariables } from './templater/transform-match-result-to-variables.js'
 
 const routeSchema = z.object({
 	template: z.string(),
@@ -16,6 +16,7 @@ const routeSchema = z.object({
 	templatePath: z.string().optional(),
 })
 
+type Variables = Record<string, string | number>
 type Route = z.infer<typeof routeSchema>
 
 type DeclutterMePluginSettings = {
@@ -51,54 +52,45 @@ const DEFAULT_SETTINGS: DeclutterMePluginSettings = {
 }
 
 export class ExampleModal extends SuggestModal<Route> {
-  private query = '';
+  private latestQuery: string | undefined;
 
   constructor(app: App, private readonly onTrigger: (query: string) => void) {
 	super(app)
   }
 
   getSuggestions(query: string): Route[] {
-    this.query = query
-
-    const matchedRoutes = routesExample.filter((route) =>
-      match(query, route.template) !== undefined
-    );
-	if (matchedRoutes.length === 0) {
-		return routesExample
-	}
-	return matchedRoutes
+    this.latestQuery = query
+    const matchedRoute = routesExample.find((route) => match(query, route.template) !== undefined);
+	return matchedRoute ? [matchedRoute] : routesExample
   }
 
   renderSuggestion(route: Route, el: HTMLElement) {
-	const variables: Record<string, string> = {
-		device: 'Personal Macbook'
+    const matchResult = this.latestQuery ? match(this.latestQuery, route.template) : undefined
+	const variables: Variables = {
+		device: 'Personal Macbook',
+		...matchResult ? transformMatchResultToVariables(matchResult) : {},
 	}
 
-    const matchResult = match(this.query, route.template)
     if (!matchResult) {
 		el.createEl('div', { text: route.template });
 		el.createEl('small', { text: replaceVariables(route.path, variables) });
 		return
 	}
 
-    for (const [variableName, { value }] of Object.entries(matchResult)) {
-      variables[variableName] = String(value)
-    }
-
     el.createEl('div', { text: replaceVariables(route.content, variables) });
     el.createEl('small', { text: replaceVariables(route.path, variables) });
   }
 
-  onChooseSuggestion(route: Route, evt: MouseEvent | KeyboardEvent) {
-	if (!this.query) return
-    this.onTrigger(this.query)
+  onChooseSuggestion() {
+	if (!this.latestQuery) return
+    this.onTrigger(this.latestQuery)
   }
 }
 
 export default class DeclutterMePlugin extends Plugin {
 	settings: DeclutterMePluginSettings = DEFAULT_SETTINGS
 
-	async handleQuery(input: string, inputVariables: Record<string, string>) {
+	async handleQuery(input: string, inputVariables: Variables) {
 		let matchedRoute: Route | undefined
 		let matchResult: MatchResult | undefined
 		for (const route of this.settings.routes) {
@@ -108,8 +100,9 @@ export default class DeclutterMePlugin extends Plugin {
 		}
 		if (!matchedRoute || !matchResult) return // TODO: warning
 
-		const variables: Record<string, string | number> = {
+		const variables: Variables = {
 			device: 'Personal Macbook',
+			...inputVariables,
 			...transformMatchResultToVariables(matchResult),
 		}
 
