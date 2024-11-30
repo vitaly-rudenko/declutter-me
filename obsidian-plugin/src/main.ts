@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { match, MatchResult } from './templater/match.js'
 import { applyMarkdownModification } from './markdown/apply-markdown-modification.js'
 import { replaceVariables } from './replace-variables.js'
+import { transformMatchResultToVariables } from './transform-match-result-to-variables.js'
 
 const routeSchema = z.object({
 	template: z.string(),
@@ -107,13 +108,9 @@ export default class DeclutterMePlugin extends Plugin {
 		}
 		if (!matchedRoute || !matchResult) return // TODO: warning
 
-		const variables: Record<string, string> = {
+		const variables: Record<string, string | number> = {
 			device: 'Personal Macbook',
-			...inputVariables
-		}
-
-		for (const [variableName, { value }] of Object.entries(matchResult)) {
-			variables[variableName] = String(value)
+			...transformMatchResultToVariables(matchResult),
 		}
 
 		const path = normalizePath(replaceVariables(matchedRoute.path, variables))
