@@ -2,7 +2,7 @@ import { App, normalizePath, Notice, Plugin, PluginSettingTab, Setting, SuggestM
 import { z } from 'zod'
 import { match, MatchResult } from './templater/match.js'
 import { applyMarkdownModification } from './markdown/apply-markdown-modification.js'
-import { replaceVariables } from './replace-variables.js'
+import { replaceVariables } from './utils/replace-variables.js'
 import { transformMatchResultToVariables } from './transform-match-result-to-variables.js'
 
 const routeSchema = z.object({

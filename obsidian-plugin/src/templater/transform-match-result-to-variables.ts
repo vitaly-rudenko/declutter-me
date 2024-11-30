@@ -1,4 +1,4 @@
-import { MatchResult } from "./templater/match";
+import { MatchResult } from './match';
 
 export function transformMatchResultToVariables(matchResult: MatchResult) {
     const variables: Record<string, string | number> = {}

@@ -1,4 +1,4 @@
-import { MatchResult } from './templater/match'
+import { MatchResult } from './match'
 import { transformMatchResultToVariables } from './transform-match-result-to-variables'
 
 describe('transformMatchResultToVariables()', () => {
