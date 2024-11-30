@@ -10,9 +10,9 @@ export const routeSchema = z.object({
   template: z.string(),
   path: z.string(),
   content: z.string(),
+  section: z.string().optional(),
   mode: z.enum(['appendLineAfterContent', 'prependLineBeforeContent']).optional(),
   leaf: z.enum(['split', 'tab', 'window']).optional(),
-  section: z.string().optional(),
   templatePath: z.string().optional(),
 })
 export const routesSchema = z.array(routeSchema)
