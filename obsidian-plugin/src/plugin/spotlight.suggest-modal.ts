@@ -1,4 +1,4 @@
-import { App, SuggestModal } from 'obsidian'
+import { SuggestModal } from 'obsidian'
 import { match } from '../templater/match.js'
 import { replaceVariables } from '../utils/replace-variables.js'
 import { transformMatchResultToVariables } from '../templater/transform-match-result-to-variables.js'
@@ -8,8 +8,8 @@ import { Route, Variables } from './settings.js'
 export class SpotlightSuggestModal extends SuggestModal<Route> {
   private latestQuery: string | undefined
 
-  constructor(app: App, private readonly plugin: DeclutterMePlugin, private readonly onTrigger: (query: string) => void) {
-    super(app)
+  constructor(private readonly plugin: DeclutterMePlugin) {
+    super(plugin.app)
   }
 
   getSuggestions(query: string): Route[] {
@@ -38,6 +38,6 @@ export class SpotlightSuggestModal extends SuggestModal<Route> {
 
   onChooseSuggestion() {
     if (!this.latestQuery) return
-    this.onTrigger(this.latestQuery)
+    this.plugin.handleQuery(this.latestQuery)
   }
 }

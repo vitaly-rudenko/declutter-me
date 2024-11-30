@@ -4,13 +4,58 @@ import { applyMarkdownModification } from '../markdown/apply-markdown-modificati
 import { replaceVariables } from '../utils/replace-variables.js'
 import { transformMatchResultToVariables } from '../templater/transform-match-result-to-variables.js'
 import { DeclutterMePluginSettings, DEFAULT_SETTINGS, Route, Variables, variablesSchema } from './settings.js'
-import { DeclutterMeSettingTab } from './declutter-me.plugin-setting-tab.js'
+import { DeclutterMePluginSettingTab } from './declutter-me.plugin-setting-tab.js'
 import { SpotlightSuggestModal } from './spotlight.suggest-modal.js'
+
+type ObsidianProtocolHandlerEvent = {
+  action: string
+  input: string
+  [key: string]: string
+}
 
 export class DeclutterMePlugin extends Plugin {
   settings: DeclutterMePluginSettings = DEFAULT_SETTINGS
 
-  async handleQuery(input: string, inputVariables: Variables) {
+  async onload() {
+    await this.loadSettings()
+
+    this.addSettingTab(new DeclutterMePluginSettingTab(this))
+
+    this.addCommand({
+      id: 'declutter-me-spotlight',
+      name: 'Spotlight',
+      callback: () => new SpotlightSuggestModal(this).open()
+    })
+
+    this.registerObsidianProtocolHandler('declutter-me', async (event) => {
+      const { action: _, input, ...inputVariables } = event as ObsidianProtocolHandlerEvent
+      await this.handleQuery(input, inputVariables)
+    })
+  }
+
+  async loadSettings() {
+    let variables: Variables = {}
+    try {
+      variables = variablesSchema.parse(JSON.parse(this.app.loadLocalStorage('declutter-me:variables') as string))
+    } catch { new Notice('Could not load variables') }
+
+    this.settings = {
+      ...DEFAULT_SETTINGS,
+      ...await this.loadData(),
+      device: String(this.app.loadLocalStorage('declutter-me:device') || ''),
+      variables,
+    }
+  }
+
+  async saveSettings() {
+    await this.saveData(this.settings)
+    await this.app.saveLocalStorage('declutter-me:device', this.settings.device)
+    await this.app.saveLocalStorage('declutter-me:variables', JSON.stringify(this.settings.variables))
+  }
+
+  // ---
+
+  async handleQuery(input: string, inputVariables: Variables = {}) {
     const firstMatchingRoute = this.getFirstMatchingRoute(input)
     if (!firstMatchingRoute) {
       new Notice('Could not parse input')
@@ -70,11 +115,11 @@ export class DeclutterMePlugin extends Plugin {
       : undefined
   }
 
+  // ---
+
   private async upsertFile(path: string) {
     let file = this.app.vault.getFileByPath(path)
     if (!file) {
-      console.debug('Creating new file:', path)
-
       if (path.includes('/')) {
         try {
           await this.app.vault.createFolder(path.split('/').slice(0, -1).join('/'))
@@ -83,6 +128,7 @@ export class DeclutterMePlugin extends Plugin {
 
       file = await this.app.vault.create(path, '')
     }
+
     return file
   }
 
@@ -94,52 +140,7 @@ export class DeclutterMePlugin extends Plugin {
         return templateFileData
       }
     }
+
     return undefined
-  }
-
-  async onload() {
-    await this.loadSettings()
-
-    this.addSettingTab(new DeclutterMeSettingTab(this.app, this))
-
-    this.addCommand({
-      id: 'declutter-me-spotlight',
-      name: 'Spotlight',
-      callback: () => {
-        new SpotlightSuggestModal(this.app, this, async (query) => {
-          await this.handleQuery(query, {})
-        }).open()
-      }
-    })
-
-    this.registerObsidianProtocolHandler('declutter-me', async (event) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { action, input, ...inputVariables } = event as { action: string; input: string;[key: string]: string }
-      await this.handleQuery(input, inputVariables)
-    })
-  }
-
-  onunload() { }
-
-  async loadSettings() {
-    let variables: Variables = {}
-    try {
-      variables = variablesSchema.parse(JSON.parse(this.app.loadLocalStorage('declutter-me:variables') as string))
-    } catch {
-      new Notice('Could not load variables')
-    }
-
-    this.settings = {
-      ...DEFAULT_SETTINGS,
-      ...await this.loadData(),
-      device: String(this.app.loadLocalStorage('declutter-me:device') || ''),
-      variables,
-    }
-  }
-
-  async saveSettings() {
-    await this.saveData(this.settings)
-    await this.app.saveLocalStorage('declutter-me:device', this.settings.device)
-    await this.app.saveLocalStorage('declutter-me:variables', JSON.stringify(this.settings.variables))
   }
 }

@@ -1,13 +1,10 @@
-import { App, Notice, PluginSettingTab, Setting } from 'obsidian'
+import { Notice, PluginSettingTab, Setting } from 'obsidian'
 import { DeclutterMePlugin } from './declutter-me.plugin'
 import { DEFAULT_SETTINGS, variablesExample, variablesSchema, routesExample, routesSchema } from './settings'
 
-export class DeclutterMeSettingTab extends PluginSettingTab {
-  plugin: DeclutterMePlugin
-
-  constructor(app: App, plugin: DeclutterMePlugin) {
-    super(app, plugin)
-    this.plugin = plugin
+export class DeclutterMePluginSettingTab extends PluginSettingTab {
+  constructor(readonly plugin: DeclutterMePlugin) {
+    super(plugin.app, plugin)
   }
 
   display(): void {

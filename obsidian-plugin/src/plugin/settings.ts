@@ -1,5 +1,11 @@
 import { z } from 'zod'
 
+export const variablesSchema = z.record(z.union([z.number(), z.string()]))
+export const variablesExample: Variables = {
+  hello: 'world'
+}
+export type Variables = z.infer<typeof variablesSchema>
+
 export const routeSchema = z.object({
   template: z.string(),
   path: z.string(),
@@ -10,20 +16,7 @@ export const routeSchema = z.object({
   section: z.string().optional(),
   templatePath: z.string().optional(),
 })
-
-export const variablesSchema = z.record(z.union([z.number(), z.string()]))
-
-export type Variables = z.infer<typeof variablesSchema>
-export type Route = z.infer<typeof routeSchema>
-
-export type DeclutterMePluginSettings = {
-  routes: Route[]
-  device: string
-  variables: Variables
-}
-
 export const routesSchema = z.array(routeSchema)
-
 export const routesExample: Route[] = [
   {
     template: 'w {note}',
@@ -44,11 +37,13 @@ export const routesExample: Route[] = [
     leaf: 'tab',
   }
 ]
+export type Route = z.infer<typeof routeSchema>
 
-export const variablesExample: Variables = {
-  hello: 'world'
+export type DeclutterMePluginSettings = {
+  routes: Route[]
+  device: string
+  variables: Variables
 }
-
 export const DEFAULT_SETTINGS: DeclutterMePluginSettings = {
   routes: routesExample,
   device: 'Personal Macbook',
