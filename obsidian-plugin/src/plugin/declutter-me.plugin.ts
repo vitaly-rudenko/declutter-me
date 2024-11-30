@@ -6,6 +6,7 @@ import { transformMatchResultToVariables } from '../templater/transform-match-re
 import { DeclutterMePluginSettings, DEFAULT_SETTINGS, Route, Variables, variablesSchema } from './settings.js'
 import { DeclutterMePluginSettingTab } from './declutter-me.plugin-setting-tab.js'
 import { SpotlightSuggestModal } from './spotlight.suggest-modal.js'
+import { processTemplate } from './workarounds/process-template.js'
 
 type ObsidianProtocolHandlerEvent = {
   action: string
@@ -136,7 +137,7 @@ export class DeclutterMePlugin extends Plugin {
     if (templateFile) {
       const templateFileData = await this.app.vault.read(templateFile)
       if (templateFileData !== '') {
-        return templateFileData
+        return processTemplate(templateFileData)
       }
     }
 
