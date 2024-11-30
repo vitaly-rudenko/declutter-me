@@ -174,4 +174,16 @@ describe('applyMarkdownModification()', () => {
             })).toBe('# section before\n# section\ntest\n#section after\n')
         })
     })
+
+    describe('[regressions]', () => {
+        it('should add section correctly', () => {
+            expect(applyMarkdownModification({
+                type: 'appendLineAfterContent',
+                skipProperties: false,
+                section: '# section',
+                markdown: '---\nhello: world\n---\n---\n',
+                content: 'test'
+            })).toBe('---\nhello: world\n---\n---\n# section\ntest')
+        })
+    })
 })

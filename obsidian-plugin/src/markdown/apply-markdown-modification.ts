@@ -16,7 +16,12 @@ export function applyMarkdownModification(input: {
         startIndex = lines.indexOf(section, startIndex)
         if (startIndex === -1) {
             const lastNonEmptyLineIndex = Math.max(0, lines.findLastIndex(line => line.trim() !== ''))
-            lines.splice(lastNonEmptyLineIndex, 0, section)
+            if (lines[lastNonEmptyLineIndex] !== undefined && lines[lastNonEmptyLineIndex].trim() !== '') {
+                lines.splice(lastNonEmptyLineIndex + 1, 0, section)
+            } else {
+                lines.splice(lastNonEmptyLineIndex, 0, section)
+            }
+
             startIndex = lastNonEmptyLineIndex + 2
         }
 
