@@ -25,6 +25,7 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
           })
       })
 
+    let variablesErrorTimeoutId: any
     new Setting(this.containerEl)
       .setName('Variables')
       .setDesc('In JSON format. Can be used as {variable} in paths and contents. Not synced to other devices.')
@@ -39,13 +40,15 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
             try {
               this.plugin.settings.variables = variablesSchema.parse(JSON.parse(value))
             } catch {
-              new Notice('Could not parse variables')
+              clearTimeout(variablesErrorTimeoutId)
+              variablesErrorTimeoutId = setTimeout(() => new Notice('Could not parse variables'), 3000)
             }
 
             await this.plugin.saveSettings()
           })
       })
 
+    let routesErrorTimeoutId: any
     new Setting(this.containerEl)
       .setName('Routes')
       .setDesc('In JSON format. Synced to all devices.')
@@ -60,7 +63,8 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
             try {
               this.plugin.settings.routes = routesSchema.parse(JSON.parse(value))
             } catch {
-              new Notice('Could not parse routes')
+              clearTimeout(routesErrorTimeoutId)
+              routesErrorTimeoutId = setTimeout(() => new Notice('Could not parse routes'), 3000)
             }
 
             await this.plugin.saveSettings()
