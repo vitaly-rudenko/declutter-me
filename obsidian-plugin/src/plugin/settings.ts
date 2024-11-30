@@ -26,8 +26,7 @@ export const routesExample: Route[] = [
     template: 'p {note}',
     path: 'Personal/Tasks/{date:yyyy} from {device}.md',
     content: '- [ ] {note}',
-    leaf: 'split',
-    section: '# Backlog',
+    section: '# Tasks',
   },
   {
     template: 'JIRA-{id:number} {note}',
