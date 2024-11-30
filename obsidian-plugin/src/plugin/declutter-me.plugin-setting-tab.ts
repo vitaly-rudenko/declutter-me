@@ -224,8 +224,6 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName('Variables')
       .addTextArea((textArea) => {
-        textArea.inputEl.rows = 10
-        textArea.inputEl.cols = 60
         variablesJsonTextArea = textArea
         return textArea.setValue(JSON.stringify(this.plugin.settings.variables, null, 2))
       })
@@ -234,8 +232,6 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName('Routes')
       .addTextArea((textArea) => {
-        textArea.inputEl.rows = 20
-        textArea.inputEl.cols = 60
         routesJsonTextArea = textArea
         return textArea.setValue(JSON.stringify(this.plugin.settings.routes, null, 2))
       })
