@@ -2,10 +2,9 @@ export function applyMarkdownModification(input: {
     markdown: string,
     type: 'appendLineAfterContent' | 'prependLineBeforeContent'
     section?: string
-    skipProperties: boolean
     content: string
 }) {
-    const { markdown, type, section, skipProperties, content } = input
+    const { markdown, type, section, content } = input
 
     const lines = markdown.split('\n')
 
@@ -29,7 +28,7 @@ export function applyMarkdownModification(input: {
         if (endIndex === -1) {
             endIndex = lines.length
         }
-    } else if (skipProperties) {
+    } else {
         if (lines[0] === '---') {
             const propertiesEndIndex = lines.indexOf('---', 1)
             if (propertiesEndIndex !== -1) {

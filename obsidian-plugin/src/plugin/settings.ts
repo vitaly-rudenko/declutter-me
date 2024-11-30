@@ -12,7 +12,6 @@ export const routeSchema = z.object({
   content: z.string(),
   mode: z.enum(['appendLineAfterContent', 'prependLineBeforeContent']).optional(),
   leaf: z.enum(['split', 'tab', 'window']).optional(),
-  skipProperties: z.boolean().optional(),
   section: z.string().optional(),
   templatePath: z.string().optional(),
 })
@@ -20,21 +19,23 @@ export const routesSchema = z.array(routeSchema)
 export const routesExample: Route[] = [
   {
     template: 'w {note}',
-    path: '5 Test/2 Work/Tasks/{date:yyyy} from {device}.md',
+    path: 'Work/Tasks/{date:yyyy} from {device}.md',
     content: '- [ ] {note}',
   },
   {
     template: 'p {note}',
-    path: '5 Test/1 Personal/Tasks/{date:yyyy} from {device}.md',
+    path: 'Personal/Tasks/{date:yyyy} from {device}.md',
     content: '- [ ] {note}',
     leaf: 'split',
+    section: '# Backlog',
   },
   {
     template: 'JIRA-{id:number} {note}',
-    path: '5 Test/2 Work/Tickets/JIRA-{id} from {device}.md',
+    path: 'Work/Tickets/JIRA-{id} from {device}.md',
     content: '- [ ] {note}',
     mode: 'prependLineBeforeContent',
     leaf: 'tab',
+    templatePath: 'Templates/Work Ticket.md',
   }
 ]
 export type Route = z.infer<typeof routeSchema>

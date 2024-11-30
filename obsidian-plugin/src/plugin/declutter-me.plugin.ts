@@ -80,7 +80,6 @@ export class DeclutterMePlugin extends Plugin {
       markdown: fileData,
       type: matchedRoute.mode ?? 'appendLineAfterContent',
       content: replaceVariables(matchedRoute.content, variables),
-      skipProperties: matchedRoute.skipProperties ?? false,
       section: matchedRoute.section,
     })
 

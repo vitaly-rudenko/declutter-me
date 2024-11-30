@@ -26,47 +26,33 @@ describe('applyMarkdownModification()', () => {
                 markdown: '\n\n\nhello world\n\n\nhello world\nhi there\n\n\n',
                 content: 'multiline\ntest',
             })).toBe('\n\n\nhello world\n\n\nhello world\nhi there\nmultiline\ntest\n\n\n')
-        }
-
-        it('defaults', () => {
-            testBasic({
-                type: 'appendLineAfterContent',
-                skipProperties: false,
-            })
-        })
-
-        it('skipProperties: true', () => {
-            testBasic({
-                type: 'appendLineAfterContent',
-                skipProperties: true,
-            })
-
-            const options = {
-                type: 'appendLineAfterContent',
-                skipProperties: true,
-                content: 'test'
-            } as const
 
             expect(applyMarkdownModification({
-                markdown: '---\nhello: world\n---',
                 ...options,
+                markdown: '---\nhello: world\n---',
+                content: 'test',
             })).toBe('---\nhello: world\n---\ntest')
 
             expect(applyMarkdownModification({
-                markdown: '---\nhello: world\n---\nhello world',
                 ...options,
+                markdown: '---\nhello: world\n---\nhello world',
+                content: 'test',
             })).toBe('---\nhello: world\n---\nhello world\ntest')
 
             expect(applyMarkdownModification({
-                markdown: '---\nhello: world\n---\n\n---\n\nhello world\n\n\n',
                 ...options,
+                markdown: '---\nhello: world\n---\n\n---\n\nhello world\n\n\n',
+                content: 'test',
             })).toBe('---\nhello: world\n---\n\n---\n\nhello world\ntest\n\n\n')
+        }
+
+        it('defaults', () => {
+            testBasic({ type: 'appendLineAfterContent' })
         })
 
         it('section: "# section"', () => {
             const options = {
                 type: 'appendLineAfterContent',
-                skipProperties: false,
                 section: '# section',
                 content: 'test',
             } as const
@@ -113,64 +99,50 @@ describe('applyMarkdownModification()', () => {
                 markdown: '\n\n\nhello world\n\n\nhello world\nhi there\n\n\n',
                 content: 'multiline\ntest',
             })).toBe('\n\n\nmultiline\ntest\nhello world\n\n\nhello world\nhi there\n\n\n')
-        }
-
-        it('defaults', () => {
-            testBasic({
-                type: 'prependLineBeforeContent',
-                skipProperties: false,
-            })
-        })
-
-        it('skipProperties: true', () => {
-            testBasic({
-                type: 'prependLineBeforeContent',
-                skipProperties: true,
-            })
-
-            const options = {
-                type: 'prependLineBeforeContent',
-                skipProperties: true,
-                content: 'test'
-            } as const
 
             expect(applyMarkdownModification({
-                markdown: '---\nhello: world\n---',
                 ...options,
+                markdown: '---\nhello: world\n---',
+                content: 'test',
             })).toBe('---\nhello: world\n---\ntest')
 
             expect(applyMarkdownModification({
-                markdown: '---\nhello: world\n---\nhello world',
                 ...options,
+                markdown: '---\nhello: world\n---\nhello world',
+                content: 'test',
             })).toBe('---\nhello: world\n---\ntest\nhello world')
 
             expect(applyMarkdownModification({
-                markdown: '---\nhello: world\n---\n\n---\n\nhello world\n\n\n',
                 ...options,
+                markdown: '---\nhello: world\n---\n\n---\n\nhello world\n\n\n',
+                content: 'test',
             })).toBe('---\nhello: world\n---\n\ntest\n---\n\nhello world\n\n\n')
+        }
+
+        it('defaults', () => {
+            testBasic({ type: 'prependLineBeforeContent' })
         })
 
         it('section: "# section"', () => {
             const options = {
                 type: 'prependLineBeforeContent',
-                skipProperties: false,
                 section: '# section',
                 content: 'test',
             } as const
 
             expect(applyMarkdownModification({
-                markdown: '',
                 ...options,
+                markdown: '',
             })).toBe('# section\n\ntest')
 
             expect(applyMarkdownModification({
-                markdown: '# section\n\nhello world',
                 ...options,
+                markdown: '# section\n\nhello world',
             })).toBe('# section\n\ntest\nhello world')
 
             expect(applyMarkdownModification({
-                markdown: '# section before\n# section\n#section after\n',
                 ...options,
+                markdown: '# section before\n# section\n#section after\n',
             })).toBe('# section before\n# section\ntest\n#section after\n')
         })
     })
@@ -179,7 +151,6 @@ describe('applyMarkdownModification()', () => {
         it('should add section correctly', () => {
             expect(applyMarkdownModification({
                 type: 'appendLineAfterContent',
-                skipProperties: false,
                 section: '# section',
                 markdown: '---\nhello: world\n---\n---\n',
                 content: 'test'
