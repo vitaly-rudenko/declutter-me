@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 export const variableSchema = z.object({ name: z.string(), value: z.union([z.string(), z.number()]) })
+export const variablesSchema = z.array(variableSchema)
 export type Variable = z.infer<typeof variableSchema>
 
 export const routeSchema = z.object({

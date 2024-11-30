@@ -2,11 +2,10 @@ import { normalizePath, Notice, Plugin } from 'obsidian'
 import { match, MatchResult } from '../templater/match.js'
 import { applyMarkdownModification } from '../markdown/apply-markdown-modification.js'
 import { replaceVariables } from '../utils/replace-variables.js'
-import { DeclutterMePluginSettings, DEFAULT_SETTINGS, Route, Variable, variableSchema } from './common.js'
+import { DeclutterMePluginSettings, DEFAULT_SETTINGS, Route, Variable, variablesSchema } from './common.js'
 import { DeclutterMePluginSettingTab } from './declutter-me.plugin-setting-tab.js'
 import { SpotlightSuggestModal } from './spotlight.suggest-modal.js'
 import { processTemplate } from './workarounds/process-template.js'
-import { z } from 'zod'
 
 type ObsidianProtocolHandlerEvent = {
   action: string
@@ -37,7 +36,7 @@ export class DeclutterMePlugin extends Plugin {
   async loadSettings() {
     let variables: Variable[] = []
     try {
-      variables = z.array(variableSchema).parse(JSON.parse(this.app.loadLocalStorage('declutter-me:variables') as string))
+      variables = variablesSchema.parse(JSON.parse(this.app.loadLocalStorage('declutter-me:variables') as string))
     } catch { new Notice('Could not load variables') }
 
     this.settings = {

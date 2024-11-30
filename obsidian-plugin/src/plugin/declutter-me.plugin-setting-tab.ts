@@ -1,7 +1,6 @@
-import { Notice, PluginSettingTab, Setting } from 'obsidian'
+import { Notice, PluginSettingTab, Setting, TextAreaComponent } from 'obsidian'
 import { DeclutterMePlugin } from './declutter-me.plugin'
-import { DEFAULT_SETTINGS, routesSchema, Route, variableSchema } from './common'
-import { z } from 'zod'
+import { DEFAULT_SETTINGS, routesSchema, Route, variablesSchema } from './common'
 
 export class DeclutterMePluginSettingTab extends PluginSettingTab {
   constructor(readonly plugin: DeclutterMePlugin) {
@@ -12,9 +11,11 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
     this.containerEl.empty()
     this.containerEl.createEl('h1', { text: this.plugin.manifest.name })
 
+    this.containerEl.createEl('h3', { text: 'Variables' })
+
     new Setting(this.containerEl)
-      .setName('Device name')
-      .setDesc('Can be used as {device} in paths and contents. Not synced to other devices.')
+      .setName('{device}')
+      .setDesc('Can be used in path and content. Not synced to other devices.')
       .addText((text) => {
         return text
           .setPlaceholder(DEFAULT_SETTINGS.device)
@@ -26,17 +27,19 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
           })
       })
 
-    this.containerEl.createEl('h3', { text: 'Variables' })
-    this.containerEl.createEl('small', { text: 'Not synced to other devices' })
+    this.containerEl.createEl('h2', { text: 'Custom variables' })
 
     for (const [index, variable] of this.plugin.settings.variables.entries()) {
-      new Setting(this.containerEl)
+      const setting = new Setting(this.containerEl)
+        .setName(`{${variable.name}}`)
+        .setDesc('Can be used in path and content. Not synced to other devices.')
         .addText((text) => {
           return text
             .setPlaceholder('Variable name')
             .setValue(variable.name)
             .onChange(async (newVariableName) => {
               variable.name = newVariableName
+              setting.setName(`{${variable.name}}`)
 
               await this.plugin.saveSettings()
             })
@@ -67,7 +70,7 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .addButton((button) => {
         return button
-          .setButtonText('Add new variables')
+          .setButtonText('Add new custom variable')
           .onClick(async () => {
             this.plugin.settings.variables.push({ name: '', value: '' })
 
@@ -77,7 +80,6 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
       })
 
     this.containerEl.createEl('h3', { text: 'Routes' })
-    this.containerEl.createEl('small', { text: 'Synced to all devices' })
 
     for (const [index, route] of this.plugin.settings.routes.entries()) {
       this.containerEl.createEl('h2', { text: `Route ${index + 1}` })
@@ -218,45 +220,70 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
 
     this.containerEl.createEl('h3', { text: 'Raw settings' })
 
-    let variablesErrorTimeoutId: any
+    let variablesJsonTextArea: TextAreaComponent
     new Setting(this.containerEl)
       .setName('Variables')
       .addTextArea((textArea) => {
         textArea.inputEl.rows = 10
         textArea.inputEl.cols = 60
-
-        return textArea
-          .setValue(JSON.stringify(this.plugin.settings.variables, null, 2))
-          .onChange(async (value) => {
-            try {
-              this.plugin.settings.variables = z.array(variableSchema).parse(JSON.parse(value))
-            } catch {
-              clearTimeout(variablesErrorTimeoutId)
-              variablesErrorTimeoutId = setTimeout(() => new Notice('Could not parse variables'), 3000)
-            }
-
-            await this.plugin.saveSettings()
-          })
+        variablesJsonTextArea = textArea
+        return textArea.setValue(JSON.stringify(this.plugin.settings.variables, null, 2))
       })
 
-    let routesErrorTimeoutId: any
+    let routesJsonTextArea: TextAreaComponent
     new Setting(this.containerEl)
       .setName('Routes')
       .addTextArea((textArea) => {
         textArea.inputEl.rows = 20
         textArea.inputEl.cols = 60
+        routesJsonTextArea = textArea
+        return textArea.setValue(JSON.stringify(this.plugin.settings.routes, null, 2))
+      })
 
-        return textArea
-          .setValue(JSON.stringify(this.plugin.settings.routes, null, 2))
-          .onChange(async (value) => {
+    new Setting(this.containerEl)
+      .addButton((button) => {
+        return button
+          .setButtonText('Load')
+          .onClick(async () => {
+            variablesJsonTextArea.setValue(JSON.stringify(this.plugin.settings.variables, null, 2))
+            routesJsonTextArea.setValue(JSON.stringify(this.plugin.settings.routes, null, 2))
+
+            await this.plugin.saveSettings()
+            this.display()
+          })
+      })
+      .addButton((button) => {
+        return button
+          .setButtonText('Save')
+          .onClick(async () => {
             try {
-              this.plugin.settings.routes = routesSchema.parse(JSON.parse(value))
+              this.plugin.settings.variables = variablesSchema.parse(JSON.parse(variablesJsonTextArea.getValue()))
             } catch {
-              clearTimeout(routesErrorTimeoutId)
-              routesErrorTimeoutId = setTimeout(() => new Notice('Could not parse routes'), 3000)
+              new Notice('Invalid JSON for variables')
+              return
+            }
+
+            try {
+              this.plugin.settings.routes = routesSchema.parse(JSON.parse(routesJsonTextArea.getValue()))
+            } catch {
+              new Notice('Invalid JSON for routes')
+              return
             }
 
             await this.plugin.saveSettings()
+            this.display()
+          })
+      })
+      .addButton((button) => {
+        return button
+          .setButtonText('Reset settings')
+          .setWarning()
+          .onClick(async () => {
+            this.plugin.settings.variables = []
+            this.plugin.settings.routes = []
+
+            await this.plugin.saveSettings()
+            this.display()
           })
       })
   }
