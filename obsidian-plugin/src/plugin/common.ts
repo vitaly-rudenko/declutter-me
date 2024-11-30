@@ -1,8 +1,5 @@
 import { z } from 'zod'
 
-export const variableMapSchema = z.record(z.union([z.number(), z.string()]))
-export type VariableMap = z.infer<typeof variableMapSchema>
-
 export const variableSchema = z.object({ name: z.string(), value: z.union([z.string(), z.number()]) })
 export type Variable = z.infer<typeof variableSchema>
 
