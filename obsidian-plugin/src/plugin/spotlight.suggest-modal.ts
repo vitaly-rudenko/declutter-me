@@ -31,7 +31,7 @@ export class SpotlightSuggestModal extends SuggestModal<Route> {
       return
     }
 
-    el.createEl('div', { text: replaceVariables(route.content, variables) })
+    el.createEl('div', { text: replaceVariables(route.content ?? '{note}', variables) })
     el.createEl('small', { text: replaceVariables(route.path, variables) })
   }
 
