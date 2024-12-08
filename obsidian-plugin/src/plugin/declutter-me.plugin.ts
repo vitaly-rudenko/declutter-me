@@ -6,12 +6,15 @@ import { DeclutterMePluginSettings, DEFAULT_SETTINGS, Route, Variable, variables
 import { DeclutterMePluginSettingTab } from './declutter-me.plugin-setting-tab.js'
 import { SpotlightSuggestModal } from './spotlight.suggest-modal.js'
 import { processTemplate } from './workarounds/process-template.js'
+import { prepareMarkdownForModification } from 'src/markdown/prepare-markdown-for-modification.js'
 
 type ObsidianProtocolHandlerEvent = {
   action: string
   input: string
   [key: string]: string
 }
+
+// TODO: multiline note support (truncated + code block)
 
 export class DeclutterMePlugin extends Plugin {
   settings: DeclutterMePluginSettings = DEFAULT_SETTINGS
@@ -77,11 +80,13 @@ export class DeclutterMePlugin extends Plugin {
       || (matchedRoute.templatePath && await this.loadTemplateFileData(matchedRoute.templatePath))
       || ''
 
+    const section = matchedRoute.section ? replaceVariables(matchedRoute.section, variables) : undefined
+
     const dataToWrite = applyMarkdownModification({
-      markdown: fileData,
+      markdown: prepareMarkdownForModification({ markdown: fileData, section }),
       type: matchedRoute.mode ?? 'appendLineAfterContent',
       content: replaceVariables(matchedRoute.content, variables),
-      section: matchedRoute.section ? replaceVariables(matchedRoute.section, variables) : undefined,
+      section,
     })
 
     console.debug({ input, variables, path, dataToWrite })
