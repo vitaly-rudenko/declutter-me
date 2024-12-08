@@ -4,13 +4,23 @@ export const variableSchema = z.object({ name: z.string(), value: z.union([z.str
 export const variablesSchema = z.array(variableSchema)
 export type Variable = z.infer<typeof variableSchema>
 
+const routeTypeSchema = z.enum(['raw', 'task'])
+export type RouteType = z.infer<typeof routeTypeSchema>
+
+const routeModeSchema = z.enum(['appendLineAfterContent', 'prependLineBeforeContent'])
+export type RouteMode = z.infer<typeof routeModeSchema>
+
+const routeLeafSchema = z.enum(['noAction', 'split', 'tab', 'window'])
+export type RouteLeaf = z.infer<typeof routeLeafSchema>
+
 export const routeSchema = z.object({
   template: z.string(),
   path: z.string(),
-  content: z.string(),
+  content: z.string().optional(),
+  type: routeTypeSchema.optional(),
   section: z.string().optional(),
-  mode: z.enum(['appendLineAfterContent', 'prependLineBeforeContent']).optional(),
-  leaf: z.enum(['split', 'tab', 'window']).optional(),
+  mode: routeModeSchema.optional(),
+  leaf: routeLeafSchema.optional(),
   templatePath: z.string().optional(),
 })
 export const routesSchema = z.array(routeSchema)

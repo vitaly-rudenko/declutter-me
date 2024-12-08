@@ -2,11 +2,12 @@ import { normalizePath, Notice, Plugin } from 'obsidian'
 import { match, MatchResult } from '../templater/match.js'
 import { applyMarkdownModification } from '../markdown/apply-markdown-modification.js'
 import { replaceVariables } from '../utils/replace-variables.js'
-import { DeclutterMePluginSettings, DEFAULT_SETTINGS, Route, Variable, variablesSchema } from './common.js'
+import { DeclutterMePluginSettings, DEFAULT_SETTINGS, Route, RouteLeaf, RouteMode, RouteType, Variable, variablesSchema } from './common.js'
 import { DeclutterMePluginSettingTab } from './declutter-me.plugin-setting-tab.js'
 import { SpotlightSuggestModal } from './spotlight.suggest-modal.js'
 import { processTemplate } from './workarounds/process-template.js'
 import { prepareMarkdownForModification } from 'src/markdown/prepare-markdown-for-modification.js'
+import { formatTaskContent } from './format-content.js'
 
 type ObsidianProtocolHandlerEvent = {
   action: string
@@ -74,6 +75,10 @@ export class DeclutterMePlugin extends Plugin {
       ...matchResult.variables,
     ]
 
+    const type: RouteType = matchedRoute.type ?? 'task'
+    const mode: RouteMode = matchedRoute.mode ?? 'appendLineAfterContent'
+    const leaf: RouteLeaf = matchedRoute.leaf ?? 'noAction'
+
     const path = normalizePath(replaceVariables(matchedRoute.path, variables))
     const file = await this.upsertFile(path)
     const fileData = await this.app.vault.read(file)
@@ -82,10 +87,15 @@ export class DeclutterMePlugin extends Plugin {
 
     const section = matchedRoute.section ? replaceVariables(matchedRoute.section, variables) : undefined
 
+    const rawContent = replaceVariables(matchedRoute.content ?? '{note}', variables)
+    const formattedContent = type === 'task'
+      ? formatTaskContent(rawContent)
+      : rawContent
+
     const dataToWrite = applyMarkdownModification({
       markdown: prepareMarkdownForModification({ markdown: fileData, section }),
-      type: matchedRoute.mode ?? 'appendLineAfterContent',
-      content: replaceVariables(matchedRoute.content, variables),
+      type: mode,
+      content: formattedContent,
       section,
     })
 
@@ -93,13 +103,13 @@ export class DeclutterMePlugin extends Plugin {
 
     await this.app.vault.modify(file, dataToWrite)
 
-    if (matchedRoute.leaf) {
+    if (leaf !== 'noAction') {
       // TODO: do not open leaf if already opened & visible in any group / split
       //       currently it only checks the currently active file
       // TODO: activate existing leaf if already opened but not visible
       if (this.app.workspace.getActiveFile()?.path !== file.path) {
-        const leaf = this.app.workspace.getLeaf(matchedRoute.leaf)
-        await leaf.openFile(file)
+        const workspaceLeaf = this.app.workspace.getLeaf(leaf)
+        await workspaceLeaf.openFile(file)
       }
     }
 

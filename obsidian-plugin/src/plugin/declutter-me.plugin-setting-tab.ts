@@ -1,6 +1,6 @@
 import { Notice, PluginSettingTab, Setting, TextAreaComponent } from 'obsidian'
 import { DeclutterMePlugin } from './declutter-me.plugin'
-import { DEFAULT_SETTINGS, routesSchema, Route, variablesSchema } from './common'
+import { DEFAULT_SETTINGS, routesSchema, variablesSchema, RouteLeaf, RouteMode, RouteType } from './common'
 
 export class DeclutterMePluginSettingTab extends PluginSettingTab {
   constructor(readonly plugin: DeclutterMePlugin) {
@@ -82,24 +82,62 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
     this.containerEl.createEl('h3', { text: 'Routes' })
 
     for (const [index, route] of this.plugin.settings.routes.entries()) {
-      this.containerEl.createEl('h2', { text: `Route ${index + 1}` })
+      // this.containerEl.createEl('h2', { text: `Route ${index + 1}` })
 
       new Setting(this.containerEl)
+        .setName(`Route ${index + 1}`)
+        .setHeading()
+        .addButton((button) => {
+          return button
+            .setIcon('move-up')
+            .setDisabled(index === 0)
+            .onClick(async () => {
+              if (index === 0) return
+              const swapRoute = this.plugin.settings.routes[index - 1]
+              this.plugin.settings.routes[index - 1] = route
+              this.plugin.settings.routes[index] = swapRoute
+              await this.plugin.saveSettings()
+              this.display()
+            })
+        })
+        .addButton((button) => {
+          return button
+            .setIcon('move-down')
+            .setDisabled(index === this.plugin.settings.routes.length - 1)
+            .onClick(async () => {
+              if (index === this.plugin.settings.routes.length - 1) return
+              const swapRoute = this.plugin.settings.routes[index + 1]
+              this.plugin.settings.routes[index + 1] = route
+              this.plugin.settings.routes[index] = swapRoute
+              await this.plugin.saveSettings()
+              this.display()
+            })
+        })
+        .addButton((button) => {
+          return button
+            .setWarning()
+            .setIcon('x')
+            .onClick(async () => {
+              this.plugin.settings.routes.splice(index, 1)
+              await this.plugin.saveSettings()
+              this.display()
+            })
+        })
+
+      setupSettingSection(new Setting(this.containerEl)
         .setName('Input')
-        .setDesc('Template')
         .addText((text) => {
           return text
-            .setPlaceholder('p {note}')
+            .setPlaceholder('personal {note}')
             .setValue(route.template)
             .onChange(async (newTemplate) => {
               route.template = newTemplate
               await this.plugin.saveSettings()
             })
-        })
+        }))
 
-      new Setting(this.containerEl)
-        .setName('Destination')
-        .setDesc('Path and section')
+      setupSettingSection(new Setting(this.containerEl)
+        .setName('Destination\nSection')
         .addText((text) => {
           return text
             .setPlaceholder('Personal/Tasks/{date:yyyy} from {device}.md')
@@ -117,17 +155,16 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
               route.section = newSection ? newSection : undefined
               await this.plugin.saveSettings()
             })
-        })
+        }))
 
-      new Setting(this.containerEl)
-        .setName('Output')
-        .setDesc('Content and template path')
+      setupSettingSection(new Setting(this.containerEl)
+        .setName('Content\nTemplate')
         .addText((text) => {
           return text
-            .setPlaceholder('- [ ] {note}')
-            .setValue(route.content)
+            .setPlaceholder('{note}')
+            .setValue(route.content ?? '')
             .onChange(async (newContent) => {
-              route.content = newContent
+              route.content = newContent || undefined
               await this.plugin.saveSettings()
             })
         })
@@ -136,73 +173,43 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
             .setPlaceholder('Templates/Personal Task.md')
             .setValue(route.templatePath ?? '')
             .onChange(async (newTemplatePath) => {
-              route.templatePath = newTemplatePath ? newTemplatePath : undefined
+              route.templatePath = newTemplatePath || undefined
               await this.plugin.saveSettings()
             })
-        })
+        }))
 
       new Setting(this.containerEl)
         .setName('Options')
-        .setDesc('Mode and leaf')
         .addDropdown((dropdown) => {
           return dropdown
             .addOption('appendLineAfterContent', 'Append line after content')
             .addOption('prependLineBeforeContent', 'Prepend line before content')
             .setValue(route.mode ?? 'appendLineAfterContent')
             .onChange(async (newMode) => {
-              route.mode = newMode === 'appendLineAfterContent' ? newMode : newMode as Route['mode']
+              route.mode = newMode as RouteMode
               await this.plugin.saveSettings()
             })
         })
         .addDropdown((dropdown) => {
           return dropdown
-            .addOption('default', 'Do not open')
+            .addOption('tab', 'Open in a new Tab')
             .addOption('split', 'Open in a Split')
-            .addOption('tab', 'Open in new Tab')
-            .addOption('window', 'Open in new Window')
-            .setValue(route.leaf ?? 'default')
+            .addOption('window', 'Open in a new Window')
+            .addOption('noAction', 'No action')
+            .setValue(route.leaf ?? 'tab')
             .onChange(async (newLeaf) => {
-              route.leaf = newLeaf !== 'default' ? newLeaf as Route['leaf'] : undefined
+              route.leaf = newLeaf as RouteLeaf
               await this.plugin.saveSettings()
             })
         })
-
-      new Setting(this.containerEl)
-        .setName('Actions')
-        .addButton((button) => {
-          return button
-            .setButtonText('Move up')
-            .setDisabled(index === 0)
-            .onClick(async () => {
-              if (index === 0) return
-              const swapRoute = this.plugin.settings.routes[index - 1]
-              this.plugin.settings.routes[index - 1] = route
-              this.plugin.settings.routes[index] = swapRoute
+        .addDropdown((dropdown) => {
+          return dropdown
+            .addOption('task', 'Task')
+            .addOption('raw', 'Raw')
+            .setValue(route.type ?? 'task')
+            .onChange(async (newType) => {
+              route.type = newType as RouteType
               await this.plugin.saveSettings()
-              this.display()
-            })
-        })
-        .addButton((button) => {
-          return button
-            .setButtonText('Move down')
-            .setDisabled(index === this.plugin.settings.routes.length - 1)
-            .onClick(async () => {
-              if (index === this.plugin.settings.routes.length - 1) return
-              const swapRoute = this.plugin.settings.routes[index + 1]
-              this.plugin.settings.routes[index + 1] = route
-              this.plugin.settings.routes[index] = swapRoute
-              await this.plugin.saveSettings()
-              this.display()
-            })
-        })
-        .addButton((button) => {
-          return button
-            .setWarning()
-            .setButtonText('Delete')
-            .onClick(async () => {
-              this.plugin.settings.routes.splice(index, 1)
-              await this.plugin.saveSettings()
-              this.display()
             })
         })
     }
@@ -225,6 +232,9 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
       .setName('Variables')
       .addTextArea((textArea) => {
         variablesJsonTextArea = textArea
+        textArea.inputEl.cols = 60
+        textArea.inputEl.rows = 15
+
         return textArea.setValue(JSON.stringify(this.plugin.settings.variables, null, 2))
       })
 
@@ -233,6 +243,9 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
       .setName('Routes')
       .addTextArea((textArea) => {
         routesJsonTextArea = textArea
+        textArea.inputEl.cols = 60
+        textArea.inputEl.rows = 15
+
         return textArea.setValue(JSON.stringify(this.plugin.settings.routes, null, 2))
       })
 
@@ -283,4 +296,13 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
           })
       })
   }
+}
+
+function setupSettingSection(setting: Setting) {
+  setting.infoEl.style.flex = '0 0 auto'
+  setting.infoEl.style.minWidth = '25%'
+  setting.infoEl.innerHTML = setting.infoEl.innerHTML.replace(/\n/g, '<br>')
+
+  setting.controlEl.style.flexDirection = 'column'
+  setting.controlEl.style.alignItems = 'stretch'
 }
