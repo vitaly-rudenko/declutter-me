@@ -1,0 +1,585 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations] 1`] = `
+"INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: # section before<br># section<br><br><br># section after<br> 1`] = `
+"# section before
+# section
+
+
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: # section before<br># section<br><br>hello world<br>hi there<br># section after<br> 1`] = `
+"# section before
+# section
+
+hello world
+hi there
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: # section before<br># section<br>hello world<br># section after<br> 1`] = `
+"# section before
+# section
+hello world
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: # section<br><br><br> 1`] = `
+"# section
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: # section<br><br>hello world<br>hi there<br> 1`] = `
+"# section
+
+hello world
+hi there
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: # section<br>hello world<br> 1`] = `
+"# section
+hello world
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br><br><br> 1`] = `
+"---
+hello: world
+---
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br><br><br># section before<br># section<br><br><br># section after<br> 1`] = `
+"---
+hello: world
+---
+
+
+# section before
+# section
+
+
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br><br><br># section before<br># section<br><br>hello world<br>hi there<br># section after<br> 1`] = `
+"---
+hello: world
+---
+
+
+# section before
+# section
+
+hello world
+hi there
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br><br><br># section before<br># section<br>hello world<br># section after<br> 1`] = `
+"---
+hello: world
+---
+
+
+# section before
+# section
+hello world
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br><br><br># section<br><br><br> 1`] = `
+"---
+hello: world
+---
+
+
+# section
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br><br><br># section<br><br>hello world<br>hi there<br> 1`] = `
+"---
+hello: world
+---
+
+
+# section
+
+hello world
+hi there
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br><br><br># section<br>hello world<br> 1`] = `
+"---
+hello: world
+---
+
+
+# section
+hello world
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br><br>hello world<br>hi there<br> 1`] = `
+"---
+hello: world
+---
+
+hello world
+hi there
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br><br>hello world<br>hi there<br># section before<br># section<br><br><br># section after<br> 1`] = `
+"---
+hello: world
+---
+
+hello world
+hi there
+# section before
+# section
+
+
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br><br>hello world<br>hi there<br># section before<br># section<br><br>hello world<br>hi there<br># section after<br> 1`] = `
+"---
+hello: world
+---
+
+hello world
+hi there
+# section before
+# section
+
+hello world
+hi there
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br><br>hello world<br>hi there<br># section<br><br><br> 1`] = `
+"---
+hello: world
+---
+
+hello world
+hi there
+# section
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br><br>hello world<br>hi there<br># section<br><br>hello world<br>hi there<br> 1`] = `
+"---
+hello: world
+---
+
+hello world
+hi there
+# section
+
+hello world
+hi there
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br>hello world<br> 1`] = `
+"---
+hello: world
+---
+hello world
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br>hello world<br># section before<br># section<br><br><br># section after<br> 1`] = `
+"---
+hello: world
+---
+hello world
+# section before
+# section
+
+
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br>hello world<br># section before<br># section<br>hello world<br># section after<br> 1`] = `
+"---
+hello: world
+---
+hello world
+# section before
+# section
+hello world
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br>hello world<br># section<br><br><br> 1`] = `
+"---
+hello: world
+---
+hello world
+# section
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: appendLineAfterContent [permutations]: ---<br>hello: world<br>---<br>hello world<br># section<br>hello world<br> 1`] = `
+"---
+hello: world
+---
+hello world
+# section
+hello world
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations] 1`] = `
+"INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: # section before<br># section<br><br><br># section after<br> 1`] = `
+"# section before
+# section
+
+
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: # section before<br># section<br><br>hello world<br>hi there<br># section after<br> 1`] = `
+"# section before
+# section
+
+hello world
+hi there
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: # section before<br># section<br>hello world<br># section after<br> 1`] = `
+"# section before
+# section
+hello world
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: # section<br><br><br> 1`] = `
+"# section
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: # section<br><br>hello world<br>hi there<br> 1`] = `
+"# section
+
+INSERTED
+hello world
+hi there
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: # section<br>hello world<br> 1`] = `
+"# section
+
+INSERTED
+hello world
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br><br><br> 1`] = `
+"---
+hello: world
+---
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br><br><br># section before<br># section<br><br><br># section after<br> 1`] = `
+"---
+hello: world
+---
+
+
+# section before
+# section
+
+
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br><br><br># section before<br># section<br><br>hello world<br>hi there<br># section after<br> 1`] = `
+"---
+hello: world
+---
+
+
+# section before
+# section
+
+hello world
+hi there
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br><br><br># section before<br># section<br>hello world<br># section after<br> 1`] = `
+"---
+hello: world
+---
+
+
+# section before
+# section
+hello world
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br><br><br># section<br><br><br> 1`] = `
+"---
+hello: world
+---
+
+
+# section
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br><br><br># section<br><br>hello world<br>hi there<br> 1`] = `
+"---
+hello: world
+---
+
+
+# section
+
+INSERTED
+hello world
+hi there
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br><br><br># section<br>hello world<br> 1`] = `
+"---
+hello: world
+---
+
+
+# section
+
+INSERTED
+hello world
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br><br>hello world<br>hi there<br> 1`] = `
+"---
+hello: world
+---
+
+INSERTED
+hello world
+hi there
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br><br>hello world<br>hi there<br># section before<br># section<br><br><br># section after<br> 1`] = `
+"---
+hello: world
+---
+
+hello world
+hi there
+# section before
+# section
+
+
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br><br>hello world<br>hi there<br># section before<br># section<br><br>hello world<br>hi there<br># section after<br> 1`] = `
+"---
+hello: world
+---
+
+hello world
+hi there
+# section before
+# section
+
+hello world
+hi there
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br><br>hello world<br>hi there<br># section<br><br><br> 1`] = `
+"---
+hello: world
+---
+
+hello world
+hi there
+# section
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br><br>hello world<br>hi there<br># section<br><br>hello world<br>hi there<br> 1`] = `
+"---
+hello: world
+---
+
+hello world
+hi there
+# section
+
+INSERTED
+hello world
+hi there
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br>hello world<br> 1`] = `
+"---
+hello: world
+---
+
+INSERTED
+hello world
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br>hello world<br># section before<br># section<br><br><br># section after<br> 1`] = `
+"---
+hello: world
+---
+hello world
+# section before
+# section
+
+
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br>hello world<br># section before<br># section<br>hello world<br># section after<br> 1`] = `
+"---
+hello: world
+---
+hello world
+# section before
+# section
+hello world
+# section after
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br>hello world<br># section<br><br><br> 1`] = `
+"---
+hello: world
+---
+hello world
+# section
+
+INSERTED
+"
+`;
+
+exports[`applyMarkdownModification() type: prependLineBeforeContent [permutations]: ---<br>hello: world<br>---<br>hello world<br># section<br>hello world<br> 1`] = `
+"---
+hello: world
+---
+hello world
+# section
+
+INSERTED
+hello world
+"
+`;

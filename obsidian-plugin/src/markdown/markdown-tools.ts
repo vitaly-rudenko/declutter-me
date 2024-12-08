@@ -6,10 +6,10 @@ export function isLogicalSeparator(line: string) {
   return isSection(line) || isHorizontalRule(line)
 }
 
-export function isSection(line: string) {
+function isSection(line: string) {
   return /^#+ /.test(line)
 }
 
-export function isHorizontalRule(line: string) {
+function isHorizontalRule(line: string) {
   return line === '---'
 }
