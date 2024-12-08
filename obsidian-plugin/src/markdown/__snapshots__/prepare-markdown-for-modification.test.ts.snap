@@ -1,0 +1,291 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`prepareMarkdownForModification() [permutations]:  + section "# section" 1`] = `
+"# section
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]:  w/o section 1`] = `""`;
+
+exports[`prepareMarkdownForModification() [permutations]: # section before<br># section<br># section after + section "# section" 1`] = `
+"# section before
+# section
+
+
+
+# section after"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: # section before<br># section<br># section after w/o section 1`] = `
+"# section before
+# section
+# section after
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: # section before<br># section<br><br># section after + section "# section" 1`] = `
+"# section before
+# section
+
+
+
+# section after"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: # section before<br># section<br><br># section after w/o section 1`] = `
+"# section before
+# section
+
+# section after
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: # section before<br># section<br><br><br># section after + section "# section" 1`] = `
+"# section before
+# section
+
+
+
+# section after"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: # section before<br># section<br><br><br># section after w/o section 1`] = `
+"# section before
+# section
+
+
+# section after
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: # section<br>hello world + section "# section" 1`] = `
+"# section
+hello world"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: # section<br>hello world w/o section 1`] = `
+"# section
+hello world"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: # section<br>hello world<br> + section "# section" 1`] = `
+"# section
+hello world
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: # section<br>hello world<br> w/o section 1`] = `
+"# section
+hello world
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: <br> + section "# section" 1`] = `
+"# section
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: <br> w/o section 1`] = `
+"
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: <br><br><br> + section "# section" 1`] = `
+"# section
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: <br><br><br> w/o section 1`] = `
+"
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: <br><br><br># section before<br><br><br># section<br><br><br># section after<br><br><br> + section "# section" 1`] = `
+"
+
+
+# section before
+
+
+# section
+
+
+
+# section after
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: <br><br><br># section before<br><br><br># section<br><br><br># section after<br><br><br> w/o section 1`] = `
+"
+
+
+# section before
+
+
+# section
+
+
+# section after
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: <br><br><br># section<br><br><br>hello world<br><br><br> + section "# section" 1`] = `
+"
+
+
+# section
+
+
+hello world
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: <br><br><br># section<br><br><br>hello world<br><br><br> w/o section 1`] = `
+"
+
+
+# section
+
+
+hello world
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: <br><br><br>---<br>hello: world<br>---<br><br><br> + section "# section" 1`] = `
+"
+
+
+---
+hello: world
+---
+
+
+
+# section
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: <br><br><br>---<br>hello: world<br>---<br><br><br> w/o section 1`] = `
+"
+
+
+---
+hello: world
+---
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: <br><br><br>hello world<br><br><br> + section "# section" 1`] = `
+"
+
+
+hello world
+
+
+
+# section
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: <br><br><br>hello world<br><br><br> w/o section 1`] = `
+"
+
+
+hello world
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: ---<br>hello: world<br>--- + section "# section" 1`] = `
+"---
+hello: world
+---
+
+# section
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: ---<br>hello: world<br>--- w/o section 1`] = `
+"---
+hello: world
+---
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: ---<br>hello: world<br>---<br> + section "# section" 1`] = `
+"---
+hello: world
+---
+
+# section
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: ---<br>hello: world<br>---<br> w/o section 1`] = `
+"---
+hello: world
+---
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: hello world + section "# section" 1`] = `
+"hello world
+
+# section
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: hello world w/o section 1`] = `"hello world"`;
+
+exports[`prepareMarkdownForModification() [permutations]: hello world<br> + section "# section" 1`] = `
+"hello world
+
+# section
+
+
+"
+`;
+
+exports[`prepareMarkdownForModification() [permutations]: hello world<br> w/o section 1`] = `
+"hello world
+"
+`;
