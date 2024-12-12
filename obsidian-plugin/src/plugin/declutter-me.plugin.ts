@@ -7,7 +7,8 @@ import { DeclutterMePluginSettingTab } from './declutter-me.plugin-setting-tab.j
 import { SpotlightSuggestModal } from './spotlight.suggest-modal.js'
 import { processTemplate } from './workarounds/process-template.js'
 import { prepareMarkdownForModification } from 'src/markdown/prepare-markdown-for-modification.js'
-import { formatTaskContent } from './format-content.js'
+import { formatTaskContent } from './formatters/format-task-content.js'
+import { formatListItemContent } from './formatters/format-list-item-content.js'
 
 type ObsidianProtocolHandlerEvent = {
   action: string
@@ -90,7 +91,9 @@ export class DeclutterMePlugin extends Plugin {
     const rawContent = replaceVariables(matchedRoute.content ?? '{note}', variables)
     const formattedContent = type === 'task'
       ? formatTaskContent(rawContent)
-      : rawContent
+      : type === 'list-item'
+        ? formatListItemContent(rawContent)
+        : rawContent
 
     const dataToWrite = applyMarkdownModification({
       markdown: prepareMarkdownForModification({ markdown: fileData, section }),

@@ -205,6 +205,7 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
         .addDropdown((dropdown) => {
           return dropdown
             .addOption('task', 'Task')
+            .addOption('list-item', 'List item')
             .addOption('raw', 'Raw')
             .setValue(route.type ?? 'task')
             .onChange(async (newType) => {

@@ -4,7 +4,7 @@ export const variableSchema = z.object({ name: z.string(), value: z.union([z.str
 export const variablesSchema = z.array(variableSchema)
 export type Variable = z.infer<typeof variableSchema>
 
-const routeTypeSchema = z.enum(['raw', 'task'])
+const routeTypeSchema = z.enum(['raw', 'task', 'list-item'])
 export type RouteType = z.infer<typeof routeTypeSchema>
 
 const routeModeSchema = z.enum(['appendLineAfterContent', 'prependLineBeforeContent'])
