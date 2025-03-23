@@ -1,0 +1,11 @@
+{
+	"id": "declutter-me",
+	"name": "Declutter Me",
+	"version": "0.1.0",
+	"minAppVersion": "0.15.0",
+	"description": "Gateway for your notes",
+	"author": "Obsidian",
+	"authorUrl": "https://github.com/vitaly-rudenko",
+	"fundingUrl": "",
+	"isDesktopOnly": false
+}
