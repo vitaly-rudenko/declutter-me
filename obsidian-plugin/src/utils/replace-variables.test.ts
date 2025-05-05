@@ -1,4 +1,4 @@
-import { replaceVariables } from './replace-variables'
+import { replaceVariables } from './replace-variables.js'
 
 describe('replaceVariables()', () => {
   it('replaces variables', () => {

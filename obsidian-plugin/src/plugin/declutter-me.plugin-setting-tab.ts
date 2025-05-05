@@ -1,6 +1,7 @@
 import { Notice, PluginSettingTab, Setting, TextAreaComponent } from 'obsidian'
-import { DeclutterMePlugin } from './declutter-me.plugin'
-import { DEFAULT_SETTINGS, routesSchema, variablesSchema, RouteLeaf, RouteMode, RouteType } from './common'
+import { DeclutterMePlugin } from './declutter-me.plugin.js'
+import { DEFAULT_SETTINGS, routesSchema, variablesSchema, RouteLeaf, RouteMode, RouteType } from './common.js'
+import { defaultRouteLeaf, defaultRouteMode, defaultRouteType } from './defaults.js'
 
 export class DeclutterMePluginSettingTab extends PluginSettingTab {
   constructor(readonly plugin: DeclutterMePlugin) {
@@ -184,7 +185,7 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
           return dropdown
             .addOption('appendLineAfterContent', 'Append line after content')
             .addOption('prependLineBeforeContent', 'Prepend line before content')
-            .setValue(route.mode ?? 'appendLineAfterContent')
+            .setValue(route.mode ?? defaultRouteMode)
             .onChange(async (newMode) => {
               route.mode = newMode as RouteMode
               await this.plugin.saveSettings()
@@ -196,7 +197,7 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
             .addOption('split', 'Open in a Split')
             .addOption('window', 'Open in a new Window')
             .addOption('noAction', 'No action')
-            .setValue(route.leaf ?? 'tab')
+            .setValue(route.leaf ?? defaultRouteLeaf)
             .onChange(async (newLeaf) => {
               route.leaf = newLeaf as RouteLeaf
               await this.plugin.saveSettings()
@@ -207,7 +208,7 @@ export class DeclutterMePluginSettingTab extends PluginSettingTab {
             .addOption('task', 'Task')
             .addOption('list-item', 'List item')
             .addOption('raw', 'Raw')
-            .setValue(route.type ?? 'task')
+            .setValue(route.type ?? defaultRouteType)
             .onChange(async (newType) => {
               route.type = newType as RouteType
               await this.plugin.saveSettings()

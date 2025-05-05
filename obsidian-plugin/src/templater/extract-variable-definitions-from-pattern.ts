@@ -1,4 +1,4 @@
-import { Token } from './parse-template'
+import { Token } from './parse-template.js'
 
 type VariableDefinitionMap = {
     [variableName: string]: {

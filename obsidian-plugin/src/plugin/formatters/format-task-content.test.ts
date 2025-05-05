@@ -1,4 +1,4 @@
-import { formatTaskContent } from "./format-task-content"
+import { formatTaskContent } from "./format-task-content.js"
 
 describe('formatTaskContent()', () => {
   it('should format single-line content', () => {

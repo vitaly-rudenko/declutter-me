@@ -1,4 +1,4 @@
-import { applyMarkdownModification } from './apply-markdown-modification'
+import { applyMarkdownModification } from './apply-markdown-modification.js'
 
 const propertiesVariations = [
   undefined,

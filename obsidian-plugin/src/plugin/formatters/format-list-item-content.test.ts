@@ -1,4 +1,4 @@
-import { formatListItemContent } from "./format-list-item-content"
+import { formatListItemContent } from "./format-list-item-content.js"
 
 describe('formatListItemContent()', () => {
   it('should format single-line content', () => {

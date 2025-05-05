@@ -1,4 +1,4 @@
-import { processTemplate } from "./process-template"
+import { processTemplate } from "./process-template.js"
 
 describe('processTemplate()', () => {
   it('processes a template', () => {

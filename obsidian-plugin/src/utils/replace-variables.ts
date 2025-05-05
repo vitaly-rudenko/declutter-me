@@ -1,5 +1,5 @@
 import { format } from 'date-fns'
-import { Variable } from 'src/plugin/common'
+import { Variable } from 'src/plugin/common.js'
 
 export function replaceVariables(input: string, variables: Variable[], now = new Date()) {
   let result = input

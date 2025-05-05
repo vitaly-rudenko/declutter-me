@@ -1,4 +1,4 @@
-import { isEmpty, isLogicalSeparator } from "./markdown-tools"
+import { isEmpty, isLogicalSeparator } from "./markdown-tools.js"
 
 export function prepareMarkdownForModification(input: {
   markdown: string,

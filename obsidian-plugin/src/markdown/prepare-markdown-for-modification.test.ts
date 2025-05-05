@@ -1,4 +1,4 @@
-import { prepareMarkdownForModification } from "./prepare-markdown-for-modification"
+import { prepareMarkdownForModification } from "./prepare-markdown-for-modification.js"
 
 const markdownVariations = [
   '',

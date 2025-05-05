@@ -9,6 +9,7 @@ import { processTemplate } from './workarounds/process-template.js'
 import { prepareMarkdownForModification } from 'src/markdown/prepare-markdown-for-modification.js'
 import { formatTaskContent } from './formatters/format-task-content.js'
 import { formatListItemContent } from './formatters/format-list-item-content.js'
+import { defaultRouteLeaf, defaultRouteMode, defaultRouteType } from './defaults.js'
 
 type ObsidianProtocolHandlerEvent = {
   action: string
@@ -76,9 +77,9 @@ export class DeclutterMePlugin extends Plugin {
       ...matchResult.variables,
     ]
 
-    const type: RouteType = matchedRoute.type ?? 'task'
-    const mode: RouteMode = matchedRoute.mode ?? 'appendLineAfterContent'
-    const leaf: RouteLeaf = matchedRoute.leaf ?? 'noAction'
+    const type: RouteType = matchedRoute.type ?? defaultRouteType
+    const mode: RouteMode = matchedRoute.mode ?? defaultRouteMode
+    const leaf: RouteLeaf = matchedRoute.leaf ?? defaultRouteLeaf
 
     const path = normalizePath(replaceVariables(matchedRoute.path, variables))
     const file = await this.upsertFile(path)
